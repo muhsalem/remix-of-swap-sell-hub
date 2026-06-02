@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult } from "@/lib/pricing.functions";
-import { Loader2, Sparkles, ArrowLeftRight } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Scale } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -22,7 +22,7 @@ const CONDITIONS = [
   { value: "fair", label: "مقبول" },
 ] as const;
 
-const CATEGORIES = ["إلكترونيات", "ساعات", "كاميرات", "أجهزة لوحية", "صوتيات", "وسائل تنقل", "أخرى"];
+const CATEGORIES = ["إلكترونيات", "هواتف", "أجهزة لوحية", "حواسيب", "صوتيات", "كاميرات", "ساعات", "مجوهرات", "وسائل تنقل", "أثاث", "كتب", "ملابس", "أخرى"];
 
 export function PricingEngine() {
   const [productA, setProductA] = useState<Product>({
@@ -40,10 +40,11 @@ export function PricingEngine() {
     marketPrice: 1850,
   });
   const [result, setResult] = useState<PricingResult | null>(null);
+  const [shariahMode, setShariahMode] = useState(false);
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { productA, productB } }),
+    mutationFn: () => fn({ data: { productA, productB, shariahMode } }),
     onSuccess: setResult,
   });
 
@@ -69,14 +70,26 @@ export function PricingEngine() {
               أدخل بيانات منتجين وسيُحلّل الذكاء الاصطناعي مدى عدالة الصفقة ويقترح موازنتها.
             </p>
           </div>
-          <button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-            className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
-            {mutation.isPending ? "جاري التحليل..." : "حلّل المقايضة"}
-          </button>
+          <div className="flex flex-col items-end gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none px-3 py-2 bg-card border border-border rounded-full text-xs font-bold hover:border-primary/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={shariahMode}
+                onChange={(e) => setShariahMode(e.target.checked)}
+                className="accent-primary size-4"
+              />
+              <Scale className="size-3.5" />
+              الوضع الشرعي
+            </label>
+            <button
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending}
+              className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
+              {mutation.isPending ? "جاري التحليل..." : "حلّل المقايضة"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -123,6 +136,37 @@ export function PricingEngine() {
                 </p>
               )}
             </div>
+
+            {result?.shariah && shariahMode && (
+              <div
+                className={`p-4 rounded-2xl text-right border ${
+                  result.shariah.level === "forbidden"
+                    ? "bg-destructive/10 border-destructive/30 text-destructive"
+                    : result.shariah.level === "warning"
+                    ? "bg-accent/10 border-accent/30 text-accent-foreground"
+                    : "bg-primary/5 border-primary/20"
+                }`}
+              >
+                <p className="text-sm font-bold mb-1 flex items-center gap-2">
+                  {result.shariah.level === "forbidden" ? (
+                    <Ban className="size-4" />
+                  ) : result.shariah.level === "warning" ? (
+                    <AlertTriangle className="size-4" />
+                  ) : (
+                    <ShieldCheck className="size-4 text-primary" />
+                  )}
+                  التحليل الشرعي
+                </p>
+                <p className="text-xs leading-relaxed">{result.shariah.rule}</p>
+                {result.shariah.notes.length > 0 && (
+                  <ul className="text-[11px] mt-2 space-y-1 list-disc pr-4 opacity-90">
+                    {result.shariah.notes.map((n, i) => (
+                      <li key={i}>{n}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

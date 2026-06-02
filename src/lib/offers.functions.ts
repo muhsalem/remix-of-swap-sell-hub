@@ -126,7 +126,8 @@ export const respondToOffer = createServerFn({ method: "POST" })
     const isSender = offer.from_user === userId;
     if (!isReceiver && !isSender) throw new Error("غير مصرّح");
 
-    let nextStatus: string;
+    type OfferStatus = "pending" | "accepted" | "rejected" | "cancelled" | "completed";
+    let nextStatus: OfferStatus;
     if (data.action === "accept" && isReceiver) nextStatus = "accepted";
     else if (data.action === "reject" && isReceiver) nextStatus = "rejected";
     else if (data.action === "cancel" && isSender) nextStatus = "cancelled";

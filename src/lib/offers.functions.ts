@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase as anonClient } from "@/integrations/supabase/client";
+import { quickShariahCheckByText } from "@/lib/pricing.functions";
 
 const CreateOfferInput = z.object({
   requested_listing: z.string().uuid(),
@@ -20,7 +21,7 @@ export const createOffer = createServerFn({ method: "POST" })
     // التحقق من أن العرض المطلوب موجود ومن مالك آخر
     const { data: requested, error: e1 } = await supabase
       .from("listings")
-      .select("id,owner_id,status")
+      .select("id,owner_id,status,title,category")
       .eq("id", data.requested_listing)
       .maybeSingle();
     if (e1 || !requested) throw new Error("العرض المطلوب غير موجود");
@@ -30,11 +31,21 @@ export const createOffer = createServerFn({ method: "POST" })
     // التحقق من ملكية العرض المعروض
     const { data: offered, error: e2 } = await supabase
       .from("listings")
-      .select("id,owner_id")
+      .select("id,owner_id,title,category")
       .eq("id", data.offered_listing)
       .maybeSingle();
     if (e2 || !offered) throw new Error("عرضك غير موجود");
     if (offered.owner_id !== userId) throw new Error("لا تملك هذا العرض");
+
+    // الوضع الشرعي مُفعّل تلقائياً لكل المعاملات
+    const shariah = quickShariahCheckByText(
+      { title: offered.title, category: offered.category },
+      { title: requested.title, category: requested.category },
+      data.cash_balance,
+    );
+    if (shariah.level === "forbidden") {
+      throw new Error(`🚫 معاملة غير شرعية — ${shariah.rule}`);
+    }
 
     const { data: row, error } = await supabase
       .from("trade_offers")

@@ -1,11 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, queryOptions } from "@tanstack/react-query";
 import { PricingEngine } from "@/components/PricingEngine";
-import cameraImg from "@/assets/product-camera.jpg";
-import keyboardImg from "@/assets/product-keyboard.jpg";
-import scooterImg from "@/assets/product-scooter.jpg";
-import watchImg from "@/assets/product-watch.jpg";
+import { Nav } from "@/components/Nav";
+import { Hero } from "@/components/Hero";
+import { ListingImage } from "@/components/ListingImage";
+import { listActiveListings } from "@/lib/listings.functions";
+import { Loader2 } from "lucide-react";
+
+const listingsQuery = queryOptions({
+  queryKey: ["active-listings"],
+  queryFn: () => listActiveListings(),
+});
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   head: () => ({
     meta: [
       { title: "إيكال EQAL — منصة المقايضة الذكية بالذكاء الاصطناعي" },
@@ -17,48 +25,16 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Listing = {
-  title: string;
-  wants: string;
-  price: number;
-  condition: string;
-  img: string;
-};
-
-const LISTINGS: Listing[] = [
-  { title: "كاميرا كانون M50", wants: "لاب توب أو عدسة 35mm", price: 5200, condition: "حالة ممتازة", img: cameraImg },
-  { title: "لوحة مفاتيح ميكانيكية", wants: "شاشة ألعاب 24 بوصة", price: 850, condition: "جديد تقريباً", img: keyboardImg },
-  { title: "سكوتر كهربائي", wants: "تابلت أو ساعة ذكية", price: 1400, condition: "مستعمل خفيف", img: scooterImg },
-  { title: "ساعة كلاسيكية", wants: "عرض مناسب (إلكترونيات)", price: 2100, condition: "مغلّفة", img: watchImg },
-];
-
 function Index() {
+  const { data, isLoading } = useQuery(listingsQuery);
+  const listings = data?.listings ?? [];
+
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Tajawal:wght@400;500&family=JetBrains+Mono&display=swap"
-        rel="stylesheet"
-      />
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Tajawal:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet" />
 
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <span className="font-display text-2xl font-extrabold tracking-tighter text-primary">
-              إيكال <span className="text-foreground">EQAL</span>
-            </span>
-            <div className="hidden md:flex gap-6 text-sm font-medium">
-              <a href="#engine" className="text-primary">المقايضة</a>
-              <a href="#market" className="hover:text-primary transition-colors">السوق</a>
-              <a href="#how" className="hover:text-primary transition-colors">كيف يعمل؟</a>
-            </div>
-          </div>
-          <button className="px-6 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
-            ابدأ مقايضة جديدة
-          </button>
-        </div>
-      </nav>
+      <Nav />
+      <Hero />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div id="engine">
@@ -67,47 +43,53 @@ function Index() {
 
         <section id="market">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="font-display text-2xl font-extrabold">أحدث العروض المتاحة للمقايضة</h2>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 rounded-lg border border-border hover:bg-stone-soft text-sm">فلاتر</button>
-              <button className="px-4 py-2 rounded-lg border border-border hover:bg-stone-soft text-sm">ترتيب</button>
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-extrabold">أحدث العروض المتاحة للمقايضة</h2>
+              <p className="text-sm text-muted-foreground mt-1">{listings.length} عرض نشط</p>
             </div>
+            <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
+              أضف عرضك
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {LISTINGS.map((l) => (
-              <article
-                key={l.title}
-                className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl transition-all duration-500"
-              >
-                <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/4] bg-stone-soft">
-                  <img
-                    src={l.img}
-                    alt={l.title}
-                    loading="lazy"
-                    width={512}
-                    height={640}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-3 right-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
-                    {l.condition}
+          {isLoading ? (
+            <div className="flex justify-center py-20"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>
+          ) : listings.length === 0 ? (
+            <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
+              <p className="text-muted-foreground mb-4">لا توجد عروض بعد. كن أول من ينشر!</p>
+              <Link to="/new-listing" className="inline-flex px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold">
+                أضف عرضك الأول
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {listings.map((l) => (
+                <Link
+                  key={l.id}
+                  to="/listings/$id"
+                  params={{ id: l.id }}
+                  className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl transition-all duration-500"
+                >
+                  <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/4] bg-stone-soft">
+                    <ListingImage path={l.images?.[0]} alt={l.title} />
+                    <div className="absolute top-3 right-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
+                      {l.condition}
+                    </div>
                   </div>
-                </div>
-                <h3 className="font-bold mb-1">{l.title}</h3>
-                <p className="text-xs text-muted-foreground mb-4">مطلوب: {l.wants}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <span className="text-sm font-bold">{l.price.toLocaleString()} ر.س</span>
-                  <button className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                    قيّم للمقايضة ←
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
+                  <h3 className="font-bold mb-1 truncate">{l.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب: {l.wants}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <span className="text-sm font-bold">{Number(l.market_price).toLocaleString()} ر.س</span>
+                    <span className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">قيّم ←</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         <section id="how" className="mt-24">
-          <h2 className="font-display text-2xl font-extrabold mb-8">كيف تعمل المنصة؟</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-extrabold mb-8">كيف تعمل المنصة؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { n: "01", t: "اعرض منتجك", d: "أضف صوراً ووصفاً وسعراً سوقياً تقديرياً." },
@@ -127,11 +109,6 @@ function Index() {
       <footer className="py-12 border-t border-border mt-16 bg-card">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <span className="font-display text-xl font-extrabold tracking-tighter opacity-40">EQAL</span>
-          <div className="flex gap-8 text-sm font-medium text-muted-foreground">
-            <a href="#">سياسة الخصوصية</a>
-            <a href="#">شروط الاستخدام</a>
-            <a href="#">تواصل معنا</a>
-          </div>
           <div className="text-xs text-muted-foreground font-mono">© 2026 EQAL AI ENGINE</div>
         </div>
       </footer>

@@ -360,7 +360,9 @@ ${shariahMode ? `- وضع شرعي: ${shariah.rule}` : ""}
 
     return {
       valueA, valueB, urvA, urvB,
-      fairness, gap, gapURV, inFavorOf, cashBalance,
+      diA: toDI(valueA), diB: toDI(valueB),
+      fairness, gap, gapURV, gapDI: toDI(Math.abs(gap)),
+      inFavorOf, cashBalance, cashBalanceDI: toDI(cashBalance),
       recommendation, rationale,
       breakdownA, breakdownB, shariah, equivalence,
     };

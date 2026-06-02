@@ -1,33 +1,66 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Search, ShoppingBag, Tag, Sparkles, ArrowLeftRight } from "lucide-react";
 import { PricingEngine } from "@/components/PricingEngine";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
 import { listActiveListings } from "@/lib/listings.functions";
 
-
 const listingsQuery = queryOptions({
   queryKey: ["active-listings"],
   queryFn: () => listActiveListings(),
 });
+
+const POPULAR = ["هواتف", "حواسيب", "ساعات", "مجوهرات", "ذهب", "أثاث", "كتب", "خدمات مهنية"];
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   head: () => ({
     meta: [
       { title: "إيكال EQAL — منصة المقايضة الذكية بالذكاء الاصطناعي" },
-      { name: "description", content: "روّج لمنتجاتك وقايضها بعدالة عبر محرك تسعير ذكي مدعوم بالذكاء الاصطناعي." },
+      { name: "description", content: "بيع، اشترِ، أو قايض بعدالة عبر محرك تسعير ذكي مدعوم بالذكاء الاصطناعي." },
       { property: "og:title", content: "إيكال EQAL — منصة المقايضة الذكية" },
-      { property: "og:description", content: "محرك تسعير للمقايضة بالذكاء الاصطناعي." },
+      { property: "og:description", content: "بيع واشترِ وقايض بثقة وعدالة." },
     ],
   }),
   component: Index,
 });
 
+type Mode = "buy" | "sell" | "barter";
+
 function Index() {
   const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
+
+  const [mode, setMode] = useState<Mode>("buy");
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = listings.map((l) => {
+      const text = `${l.title} ${l.category} ${l.wants ?? ""}`.toLowerCase();
+      let score = 0;
+      if (q) {
+        if (l.title.toLowerCase().includes(q)) score += 5;
+        if (l.category.toLowerCase().includes(q)) score += 3;
+        if (text.includes(q)) score += 1;
+      }
+      if (activeCat && l.category === activeCat) score += 4;
+      return { l, score };
+    });
+    const hasFilter = !!q || !!activeCat;
+    return hasFilter
+      ? list.filter((x) => x.score > 0).sort((a, b) => b.score - a.score)
+      : list;
+  }, [listings, query, activeCat]);
+
+  const sectionTitle =
+    mode === "buy" ? "ابحث عمّا تريد شراءه" :
+    mode === "sell" ? "أحدث المنتجات في السوق" :
+    "عروض متاحة للمقايضة";
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
@@ -37,45 +70,120 @@ function Index() {
       <Hero />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        <div id="engine">
-          <PricingEngine />
-        </div>
+        {/* شريط النية: بيع / شراء / مقايضة */}
+        <section className="mb-10">
+          <div className="bg-card rounded-3xl ring-1 ring-black/5 p-6 md:p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+              <div>
+                <h2 className="font-display text-xl md:text-2xl font-extrabold">ماذا تريد أن تفعل اليوم؟</h2>
+                <p className="text-xs text-muted-foreground mt-1">اختر هدفك وسنُكيّف لك التجربة.</p>
+              </div>
+              <div className="flex gap-2 p-1 bg-stone-soft rounded-full">
+                <ModeBtn active={mode === "buy"} onClick={() => setMode("buy")} icon={<ShoppingBag className="size-4" />} label="أريد أن أشتري" />
+                <ModeBtn active={mode === "sell"} onClick={() => setMode("sell")} icon={<Tag className="size-4" />} label="أريد أن أبيع" />
+                <ModeBtn active={mode === "barter"} onClick={() => setMode("barter")} icon={<ArrowLeftRight className="size-4" />} label="أريد أن أقايض" />
+              </div>
+            </div>
 
-        <section id="market">
-          <div className="flex items-center justify-between mb-8">
+            {mode === "buy" && (
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="مثال: آيفون 14، ساعة سمارت، استشارة قانونية..."
+                    className="w-full pr-12 pl-4 py-4 bg-stone-soft rounded-2xl border border-border outline-none focus:ring-2 ring-primary/30 text-sm"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <CatChip active={!activeCat} onClick={() => setActiveCat(null)}>كل الفئات</CatChip>
+                  {POPULAR.map((c) => (
+                    <CatChip key={c} active={activeCat === c} onClick={() => setActiveCat(activeCat === c ? null : c)}>
+                      {c}
+                    </CatChip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {mode === "sell" && (
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-stone-soft rounded-2xl">
+                <div>
+                  <p className="text-sm font-bold">انشر منتجك خلال دقيقة — مجاناً.</p>
+                  <p className="text-xs text-muted-foreground mt-1">محرك التقييم يحدد لك السعر العادل تلقائياً.</p>
+                </div>
+                <Link to="/new-listing" className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
+                  أضف منتجك الآن
+                </Link>
+              </div>
+            )}
+
+            {mode === "barter" && (
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
+                <div>
+                  <p className="text-sm font-bold">جرّب محرك التسعير الذكي.</p>
+                  <p className="text-xs text-muted-foreground mt-1">قارن أي عرضين واحصل على توصية AI فورية بعدالة الصفقة.</p>
+                </div>
+                <a href="#engine" className="px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:opacity-90 transition-all">
+                  افتح المحرك
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* السوق */}
+        <section id="market" className="mb-16">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="font-display text-2xl md:text-3xl font-extrabold">أحدث العروض المتاحة للمقايضة</h2>
-              <p className="text-sm text-muted-foreground mt-1">{listings.length} عرض نشط</p>
+              <h2 className="font-display text-2xl md:text-3xl font-extrabold flex items-center gap-3">
+                {mode === "buy" && <Sparkles className="size-5 text-primary" />}
+                {sectionTitle}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {mode === "buy" && (query || activeCat)
+                  ? `${filtered.length} نتيجة مطابقة لاهتمامك`
+                  : `${listings.length} عرض نشط`}
+              </p>
             </div>
             <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
               أضف عرضك
             </Link>
           </div>
 
-          {listings.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
-              <p className="text-muted-foreground mb-4">لا توجد عروض بعد. كن أول من ينشر!</p>
+              <p className="text-muted-foreground mb-4">
+                {query || activeCat ? "لا توجد نتائج. جرّب كلمة بحث أخرى." : "لا توجد عروض بعد. كن أول من ينشر!"}
+              </p>
               <Link to="/new-listing" className="inline-flex px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold">
                 أضف عرضك الأول
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {listings.map((l) => (
+              {filtered.map(({ l, score }) => (
                 <Link
                   key={l.id}
                   to="/listings/$id"
                   params={{ id: l.id }}
-                  className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl transition-all duration-500"
+                  className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative"
                 >
+                  {mode === "buy" && score >= 5 && (
+                    <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center gap-1 shadow-lg">
+                      <Sparkles className="size-3" /> مطابق لاهتمامك
+                    </div>
+                  )}
                   <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/4] bg-stone-soft">
                     <ListingImage path={l.images?.[0]} alt={l.title} />
-                    <div className="absolute top-3 right-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
                       {l.condition}
                     </div>
                   </div>
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب: {l.wants}</p>
+                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب مقابله: {l.wants}</p>
                   <div className="flex items-center justify-between pt-4 border-t border-border">
                     <span className="text-sm font-bold">{Number(l.market_price).toLocaleString()} ر.س</span>
                     <span className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">قيّم ←</span>
@@ -86,11 +194,16 @@ function Index() {
           )}
         </section>
 
+        {/* محرك التسعير */}
+        <div id="engine" className="scroll-mt-20">
+          <PricingEngine />
+        </div>
+
         <section id="how" className="mt-24">
           <h2 className="font-display text-2xl md:text-3xl font-extrabold mb-8">كيف تعمل المنصة؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { n: "01", t: "اعرض منتجك", d: "أضف صوراً ووصفاً وسعراً سوقياً تقديرياً." },
+              { n: "01", t: "حدّد نيتك", d: "بيع، شراء، أو مقايضة — اختر ما يناسبك." },
               { n: "02", t: "حلّل المقايضة", d: "محرك التسعير الذكي يحسب العدالة ويقترح موازنة." },
               { n: "03", t: "أتمم الصفقة", d: "تواصل مع الطرف الآخر بثقة وأنت تعرف القيمة الحقيقية." },
             ].map((s) => (
@@ -111,5 +224,31 @@ function Index() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function ModeBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2.5 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${
+        active ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {icon} {label}
+    </button>
+  );
+}
+
+function CatChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+        active ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

@@ -113,10 +113,12 @@ export function PricingEngine() {
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
-              className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all flex items-center gap-2 disabled:opacity-50"
+              className="group relative px-8 py-4 rounded-full text-sm md:text-base font-bold text-primary-foreground bg-gradient-to-br from-primary via-primary to-accent shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.8)] hover:-translate-y-0.5 transition-all flex items-center gap-2.5 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden"
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
-              {mutation.isPending ? "جاري التحليل..." : "حلّل المقايضة"}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              {mutation.isPending ? <Loader2 className="size-5 animate-spin relative z-10" /> : <Sparkles className="size-5 relative z-10 animate-pulse" />}
+              <span className="relative z-10">{mutation.isPending ? "جاري التحليل..." : "حلّل توافق المقايضة"}</span>
+              {!mutation.isPending && <ArrowLeftRight className="size-4 relative z-10 opacity-80" />}
             </button>
           </div>
         </div>

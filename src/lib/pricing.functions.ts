@@ -64,7 +64,7 @@ const ProductSchema = z.object({
 const InputSchema = z.object({
   productA: ProductSchema,
   productB: ProductSchema,
-  shariahMode: z.boolean().optional().default(false),
+  shariahMode: z.boolean().optional().default(true),
 });
 
 export type Product = z.infer<typeof ProductSchema>;

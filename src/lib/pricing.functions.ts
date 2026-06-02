@@ -6,6 +6,10 @@ import { z } from "zod";
 // 1 URV ≈ قيمة ساعة عمل ماهر = 50 ر.س = 10 كجم قمح ≈ 0.18 جرام ذهب
 // ============================================================
 export const URV_IN_SAR = 50;
+// عملة المنصة الظاهرة للمستخدم: 1 URV = 10 DI Credit (1 DI ≈ 5 ر.س)
+export const DI_PER_URV = 10;
+export const SAR_PER_DI = URV_IN_SAR / DI_PER_URV;
+const toDI = (sar: number) => Math.round((sar / SAR_PER_DI) * 100) / 100;
 
 // أسعار صرف ثابتة (تقريبية) — تُستخدم لتحويل أي عملة إلى ر.س ثم إلى URV
 const FX_TO_SAR: Record<string, number> = {
@@ -94,21 +98,20 @@ export type ShariahAnalysis = {
 };
 
 export type PricingResult = {
-  valueA: number;          // SAR
-  valueB: number;          // SAR
-  urvA: number;
-  urvB: number;
+  valueA: number; valueB: number;          // SAR (داخلي)
+  urvA: number; urvB: number;              // URV (داخلي)
+  diA: number; diB: number;                // DI Credit — يُعرض للمستخدم
   fairness: number;
-  gap: number;             // SAR
-  gapURV: number;
+  gap: number; gapURV: number; gapDI: number;
   inFavorOf: "A" | "B" | "balanced";
-  cashBalance: number;     // SAR
+  cashBalance: number;                     // SAR (داخلي)
+  cashBalanceDI: number;                   // DI Credit للموازنة
   recommendation: string;
   rationale: string;
   breakdownA: ValueBreakdown;
   breakdownB: ValueBreakdown;
   shariah: ShariahAnalysis;
-  equivalence: string;     // "1 ساعة استشارة = 3 كجم قمح = 0.5 جرام ذهب"
+  equivalence: string;
 };
 
 // ============================================================
@@ -357,7 +360,9 @@ ${shariahMode ? `- وضع شرعي: ${shariah.rule}` : ""}
 
     return {
       valueA, valueB, urvA, urvB,
-      fairness, gap, gapURV, inFavorOf, cashBalance,
+      diA: toDI(valueA), diB: toDI(valueB),
+      fairness, gap, gapURV, gapDI: toDI(Math.abs(gap)),
+      inFavorOf, cashBalance, cashBalanceDI: toDI(cashBalance),
       recommendation, rationale,
       breakdownA, breakdownB, shariah, equivalence,
     };

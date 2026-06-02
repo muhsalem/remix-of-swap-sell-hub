@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, queryOptions } from "@tanstack/react-query";
+import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { PricingEngine } from "@/components/PricingEngine";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
 import { listActiveListings } from "@/lib/listings.functions";
-import { Loader2 } from "lucide-react";
+
 
 const listingsQuery = queryOptions({
   queryKey: ["active-listings"],
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { data, isLoading } = useQuery(listingsQuery);
+  const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
 
   return (
@@ -52,9 +52,7 @@ function Index() {
             </Link>
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-20"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>
-          ) : listings.length === 0 ? (
+          {listings.length === 0 ? (
             <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
               <p className="text-muted-foreground mb-4">لا توجد عروض بعد. كن أول من ينشر!</p>
               <Link to="/new-listing" className="inline-flex px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold">

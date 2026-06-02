@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { calculateBarter, type PricingResult, ITEM_TYPES, URV_IN_SAR } from "@/lib/pricing.functions";
+import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
 import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Scale, ChevronDown } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
@@ -93,7 +93,7 @@ export function PricingEngine() {
           <div className="max-w-xl">
             <div className="flex items-center gap-3 mb-4">
               <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="size-3" /> AI Engine v3.0 — URV
+                <Sparkles className="size-3" /> AI Engine v3.0 — DI Credit
               </span>
               <span className="size-2 bg-primary rounded-full animate-pulse" />
             </div>
@@ -101,7 +101,7 @@ export function PricingEngine() {
               محرك التسعير الاقتصادي للمقايضة العادلة
             </h1>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-              يقيّم السلع والخدمات وساعات العمل والعقارات والذهب والعملات بـ <b>وحدة قيمة مرجعية موحّدة (URV)</b> = {URV_IN_SAR} ر.س،
+              يقيّم السلع والخدمات والعقارات والذهب والعملات بعملة المنصة <b>DI Credit</b> (1 DI ≈ {SAR_PER_DI} ر.س)،
               مع معاملات الإهلاك، الجودة، الندرة، الموقع، المخاطرة وزمن التسليم.
             </p>
           </div>
@@ -129,7 +129,7 @@ export function PricingEngine() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12">
-        <ProductCard label="الطرف (أ)" letter="أ" img={phoneImg} product={productA} setProduct={setProductA} result={result?.valueA} urv={result?.urvA} />
+        <ProductCard label="الطرف (أ)" letter="أ" img={phoneImg} product={productA} setProduct={setProductA} result={result?.valueA} di={result?.diA} />
 
         <div className="lg:col-span-4 p-8 bg-stone-soft border-y lg:border-y-0 lg:border-x border-border flex flex-col items-center justify-center text-center">
           <div className="animate-balance mb-6 relative" key={fairness}>
@@ -151,14 +151,14 @@ export function PricingEngine() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-center gap-2">
                     <span className="text-accent font-bold font-display text-xl">
-                      {result.gap === 0 ? "متوازن" : `${Math.abs(result.gap).toLocaleString()} ر.س`}
+                      {result.gap === 0 ? "متوازن" : `${result.cashBalanceDI.toLocaleString()} DI`}
                     </span>
                     {result.inFavorOf !== "balanced" && (
                       <span className="text-sm">لصالح {result.inFavorOf === "A" ? "(أ)" : "(ب)"}</span>
                     )}
                   </div>
                   <p className="text-[11px] text-muted-foreground font-mono">
-                    {Math.abs(result.gapURV)} URV
+                    ≈ {Math.abs(result.gap).toLocaleString()} ر.س
                   </p>
                 </div>
               ) : (
@@ -212,7 +212,7 @@ export function PricingEngine() {
           </div>
         </div>
 
-        <ProductCard label="الطرف (ب)" letter="ب" img={headphonesImg} product={productB} setProduct={setProductB} result={result?.valueB} urv={result?.urvB} />
+        <ProductCard label="الطرف (ب)" letter="ب" img={headphonesImg} product={productB} setProduct={setProductB} result={result?.valueB} di={result?.diB} />
       </div>
 
       {result && (
@@ -241,8 +241,8 @@ export function PricingEngine() {
                 <Row label="معامل الفئة/الطلب" a={result.breakdownA.categoryFactor} b={result.breakdownB.categoryFactor} />
                 <tr className="border-t-2 border-primary/30 font-bold">
                   <td className="py-3 px-3">القيمة النهائية</td>
-                  <td className="py-3 px-3 text-primary">{result.valueA.toLocaleString()} ر.س · {result.urvA} URV</td>
-                  <td className="py-3 px-3 text-primary">{result.valueB.toLocaleString()} ر.س · {result.urvB} URV</td>
+                  <td className="py-3 px-3 text-primary">{result.diA.toLocaleString()} DI <span className="opacity-50 text-[10px]">({result.valueA.toLocaleString()} ر.س)</span></td>
+                  <td className="py-3 px-3 text-primary">{result.diB.toLocaleString()} DI <span className="opacity-50 text-[10px]">({result.valueB.toLocaleString()} ر.س)</span></td>
                 </tr>
               </tbody>
             </table>
@@ -264,11 +264,11 @@ function Row({ label, a, b }: { label: string; a: number | string; b: number | s
 }
 
 function ProductCard({
-  label, letter, img, product, setProduct, result, urv,
+  label, letter, img, product, setProduct, result, di,
 }: {
   label: string; letter: string; img: string;
   product: Product; setProduct: (p: Product) => void;
-  result?: number; urv?: number;
+  result?: number; di?: number;
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   return (
@@ -401,10 +401,10 @@ function ProductCard({
         <div className="flex flex-col items-end px-4 py-3 bg-primary/5 rounded-2xl border border-primary/10">
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">القيمة المقدّرة</span>
           <span className="font-mono font-bold text-lg text-primary">
-            {result ? `${result.toLocaleString()} ر.س` : "—"}
+            {di !== undefined ? `${di.toLocaleString()} DI` : "—"}
           </span>
-          {urv !== undefined && (
-            <span className="text-[11px] text-muted-foreground font-mono">{urv} URV</span>
+          {result !== undefined && (
+            <span className="text-[11px] text-muted-foreground font-mono">≈ {result.toLocaleString()} ر.س</span>
           )}
         </div>
       </div>

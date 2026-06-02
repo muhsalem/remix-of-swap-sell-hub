@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
 import { Route as AuthenticatedNewListingRouteImport } from './routes/_authenticated/new-listing'
@@ -39,6 +40,12 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/listings/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTransactionsRoute =
+  AuthenticatedTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
+  '/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
@@ -89,6 +97,7 @@ export interface FileRoutesByTo {
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
+  '/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
@@ -102,6 +111,7 @@ export interface FileRoutesById {
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/new-listing'
     | '/offers'
     | '/profile'
+    | '/transactions'
     | '/listings/$id'
     | '/offer/$listingId'
     | '/offers/$id'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/new-listing'
     | '/offers'
     | '/profile'
+    | '/transactions'
     | '/listings/$id'
     | '/offer/$listingId'
     | '/offers/$id'
@@ -138,6 +150,7 @@ export interface FileRouteTypes {
     | '/_authenticated/new-listing'
     | '/_authenticated/offers'
     | '/_authenticated/profile'
+    | '/_authenticated/transactions'
     | '/listings/$id'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/listings/$id'
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/transactions': {
+      id: '/_authenticated/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -241,6 +261,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
 }
 
@@ -249,6 +270,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
 }
 

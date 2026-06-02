@@ -14,7 +14,169 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      listings: {
+        Row: {
+          age_months: number
+          category: string
+          condition: Database["public"]["Enums"]["listing_condition"]
+          created_at: string
+          description: string | null
+          id: string
+          images: string[]
+          is_ribawi: boolean
+          market_price: number
+          owner_id: string
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+          wants: string
+        }
+        Insert: {
+          age_months?: number
+          category: string
+          condition: Database["public"]["Enums"]["listing_condition"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[]
+          is_ribawi?: boolean
+          market_price: number
+          owner_id: string
+          status?: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at?: string
+          wants: string
+        }
+        Update: {
+          age_months?: number
+          category?: string
+          condition?: Database["public"]["Enums"]["listing_condition"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[]
+          is_ribawi?: boolean
+          market_price?: number
+          owner_id?: string
+          status?: Database["public"]["Enums"]["listing_status"]
+          title?: string
+          updated_at?: string
+          wants?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          id: string
+          rating: number | null
+          trades_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          id: string
+          rating?: number | null
+          trades_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          rating?: number | null
+          trades_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trade_offers: {
+        Row: {
+          cash_balance: number | null
+          created_at: string
+          fairness_score: number | null
+          from_user: string
+          id: string
+          message: string | null
+          offered_listing: string
+          requested_listing: string
+          status: Database["public"]["Enums"]["offer_status"]
+          to_user: string
+          updated_at: string
+        }
+        Insert: {
+          cash_balance?: number | null
+          created_at?: string
+          fairness_score?: number | null
+          from_user: string
+          id?: string
+          message?: string | null
+          offered_listing: string
+          requested_listing: string
+          status?: Database["public"]["Enums"]["offer_status"]
+          to_user: string
+          updated_at?: string
+        }
+        Update: {
+          cash_balance?: number | null
+          created_at?: string
+          fairness_score?: number | null
+          from_user?: string
+          id?: string
+          message?: string | null
+          offered_listing?: string
+          requested_listing?: string
+          status?: Database["public"]["Enums"]["offer_status"]
+          to_user?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_offers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_offers_offered_listing_fkey"
+            columns: ["offered_listing"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_offers_requested_listing_fkey"
+            columns: ["requested_listing"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_offers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +185,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
+      listing_status: "active" | "pending" | "traded" | "closed"
+      offer_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "cancelled"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +319,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      listing_condition: ["new", "like-new", "excellent", "good", "fair"],
+      listing_status: ["active", "pending", "traded", "closed"],
+      offer_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled",
+        "completed",
+      ],
+    },
   },
 } as const

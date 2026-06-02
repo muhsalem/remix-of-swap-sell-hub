@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User } from "lucide-react";
+import { LogOut, Plus, User, Inbox } from "lucide-react";
 
 export function Nav() {
   const { user, loading } = useAuth();
@@ -27,6 +27,12 @@ export function Nav() {
                 className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all"
               >
                 <Plus className="size-4" /> أضف عرضاً
+              </Link>
+              <Link
+                to="/offers"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
+              >
+                <Inbox className="size-4" /> الصندوق
               </Link>
               <Link
                 to="/my-listings"

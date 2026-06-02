@@ -1,0 +1,140 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { getWalletStats } from "@/lib/wallet.functions";
+import { SAR_PER_DI } from "@/lib/pricing.functions";
+import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles } from "lucide-react";
+
+const walletQO = queryOptions({
+  queryKey: ["wallet-stats"],
+  queryFn: () => getWalletStats(),
+});
+
+export const Route = createFileRoute("/_authenticated/profile")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(walletQO),
+  component: ProfilePage,
+  errorComponent: ({ error }) => (
+    <div className="max-w-2xl mx-auto p-8 text-center">
+      <p className="text-destructive">تعذّر تحميل بياناتك: {error.message}</p>
+    </div>
+  ),
+});
+
+function Stat({ icon: Icon, label, value, hint }: { icon: React.ElementType; label: string; value: string | number; hint?: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+        <Icon className="size-4" /> {label}
+      </div>
+      <div className="text-2xl font-extrabold tracking-tight">{value}</div>
+      {hint ? <div className="text-xs text-muted-foreground mt-1">{hint}</div> : null}
+    </div>
+  );
+}
+
+function ScoreBar({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm mb-1.5">
+        <span className="font-medium">{label}</span>
+        <span className="font-bold">{value}/100</span>
+      </div>
+      <div className="h-2.5 bg-stone-soft rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function ProfilePage() {
+  const { data } = useSuspenseQuery(walletQO);
+  const { profile, diBalance, reputationScore, impactScore, trustLevel, stats, recentReviews } = data;
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="size-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-extrabold text-primary-foreground">
+          {(profile?.display_name ?? "U").slice(0, 1).toUpperCase()}
+        </div>
+        <div className="flex-1">
+          <h1 className="text-2xl font-extrabold">{profile?.display_name ?? "مستخدم"}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">
+              <Award className="size-3" /> {trustLevel}
+            </span>
+            {profile?.bio ? <span className="text-sm text-muted-foreground">{profile.bio}</span> : null}
+          </div>
+        </div>
+      </div>
+
+      {/* DI Wallet */}
+      <div className="rounded-3xl p-6 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.5)]">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-sm opacity-90">
+            <Wallet className="size-5" /> محفظة DI Credit
+          </div>
+          <Sparkles className="size-5 opacity-80" />
+        </div>
+        <div className="flex items-baseline gap-3">
+          <div className="text-5xl font-extrabold tracking-tight">{diBalance.toFixed(2)}</div>
+          <div className="text-lg opacity-90">DI</div>
+        </div>
+        <div className="text-sm opacity-80 mt-2">
+          ≈ {(diBalance * SAR_PER_DI).toFixed(2)} ر.س &middot; 1 DI = {SAR_PER_DI} ر.س
+        </div>
+      </div>
+
+      {/* Scores */}
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+        <h2 className="font-bold flex items-center gap-2">
+          <TrendingUp className="size-4 text-primary" /> درجات الثقة والتأثير
+        </h2>
+        <ScoreBar label="Reputation Score — درجة السمعة" value={reputationScore} color="bg-gradient-to-r from-primary to-accent" />
+        <ScoreBar label="Impact Score — درجة التأثير" value={impactScore} color="bg-gradient-to-r from-emerald-500 to-teal-400" />
+        <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+          تُحتسب درجة السمعة من تقييمات الشركاء، ودرجة التأثير من حجم نشاطك ومقايضاتك المكتملة.
+        </p>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Stat icon={CheckCircle2} label="صفقات مكتملة" value={stats.completedTrades} />
+        <Stat icon={Inbox} label="عروض معلقة" value={stats.pendingOffers} />
+        <Stat icon={Package} label="إعلاناتي النشطة" value={stats.activeListings} />
+        <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
+      </div>
+
+      {/* Reviews */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <h2 className="font-bold mb-4 flex items-center gap-2">
+          <Star className="size-4 text-amber-500" /> آخر المراجعات
+        </h2>
+        {recentReviews.length === 0 ? (
+          <p className="text-sm text-muted-foreground">لا توجد مراجعات بعد. أكمل صفقتك الأولى لبدء بناء سمعتك.</p>
+        ) : (
+          <ul className="space-y-3">
+            {recentReviews.map((r) => (
+              <li key={r.id} className="p-3 rounded-xl bg-stone-soft/50">
+                <div className="flex items-center gap-1 text-amber-500 mb-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={`size-3.5 ${i < r.rating ? "fill-current" : "opacity-30"}`} />
+                  ))}
+                </div>
+                {r.comment ? <p className="text-sm">{r.comment}</p> : <p className="text-sm text-muted-foreground italic">بدون تعليق</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <Link to="/my-listings" className="flex-1 text-center px-5 py-3 rounded-full bg-foreground text-background font-bold hover:bg-primary transition-all">
+          إدارة إعلاناتي
+        </Link>
+        <Link to="/offers" className="flex-1 text-center px-5 py-3 rounded-full border border-border font-bold hover:bg-stone-soft transition-all">
+          صندوق العروض
+        </Link>
+      </div>
+    </div>
+  );
+}

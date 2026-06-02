@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet } from "lucide-react";
 
 export function Nav() {
   const { user, loading } = useAuth();
@@ -39,6 +39,12 @@ export function Nav() {
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
               >
                 <User className="size-4" /> عروضي
+              </Link>
+              <Link
+                to="/profile"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
+              >
+                <Wallet className="size-4" /> محفظتي
               </Link>
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}

@@ -136,6 +136,37 @@ export function PricingEngine() {
                 </p>
               )}
             </div>
+
+            {result?.shariah && shariahMode && (
+              <div
+                className={`p-4 rounded-2xl text-right border ${
+                  result.shariah.level === "forbidden"
+                    ? "bg-destructive/10 border-destructive/30 text-destructive"
+                    : result.shariah.level === "warning"
+                    ? "bg-accent/10 border-accent/30 text-accent-foreground"
+                    : "bg-primary/5 border-primary/20"
+                }`}
+              >
+                <p className="text-sm font-bold mb-1 flex items-center gap-2">
+                  {result.shariah.level === "forbidden" ? (
+                    <Ban className="size-4" />
+                  ) : result.shariah.level === "warning" ? (
+                    <AlertTriangle className="size-4" />
+                  ) : (
+                    <ShieldCheck className="size-4 text-primary" />
+                  )}
+                  التحليل الشرعي
+                </p>
+                <p className="text-xs leading-relaxed">{result.shariah.rule}</p>
+                {result.shariah.notes.length > 0 && (
+                  <ul className="text-[11px] mt-2 space-y-1 list-disc pr-4 opacity-90">
+                    {result.shariah.notes.map((n, i) => (
+                      <li key={i}>{n}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

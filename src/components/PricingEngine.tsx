@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult } from "@/lib/pricing.functions";
-import { Loader2, Sparkles, ArrowLeftRight } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Scale } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -22,7 +22,7 @@ const CONDITIONS = [
   { value: "fair", label: "مقبول" },
 ] as const;
 
-const CATEGORIES = ["إلكترونيات", "ساعات", "كاميرات", "أجهزة لوحية", "صوتيات", "وسائل تنقل", "أخرى"];
+const CATEGORIES = ["إلكترونيات", "هواتف", "أجهزة لوحية", "حواسيب", "صوتيات", "كاميرات", "ساعات", "مجوهرات", "وسائل تنقل", "أثاث", "كتب", "ملابس", "أخرى"];
 
 export function PricingEngine() {
   const [productA, setProductA] = useState<Product>({
@@ -40,10 +40,11 @@ export function PricingEngine() {
     marketPrice: 1850,
   });
   const [result, setResult] = useState<PricingResult | null>(null);
+  const [shariahMode, setShariahMode] = useState(false);
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { productA, productB } }),
+    mutationFn: () => fn({ data: { productA, productB, shariahMode } }),
     onSuccess: setResult,
   });
 

@@ -70,14 +70,26 @@ export function PricingEngine() {
               أدخل بيانات منتجين وسيُحلّل الذكاء الاصطناعي مدى عدالة الصفقة ويقترح موازنتها.
             </p>
           </div>
-          <button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-            className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
-            {mutation.isPending ? "جاري التحليل..." : "حلّل المقايضة"}
-          </button>
+          <div className="flex flex-col items-end gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none px-3 py-2 bg-card border border-border rounded-full text-xs font-bold hover:border-primary/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={shariahMode}
+                onChange={(e) => setShariahMode(e.target.checked)}
+                className="accent-primary size-4"
+              />
+              <Scale className="size-3.5" />
+              الوضع الشرعي
+            </label>
+            <button
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending}
+              className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
+              {mutation.isPending ? "جاري التحليل..." : "حلّل المقايضة"}
+            </button>
+          </div>
         </div>
       </div>
 

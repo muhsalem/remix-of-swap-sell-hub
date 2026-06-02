@@ -74,7 +74,7 @@ export function PricingEngine() {
   const [productA, setProductA] = useState<Product>(DEFAULT_A);
   const [productB, setProductB] = useState<Product>(DEFAULT_B);
   const [result, setResult] = useState<PricingResult | null>(null);
-  const [shariahMode, setShariahMode] = useState(false);
+  const shariahMode = true; // مُفعّل تلقائياً لكل المعاملات
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
@@ -106,16 +106,10 @@ export function PricingEngine() {
             </p>
           </div>
           <div className="flex flex-col items-end gap-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none px-3 py-2 bg-card border border-border rounded-full text-xs font-bold hover:border-primary/40 transition-colors">
-              <input
-                type="checkbox"
-                checked={shariahMode}
-                onChange={(e) => setShariahMode(e.target.checked)}
-                className="accent-primary size-4"
-              />
+            <span className="flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold">
               <Scale className="size-3.5" />
-              الوضع الشرعي
-            </label>
+              الوضع الشرعي مُفعّل تلقائياً
+            </span>
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
@@ -185,7 +179,7 @@ export function PricingEngine() {
               </div>
             )}
 
-            {result?.shariah && shariahMode && (
+            {result?.shariah && (
               <div
                 className={`p-4 rounded-2xl text-right border ${
                   result.shariah.level === "forbidden"

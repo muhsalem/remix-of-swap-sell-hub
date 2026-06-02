@@ -64,7 +64,7 @@ const ProductSchema = z.object({
 const InputSchema = z.object({
   productA: ProductSchema,
   productB: ProductSchema,
-  shariahMode: z.boolean().optional().default(false),
+  shariahMode: z.boolean().optional().default(true),
 });
 
 export type Product = z.infer<typeof ProductSchema>;
@@ -181,6 +181,21 @@ function detectRibawi(p: Product): string | null {
     if (r.keywords.some((k) => txt.includes(k.toLowerCase()))) return r.type;
   }
   return null;
+}
+
+// فحص شرعي خفيف يعتمد على العنوان والفئة فقط — يُستخدم لمنع المعاملات قبل إنشائها
+export function quickShariahCheckByText(
+  a: { title: string; category: string },
+  b: { title: string; category: string },
+  cashBalance: number,
+): ShariahAnalysis {
+  const fake = (x: { title: string; category: string }): Product => ({
+    name: x.title, category: x.category, itemType: "good",
+    unit: "قطعة", quantity: 1, condition: "good", ageMonths: 0,
+    marketPricePerUnit: 1, currency: "SAR", quality: 7,
+    scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
+  });
+  return analyzeShariah(fake(a), fake(b), cashBalance);
 }
 
 function analyzeShariah(a: Product, b: Product, cashBalance: number): ShariahAnalysis {

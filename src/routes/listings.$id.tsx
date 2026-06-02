@@ -102,7 +102,8 @@ function ListingPage() {
             )}
 
             <Link
-              to="/auth"
+              to="/offer/$listingId"
+              params={{ listingId: l.id }}
               className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all flex items-center justify-center gap-2"
             >
               <ArrowLeftRight className="size-4" /> اقترح مقايضة

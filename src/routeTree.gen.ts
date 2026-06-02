@@ -13,8 +13,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
 import { Route as AuthenticatedNewListingRouteImport } from './routes/_authenticated/new-listing'
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
+import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
+import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -35,6 +38,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/listings/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOffersRoute = AuthenticatedOffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNewListingRoute = AuthenticatedNewListingRouteImport.update({
   id: '/new-listing',
   path: '/new-listing',
@@ -45,20 +53,37 @@ const AuthenticatedMyListingsRoute = AuthenticatedMyListingsRouteImport.update({
   path: '/my-listings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOffersIdRoute = AuthenticatedOffersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedOffersRoute,
+} as any)
+const AuthenticatedOfferListingIdRoute =
+  AuthenticatedOfferListingIdRouteImport.update({
+    id: '/offer/$listingId',
+    path: '/offer/$listingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
+  '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/listings/$id': typeof ListingsIdRoute
+  '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
+  '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
+  '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/listings/$id': typeof ListingsIdRoute
+  '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
+  '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,13 +92,32 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
+  '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/listings/$id': typeof ListingsIdRoute
+  '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
+  '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/my-listings' | '/new-listing' | '/listings/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/my-listings'
+    | '/new-listing'
+    | '/offers'
+    | '/listings/$id'
+    | '/offer/$listingId'
+    | '/offers/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/my-listings' | '/new-listing' | '/listings/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/my-listings'
+    | '/new-listing'
+    | '/offers'
+    | '/listings/$id'
+    | '/offer/$listingId'
+    | '/offers/$id'
   id:
     | '__root__'
     | '/'
@@ -81,7 +125,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/my-listings'
     | '/_authenticated/new-listing'
+    | '/_authenticated/offers'
     | '/listings/$id'
+    | '/_authenticated/offer/$listingId'
+    | '/_authenticated/offers/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -121,6 +168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/offers': {
+      id: '/_authenticated/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof AuthenticatedOffersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/new-listing': {
       id: '/_authenticated/new-listing'
       path: '/new-listing'
@@ -135,17 +189,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyListingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/offers/$id': {
+      id: '/_authenticated/offers/$id'
+      path: '/$id'
+      fullPath: '/offers/$id'
+      preLoaderRoute: typeof AuthenticatedOffersIdRouteImport
+      parentRoute: typeof AuthenticatedOffersRoute
+    }
+    '/_authenticated/offer/$listingId': {
+      id: '/_authenticated/offer/$listingId'
+      path: '/offer/$listingId'
+      fullPath: '/offer/$listingId'
+      preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
+
+interface AuthenticatedOffersRouteChildren {
+  AuthenticatedOffersIdRoute: typeof AuthenticatedOffersIdRoute
+}
+
+const AuthenticatedOffersRouteChildren: AuthenticatedOffersRouteChildren = {
+  AuthenticatedOffersIdRoute: AuthenticatedOffersIdRoute,
+}
+
+const AuthenticatedOffersRouteWithChildren =
+  AuthenticatedOffersRoute._addFileChildren(AuthenticatedOffersRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
+  AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
+  AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,
+  AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
+  AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

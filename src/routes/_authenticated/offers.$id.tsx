@@ -56,6 +56,27 @@ function OfferDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Realtime: refresh on new messages for this offer
+  useEffect(() => {
+    const ch = supabase
+      .channel(`offer-msgs:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `offer_id=eq.${id}` },
+        () => qc.invalidateQueries({ queryKey: ["offer", id] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [id, qc]);
+
+  // Disputes
+  const disputesFn = useServerFn(listOfferDisputes);
+  const { data: disputesData } = useQuery({
+    queryKey: ["disputes", id],
+    queryFn: () => disputesFn({ data: { offer_id: id } }),
+  });
+  const disputes = disputesData?.disputes ?? [];
+
   return (
     <div dir="rtl" className="min-h-screen bg-background font-body">
       <Nav />

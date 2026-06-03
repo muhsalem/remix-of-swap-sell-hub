@@ -144,6 +144,7 @@ export function PricingEngine() {
       locationTier: "tier1",
       riskLevel: f.dep ? "medium" : "low",
       deliveryDays: f.type === "service" ? 1 : 3,
+      distanceKm: 0,
     };
     if (side === "A") setSideA([product]); else setSideB([product]);
   };

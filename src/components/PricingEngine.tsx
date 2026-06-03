@@ -5,9 +5,10 @@ import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.f
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
-  ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2,
+  ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
 } from "lucide-react";
 import { CatalogPicker, type CatalogPick } from "@/components/CatalogPicker";
+import { ITEMS as CATALOG_ITEMS } from "@/lib/badel-catalog";
 
 // ============================================================
 // Types
@@ -120,7 +121,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
   const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
 
-  const onCatalogPick = (_side: "A" | "B", pick: CatalogPick) => {
+  const onCatalogPick = (pick: CatalogPick) => {
     const f = pick.family;
     const product: Product = {
       name: pick.itemName,
@@ -139,11 +140,21 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       deliveryDays: f.type === "service" ? 1 : 3,
       distanceKm: 0,
     };
-    // إذا كان السطر الفارغ هو الأول → أبدله، وإلا أضف عنصر جديد
     if (items.length === 1 && !items[0].name.trim() && items[0].marketPricePerUnit === 0) {
       setItems([product]);
     } else {
       setItems([...items, product]);
+    }
+  };
+
+  const [wantsByIdx, setWantsByIdx] = useState<Record<number, string>>({});
+  const setWant = (idx: number, v: string) => setWantsByIdx({ ...wantsByIdx, [idx]: v });
+  const triggerBarter = (have: string, want: string) => {
+    if (!have.trim() || !want.trim()) return;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("badel:match", { detail: { have, want } }));
+      const el = document.getElementById("match-finder-search");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -175,14 +186,14 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </span>
               )}
             </div>
-            <h3 className="font-display text-xl md:text-2xl font-extrabold tracking-tight leading-tight">
+            <h3 className="font-display text-2xl md:text-3xl font-black tracking-tight leading-tight">
               محرّك التسعير العادل
             </h3>
-            <p className="text-muted-foreground mt-1 text-xs md:text-sm">
-              ابدأ من الكتالوج، اضبط القيمة، اعرف ما تملكه يساوي كم.
+            <p className="text-foreground/70 mt-1 text-sm md:text-base font-bold">
+              اختر من الكتالوج، اضبط القيمة، واعرض ما تريده بالمقابل.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-xs bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
+          <label className="flex items-center gap-2 text-xs font-extrabold bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
             <input
               type="checkbox" checked={autoCalc}
               onChange={(e) => setAutoCalc(e.target.checked)}
@@ -192,7 +203,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             حساب تلقائي
           </label>
         </div>
-        <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} />
       </div>
 
       {/* ============ Hero value display ============ */}
@@ -203,7 +213,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
         }} />
         <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
           <div className="md:col-span-7">
-            <div className="text-[10px] uppercase tracking-[0.2em] opacity-70 font-bold mb-1">القيمة الإجمالية المقدّرة</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] opacity-80 font-extrabold mb-1">القيمة الإجمالية المقدّرة</div>
             <div className="flex items-baseline gap-3 flex-wrap">
               <span className="font-display text-4xl md:text-5xl font-extrabold tabular-nums leading-none">
                 {result ? valueSAR.toLocaleString() : "—"}
@@ -242,20 +252,20 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
         </div>
       </div>
 
-      {/* ============ Items list ============ */}
-      <div className="p-5 md:p-7 bg-card">
-        <div className="flex items-center justify-between mb-4">
+      {/* ============ Items list + Catalog ============ */}
+      <div className="p-5 md:p-7 bg-card space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-xl grid place-items-center bg-primary/10 text-primary">
+            <div className="size-9 rounded-xl grid place-items-center bg-primary/10 text-primary">
               <Package2 className="size-4" />
             </div>
-            <h4 className="font-bold text-sm">ممتلكاتك ({items.length})</h4>
+            <h4 className="font-extrabold text-base">ممتلكاتي ({items.length})</h4>
           </div>
           {!autoCalc && (
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
+              className="px-4 py-2 rounded-xl text-xs font-extrabold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
             >
               {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
               احسب القيمة
@@ -263,12 +273,17 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           )}
         </div>
 
+        <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} compact />
+
         <div className="space-y-2">
           {items.map((p, i) => (
             <ItemRow
               key={i}
               index={i}
               product={p}
+              wantValue={wantsByIdx[i] || ""}
+              onWantChange={(v) => setWant(i, v)}
+              onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
               onUpdate={(np) => updateItem(i, np)}
               onRemove={items.length > 1 ? () => removeItem(i) : undefined}
             />
@@ -276,9 +291,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
 
           <button
             type="button" onClick={addItem} disabled={items.length >= 5}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 text-xs font-bold transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 text-sm font-extrabold transition-all disabled:opacity-50"
           >
-            <Plus className="size-3.5" /> أضف عنصر آخر ({items.length}/5)
+            <Plus className="size-4" /> أضف عنصر يدوياً ({items.length}/5)
           </button>
         </div>
       </div>
@@ -330,12 +345,15 @@ function Row({ label, v }: { label: string; v: number | string }) {
 // Item row — compact inline, expands details
 // ============================================================
 function ItemRow({
-  index, product, onUpdate, onRemove,
+  index, product, onUpdate, onRemove, wantValue, onWantChange, onBarter,
 }: {
   index: number;
   product: Product;
   onUpdate: (p: Product) => void;
   onRemove?: () => void;
+  wantValue: string;
+  onWantChange: (v: string) => void;
+  onBarter: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(index === 0);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);
@@ -398,6 +416,14 @@ function ItemRow({
         </span>
         <ConditionPill product={product} onUpdate={onUpdate} />
       </div>
+
+      {/* Barter bar */}
+      <BarterBar
+        product={product}
+        wantValue={wantValue}
+        onWantChange={onWantChange}
+        onBarter={onBarter}
+      />
 
       {/* Expanded advanced section */}
       {isOpen && (
@@ -555,6 +581,68 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
             ⚠ سعرك {diff > 0 ? "أعلى" : "أقل"} {Math.abs(diff).toFixed(0)}% — السعر المقترح: <b>{Math.round(ref.avg).toLocaleString()}</b>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Suggestions pool by item type
+function suggestFor(product: Product): string[] {
+  const pool: string[] = [];
+  if (product.itemType === "service" || product.itemType === "labor_hours") {
+    pool.push(...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g12 || []), ...(CATALOG_ITEMS.g1 || []));
+  } else {
+    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g10 || []), ...(CATALOG_ITEMS.s9 || []));
+  }
+  return Array.from(new Set(pool)).slice(0, 5);
+}
+
+function BarterBar({
+  product, wantValue, onWantChange, onBarter,
+}: {
+  product: Product;
+  wantValue: string;
+  onWantChange: (v: string) => void;
+  onBarter: () => void;
+}) {
+  const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
+  const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
+
+  return (
+    <div className="border-t border-dashed border-border px-3 py-2.5 bg-gradient-to-l from-accent/5 to-transparent">
+      <div className="flex items-center gap-2 mb-1.5">
+        <ArrowLeftRight className="size-3.5 text-accent" />
+        <span className="text-[11px] font-extrabold text-foreground">قايض بـ</span>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+        <input
+          type="text"
+          value={wantValue}
+          onChange={(e) => onWantChange(e.target.value)}
+          placeholder="اكتب ما تريده مقابل هذا العنصر..."
+          className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-stone-soft border border-transparent focus:border-accent text-sm font-bold outline-none"
+        />
+        <button
+          type="button"
+          onClick={onBarter}
+          disabled={!canBarter}
+          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <ArrowLeftRight className="size-3.5" /> قايض
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        <span className="text-[10px] text-muted-foreground font-bold pt-1">اقتراحات:</span>
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onWantChange(s)}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+          >
+            {s}
+          </button>
+        ))}
       </div>
     </div>
   );

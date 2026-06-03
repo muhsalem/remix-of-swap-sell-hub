@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
@@ -15,12 +15,25 @@ export function MatchFinder() {
     mutationFn: () => fn({ data: { have, want } }),
   });
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ have: string; want: string }>).detail;
+      if (!detail) return;
+      setHave(detail.have);
+      setWant(detail.want);
+      setTimeout(() => m.mutate(), 50);
+    };
+    window.addEventListener("badel:match", handler);
+    return () => window.removeEventListener("badel:match", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const matches = m.data?.matches ?? [];
 
   return (
     <section className="space-y-8 mb-16">
       {/* ===== Search bar ===== */}
-      <div className="bg-card rounded-3xl ring-1 ring-black/5 shadow-xl overflow-hidden">
+      <div id="match-finder-search" className="bg-card rounded-3xl ring-1 ring-black/5 shadow-xl overflow-hidden scroll-mt-20">
         <div className="p-6 md:p-8 bg-gradient-to-br from-primary/8 via-card to-accent/5 border-b border-border">
           <div className="flex items-center gap-3 mb-3">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5">

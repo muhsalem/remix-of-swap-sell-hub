@@ -236,17 +236,6 @@ export function PricingEngine() {
               )}
             </div>
 
-            <div className="p-4 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 text-right">
-              <p className="text-sm font-bold mb-1">توصية الذكاء الاصطناعي</p>
-              <p className="text-xs opacity-90 leading-relaxed">
-                {result?.recommendation ?? "أدخل بيانات الطرفين ثم اضغط الزر لتحليل عدالة المقايضة."}
-              </p>
-              {result?.rationale && (
-                <p className="text-[11px] opacity-70 mt-2 border-t border-primary-foreground/20 pt-2">
-                  {result.rationale}
-                </p>
-              )}
-            </div>
 
             {result && <MarketExpertAdvice result={result} sideA={sideA} sideB={sideB} />}
 

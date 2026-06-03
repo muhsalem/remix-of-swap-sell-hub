@@ -174,6 +174,39 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_fees: {
+        Row: {
+          amount_sar: number
+          created_at: string
+          id: string
+          offer_id: string
+          paid_at: string | null
+          payer_id: string
+          rate: number
+          status: Database["public"]["Enums"]["fee_status"]
+        }
+        Insert: {
+          amount_sar: number
+          created_at?: string
+          id?: string
+          offer_id: string
+          paid_at?: string | null
+          payer_id: string
+          rate?: number
+          status?: Database["public"]["Enums"]["fee_status"]
+        }
+        Update: {
+          amount_sar?: number
+          created_at?: string
+          id?: string
+          offer_id?: string
+          paid_at?: string | null
+          payer_id?: string
+          rate?: number
+          status?: Database["public"]["Enums"]["fee_status"]
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           category: string
@@ -397,6 +430,36 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_ledger: {
+        Row: {
+          amount_di: number
+          created_at: string
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id: string
+          note: string | null
+          reference_offer: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_di: number
+          created_at?: string
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          note?: string | null
+          reference_offer?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_di?: number
+          created_at?: string
+          entry_type?: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          note?: string | null
+          reference_offer?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -414,7 +477,14 @@ export type Database = {
       account_type: "individual" | "company"
       app_role: "admin" | "moderator" | "user"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
+      fee_status: "due" | "paid" | "waived"
       kyc_status: "none" | "pending" | "verified" | "rejected"
+      ledger_entry_type:
+        | "welcome_bonus"
+        | "trade_completed"
+        | "fee_charge"
+        | "manual_adjust"
+        | "refund"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
       offer_status:
@@ -553,7 +623,15 @@ export const Constants = {
       account_type: ["individual", "company"],
       app_role: ["admin", "moderator", "user"],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
+      fee_status: ["due", "paid", "waived"],
       kyc_status: ["none", "pending", "verified", "rejected"],
+      ledger_entry_type: [
+        "welcome_bonus",
+        "trade_completed",
+        "fee_charge",
+        "manual_adjust",
+        "refund",
+      ],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],
       offer_status: [

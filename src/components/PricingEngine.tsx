@@ -647,3 +647,50 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
     </div>
   );
 }
+
+function SamplePicker({ title, icon, items, onPick }: {
+  title: string;
+  icon: React.ReactNode;
+  items: Product[];
+  onPick: (p: Product, side: "A" | "B") => void;
+}) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="p-4 bg-card border border-border rounded-2xl">
+      <div className="flex items-center gap-2 mb-3 text-xs font-bold text-muted-foreground">
+        {icon} {title}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {items.map((it, i) => (
+          <div key={i} className="relative">
+            <button
+              type="button"
+              onClick={() => setOpen(open === i ? null : i)}
+              className="px-3 py-1.5 text-[11px] font-bold rounded-full bg-stone-soft hover:bg-primary/10 border border-border transition-all"
+            >
+              {it.name}
+            </button>
+            {open === i && (
+              <div className="absolute z-20 top-full mt-1 right-0 bg-card border border-border rounded-xl shadow-xl p-2 min-w-[140px] flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => { onPick(it, "A"); setOpen(null); }}
+                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-primary/10 text-right"
+                >
+                  حمّل في الطرف (أ)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onPick(it, "B"); setOpen(null); }}
+                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-accent/10 text-right"
+                >
+                  حمّل في الطرف (ب)
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

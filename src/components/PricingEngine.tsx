@@ -553,21 +553,53 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ServiceStep({ ok, title, okMsg, failMsg }: { ok: boolean; title: string; okMsg: string; failMsg: string }) {
+function MarketExpertAdvice({ result, sideA, sideB }: { result: PricingResult; sideA: Product[]; sideB: Product[] }) {
+  const stronger = result.inFavorOf;
+  const gapPct = Math.round((Math.abs(result.gap) / Math.max(result.valueA, result.valueB, 1)) * 100);
+  const fair = result.fairness;
+  const namesA = sideA.map((p) => p.name).join(" + ");
+  const namesB = sideB.map((p) => p.name).join(" + ");
+
+  let headline = "";
+  let toA = "";
+  let toB = "";
+  if (fair >= 85) {
+    headline = "صفقة عادلة — أنصح بإتمامها مباشرة";
+    toA = `سعر السوق الحالي لـ«${namesA}» قريب من قيمة ما ستحصل عليه. لا تتأخر — السلع المماثلة قد تخسر 5-8% شهرياً.`;
+    toB = `قيمة ما تعرضه ≈ ما ستحصل عليه. هذه صفقة رابحة من حيث الوقت (دون عمولة بيع كامل ولا انتظار مشتري).`;
+  } else if (fair >= 65) {
+    headline = `فجوة ${gapPct}% لصالح الطرف (${stronger === "A" ? "أ" : "ب"}) — يمكن تعديلها`;
+    toA = stronger === "A"
+      ? `أنت في موقع الأقوى. الطرف (ب) يحتاج إضافة ${result.cashBalanceDI} DI نقداً أو سلعة صغيرة لتعادل الصفقة.`
+      : `يفصلك ${result.cashBalanceDI} DI عن صفقة عادلة — اعرض دفعها نقداً أو أضف سلعة بقيمة مقاربة.`;
+    toB = stronger === "B"
+      ? `قيمتك أعلى — اطلب من (أ) إضافة ${result.cashBalanceDI} DI أو خدمة مكافئة.`
+      : `أنت تكسب وقتاً وعمولة بيع. الفارق ${result.cashBalanceDI} DI صغير مقابل سرعة الإنجاز.`;
+  } else {
+    headline = "فجوة كبيرة — لا أنصح بإتمامها بهذا الشكل";
+    toA = `الفجوة ${gapPct}% كبيرة جداً. أعد التفاوض أو ابحث عن عرض مكافئ في «أُقايض/أبحث عن».`;
+    toB = `الطرف الآخر يخسر ${gapPct}% — لن يقبل غالباً. خفّض المطلوب أو أضف قيمة لجذبه.`;
+  }
+
   return (
-    <li className={`flex items-start gap-2 p-2 rounded-lg border ${ok ? "bg-primary/5 border-primary/20" : "bg-destructive/5 border-destructive/30"}`}>
-      <span className={`shrink-0 mt-0.5 size-5 rounded-full grid place-items-center ${ok ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
-        {ok ? <Check className="size-3" /> : <XCircle className="size-3" />}
-      </span>
-      <div className="flex-1">
-        <div className="font-bold text-[12px]">{title}</div>
-        <div className={`text-[11px] leading-relaxed ${ok ? "text-foreground/70" : "text-destructive"}`}>
-          {ok ? okMsg : failMsg}
+    <div className="p-4 bg-gradient-to-br from-accent/15 to-primary/10 border border-accent/30 rounded-2xl text-right space-y-3">
+      <p className="text-sm font-bold flex items-center gap-2">
+        <TrendingUp className="size-4 text-accent" />
+        نصيحة الخبير التسويقي
+      </p>
+      <p className="text-xs font-bold leading-relaxed">{headline}</p>
+      <div className="grid grid-cols-1 gap-2 text-[11px]">
+        <div className="p-2 bg-card/60 rounded-lg border border-border">
+          <span className="font-bold text-primary">إلى الطرف (أ): </span>{toA}
+        </div>
+        <div className="p-2 bg-card/60 rounded-lg border border-border">
+          <span className="font-bold text-accent">إلى الطرف (ب): </span>{toB}
         </div>
       </div>
-    </li>
+    </div>
   );
 }
+
 
 function PriceOracleWarning({ category, title, price }: { category: string; title: string; price: number }) {
   const fetchFn = useServerFn(getReferencePrice);

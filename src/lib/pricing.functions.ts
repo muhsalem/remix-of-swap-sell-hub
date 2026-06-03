@@ -146,7 +146,7 @@ export function quickShariahCheckByText(
     name: x.title, category: x.category, itemType: "good",
     unit: "قطعة", quantity: 1, condition: "good", ageMonths: 0,
     marketPricePerUnit: 1, currency: "SAR", quality: 7,
-    scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
+    scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0, distanceKm: 0,
   });
   return analyzeShariahPair(fake(a), fake(b), cashBalance);
 }

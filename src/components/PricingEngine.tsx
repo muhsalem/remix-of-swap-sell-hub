@@ -121,7 +121,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
   const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
 
-  const onCatalogPick = (_side: "A" | "B", pick: CatalogPick) => {
+  const onCatalogPick = (pick: CatalogPick) => {
     const f = pick.family;
     const product: Product = {
       name: pick.itemName,
@@ -140,11 +140,21 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       deliveryDays: f.type === "service" ? 1 : 3,
       distanceKm: 0,
     };
-    // إذا كان السطر الفارغ هو الأول → أبدله، وإلا أضف عنصر جديد
     if (items.length === 1 && !items[0].name.trim() && items[0].marketPricePerUnit === 0) {
       setItems([product]);
     } else {
       setItems([...items, product]);
+    }
+  };
+
+  const [wantsByIdx, setWantsByIdx] = useState<Record<number, string>>({});
+  const setWant = (idx: number, v: string) => setWantsByIdx({ ...wantsByIdx, [idx]: v });
+  const triggerBarter = (have: string, want: string) => {
+    if (!have.trim() || !want.trim()) return;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("badel:match", { detail: { have, want } }));
+      const el = document.getElementById("match-finder-search");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 

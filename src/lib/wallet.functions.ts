@@ -10,7 +10,7 @@ export const getWalletStats = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     const [profileRes, offersRes, reviewsRes, listingsRes] = await Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,bio,rating,trades_count,created_at").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("display_name,avatar_url,bio,rating,trades_count,created_at,account_type,company_name,company_verified").eq("id", userId).maybeSingle(),
       supabase.from("trade_offers").select("id,status,cash_balance,from_user,to_user,created_at").or(`from_user.eq.${userId},to_user.eq.${userId}`),
       supabase.from("reviews").select("id,rating,comment,created_at,reviewer_id").eq("reviewed_user", userId).order("created_at", { ascending: false }).limit(10),
       supabase.from("listings").select("id,status").eq("owner_id", userId),

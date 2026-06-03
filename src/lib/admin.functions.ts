@@ -91,3 +91,96 @@ export const resolveDispute = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+async function assertAdmin(supabase: any, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  if (!data) throw new Error("غير مصرّح: صلاحية المشرف مطلوبة");
+}
+
+export const getAdminKPIs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const [{ count: users }, { count: listings }, { count: offers }, { data: completed }, { data: fees }, { count: openDisputes }, { count: pendingKyc }] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("listings").select("*", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("trade_offers").select("*", { count: "exact", head: true }),
+      supabase.from("trade_offers").select("cash_balance,created_at").eq("status", "completed"),
+      supabase.from("platform_fees").select("amount_sar,status,created_at"),
+      supabase.from("disputes").select("*", { count: "exact", head: true }).eq("status", "open"),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("company_kyc_status", "pending"),
+    ]);
+
+    const gmv = (completed ?? []).reduce((s: number, o: any) => s + Number(o.cash_balance ?? 0), 0);
+    const totalFees = (fees ?? []).reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const dueFees = (fees ?? []).filter((f: any) => f.status === "due").reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const completionRate = offers ? Math.round(((completed?.length ?? 0) / offers) * 100) : 0;
+
+    // Trend last 30 days
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 3600 * 1000;
+    const recent = (completed ?? []).filter((o: any) => new Date(o.created_at).getTime() > thirtyDaysAgo).length;
+
+    return {
+      kpis: {
+        totalUsers: users ?? 0,
+        activeListings: listings ?? 0,
+        totalOffers: offers ?? 0,
+        completedOffers: completed?.length ?? 0,
+        completionRate,
+        gmvSAR: Math.round(gmv),
+        totalFeesSAR: Math.round(totalFees),
+        dueFeesSAR: Math.round(dueFees),
+        openDisputes: openDisputes ?? 0,
+        pendingKyc: pendingKyc ?? 0,
+        completedLast30Days: recent,
+      },
+    };
+  });
+
+export const listPendingKyc = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,display_name,company_name,commercial_register,company_kyc_status,company_kyc_doc_url,company_kyc_notes,created_at")
+      .eq("account_type", "company")
+      .in("company_kyc_status", ["pending", "rejected"])
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { profiles: data ?? [] };
+  });
+
+export const reviewKyc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({
+      profile_id: z.string().uuid(),
+      decision: z.enum(["verified", "rejected"]),
+      notes: z.string().max(500).optional().default(""),
+    }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        company_kyc_status: data.decision,
+        company_kyc_notes: data.notes,
+        company_verified: data.decision === "verified",
+      } as never)
+      .eq("id", data.profile_id);
+    if (error) throw new Error(error.message);
+    await supabase.from("notifications").insert({
+      user_id: data.profile_id,
+      type: "kyc_decision",
+      title: data.decision === "verified" ? "تم توثيق شركتك ✓" : "تم رفض طلب التوثيق",
+      body: data.notes || (data.decision === "verified" ? "مبروك! حسابك الآن موثّق." : "يرجى مراجعة الملاحظات وإعادة الإرسال."),
+      link: "/profile",
+    });
+    return { ok: true };
+  });

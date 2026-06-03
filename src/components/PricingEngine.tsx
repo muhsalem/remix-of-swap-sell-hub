@@ -273,8 +273,6 @@ export function PricingEngine() {
                 )}
               </div>
             )}
-          </div>
-        </div>
 
             {serviceBarter && (
               <div className="p-4 bg-card rounded-2xl border border-accent/30 text-right">

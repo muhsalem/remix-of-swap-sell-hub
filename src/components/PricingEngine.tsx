@@ -252,20 +252,20 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
         </div>
       </div>
 
-      {/* ============ Items list ============ */}
-      <div className="p-5 md:p-7 bg-card">
-        <div className="flex items-center justify-between mb-4">
+      {/* ============ Items list + Catalog ============ */}
+      <div className="p-5 md:p-7 bg-card space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-xl grid place-items-center bg-primary/10 text-primary">
+            <div className="size-9 rounded-xl grid place-items-center bg-primary/10 text-primary">
               <Package2 className="size-4" />
             </div>
-            <h4 className="font-bold text-sm">ممتلكاتك ({items.length})</h4>
+            <h4 className="font-extrabold text-base">ممتلكاتي ({items.length})</h4>
           </div>
           {!autoCalc && (
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
+              className="px-4 py-2 rounded-xl text-xs font-extrabold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
             >
               {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
               احسب القيمة
@@ -273,12 +273,17 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           )}
         </div>
 
+        <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} compact />
+
         <div className="space-y-2">
           {items.map((p, i) => (
             <ItemRow
               key={i}
               index={i}
               product={p}
+              wantValue={wantsByIdx[i] || ""}
+              onWantChange={(v) => setWant(i, v)}
+              onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
               onUpdate={(np) => updateItem(i, np)}
               onRemove={items.length > 1 ? () => removeItem(i) : undefined}
             />
@@ -286,9 +291,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
 
           <button
             type="button" onClick={addItem} disabled={items.length >= 5}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 text-xs font-bold transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 text-sm font-extrabold transition-all disabled:opacity-50"
           >
-            <Plus className="size-3.5" /> أضف عنصر آخر ({items.length}/5)
+            <Plus className="size-4" /> أضف عنصر يدوياً ({items.length}/5)
           </button>
         </div>
       </div>

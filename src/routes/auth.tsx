@@ -43,6 +43,11 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        if (!acceptedTerms) {
+          toast.error("يجب الموافقة على الشروط وسياسة الخصوصية للمتابعة");
+          setLoading(false);
+          return;
+        }
         const displayName = accountType === "company"
           ? (companyName || name || email.split("@")[0])
           : (name || email.split("@")[0]);
@@ -54,6 +59,8 @@ function AuthPage() {
               display_name: displayName,
               account_type: accountType,
               company_name: accountType === "company" ? companyName : null,
+              terms_accepted: "true",
+              terms_version: TERMS_VERSION,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },

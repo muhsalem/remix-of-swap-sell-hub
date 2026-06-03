@@ -214,7 +214,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
         }} />
         <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
           <div className="md:col-span-7">
-            <div className="text-[10px] uppercase tracking-[0.2em] opacity-70 font-bold mb-1">القيمة الإجمالية المقدّرة</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] opacity-80 font-extrabold mb-1">القيمة الإجمالية المقدّرة</div>
             <div className="flex items-baseline gap-3 flex-wrap">
               <span className="font-display text-4xl md:text-5xl font-extrabold tabular-nums leading-none">
                 {result ? valueSAR.toLocaleString() : "—"}

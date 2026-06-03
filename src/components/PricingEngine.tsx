@@ -417,6 +417,14 @@ function ItemRow({
         <ConditionPill product={product} onUpdate={onUpdate} />
       </div>
 
+      {/* Barter bar */}
+      <BarterBar
+        product={product}
+        wantValue={wantValue}
+        onWantChange={onWantChange}
+        onBarter={onBarter}
+      />
+
       {/* Expanded advanced section */}
       {isOpen && (
         <div className="border-t border-border p-3 space-y-3 bg-stone-soft/40 rounded-b-2xl">

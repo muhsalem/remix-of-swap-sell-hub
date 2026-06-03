@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
-import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle } from "lucide-react";
+import { getReferencePrice } from "@/lib/price-oracle.functions";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle, TrendingUp } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -521,6 +522,8 @@ function ProductCard({
           onChange={(e) => setProduct({ ...product, marketPricePerUnit: Number(e.target.value) || 0 })}
           className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none" />
       </Field>
+      <PriceOracleWarning category={product.category} title={product.name} price={product.marketPricePerUnit} />
+
 
       <button
         type="button"

@@ -26,6 +26,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

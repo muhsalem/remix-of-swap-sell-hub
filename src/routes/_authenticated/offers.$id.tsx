@@ -6,10 +6,11 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getOffer, respondToOffer, sendMessage, submitReview } from "@/lib/offers.functions";
 import { openDispute, listOfferDisputes } from "@/lib/disputes.functions";
+import { setShipping, confirmDelivery } from "@/lib/logistics.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
-import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle } from "lucide-react";
+import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle, Truck } from "lucide-react";
 
 const offerQuery = (id: string) =>
   queryOptions({ queryKey: ["offer", id], queryFn: () => getOffer({ data: { id } }) });

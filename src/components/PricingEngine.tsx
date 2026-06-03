@@ -23,6 +23,12 @@ type Product = {
   locationTier: "tier1" | "tier2" | "tier3" | "rural";
   riskLevel: "low" | "medium" | "high";
   deliveryDays: number;
+  distanceKm: number;
+};
+
+// خريطة ربط الحالة بالجودة الافتراضية (يمكن للمستخدم تعديلها يدويًا بعد ذلك)
+const CONDITION_TO_QUALITY: Record<Product["condition"], number> = {
+  "new": 10, "like-new": 9, "excellent": 8, "good": 6, "fair": 4,
 };
 
 const CONDITIONS = [

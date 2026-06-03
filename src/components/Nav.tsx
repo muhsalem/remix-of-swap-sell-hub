@@ -1,11 +1,24 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox, Wallet, History } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { checkIsAdmin } from "@/lib/admin.functions";
 
 export function Nav() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const checkAdmin = useServerFn(checkIsAdmin);
+  const { data: adminData } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => checkAdmin(),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+  const isAdmin = adminData?.isAdmin ?? false;
+
+
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -53,6 +66,15 @@ export function Nav() {
               >
                 <Wallet className="size-4" /> محفظتي
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin/disputes"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20"
+                  title="لوحة المشرف"
+                >
+                  <ShieldAlert className="size-4" />
+                </Link>
+              )}
               <NotificationBell />
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}

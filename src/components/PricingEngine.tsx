@@ -490,7 +490,10 @@ function ProductCard({
           <div className="grid grid-cols-2 gap-2">
             <Field label="الحالة">
               <select value={product.condition}
-                onChange={(e) => setProduct({ ...product, condition: e.target.value as Product["condition"] })}
+                onChange={(e) => {
+                  const newCondition = e.target.value as Product["condition"];
+                  setProduct({ ...product, condition: newCondition, quality: CONDITION_TO_QUALITY[newCondition] });
+                }}
                 className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none">
                 {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>

@@ -345,12 +345,15 @@ function Row({ label, v }: { label: string; v: number | string }) {
 // Item row — compact inline, expands details
 // ============================================================
 function ItemRow({
-  index, product, onUpdate, onRemove,
+  index, product, onUpdate, onRemove, wantValue, onWantChange, onBarter,
 }: {
   index: number;
   product: Product;
   onUpdate: (p: Product) => void;
   onRemove?: () => void;
+  wantValue: string;
+  onWantChange: (v: string) => void;
+  onBarter: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(index === 0);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);

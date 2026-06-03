@@ -3,6 +3,8 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, ShoppingBag, Tag, Sparkles, ArrowLeftRight } from "lucide-react";
 import { PricingEngine } from "@/components/PricingEngine";
+import { MatchFinder } from "@/components/MatchFinder";
+import { Calculator, Repeat2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";

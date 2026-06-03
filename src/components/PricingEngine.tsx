@@ -632,9 +632,14 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
     <div className={`text-[11px] p-2 rounded-lg border flex items-start gap-2 ${abnormal ? "bg-destructive/5 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20"}`}>
       <TrendingUp className="size-3.5 mt-0.5 shrink-0" />
       <div className="flex-1">
-        <div className="font-bold">مرجع السوق ({ref.count} عرض)</div>
+        <div className="font-bold">مرجع السوق ({ref.count} عرض مماثل)</div>
         <div>المتوسط: {ref.avg.toLocaleString()} — المدى: {ref.min?.toLocaleString()} ~ {ref.max?.toLocaleString()}</div>
-        {abnormal && <div className="font-bold mt-0.5">⚠ سعرك يختلف بنسبة {diff.toFixed(0)}% عن السوق</div>}
+        {abnormal && (
+          <div className="mt-1 space-y-0.5">
+            <div className="font-bold">⚠ سعرك {diff > 0 ? "أعلى" : "أقل"} من السوق بنسبة {Math.abs(diff).toFixed(0)}%</div>
+            <div className="font-bold">💡 السعر العادل المقترح: {Math.round(ref.avg).toLocaleString()}</div>
+          </div>
+        )}
       </div>
     </div>
   );

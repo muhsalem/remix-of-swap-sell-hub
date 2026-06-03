@@ -67,18 +67,47 @@ const DEFAULT_SERVICE: Product = {
 
 const SHARIAH_MODE = true; // مفعّل تلقائياً — لا يُعرض للمستخدم
 
+// عملة افتراضية بحسب لغة المتصفح
+function detectCurrency(): string {
+  if (typeof navigator === "undefined") return "SAR";
+  const lang = (navigator.language || "ar-SA").toLowerCase();
+  if (lang.includes("-eg")) return "EGP";
+  if (lang.includes("-ae")) return "AED";
+  if (lang.includes("-kw")) return "KWD";
+  if (lang.includes("-qa")) return "QAR";
+  if (lang.includes("-gb")) return "GBP";
+  if (lang.includes("-us")) return "USD";
+  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
+  return "SAR";
+}
+
+// عينات تجربة: 5 سلع + 5 خدمات
+const SAMPLE_GOODS: Product[] = [
+  { name: "آيفون 13 برو 256GB", category: "هواتف", itemType: "good", unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 18, marketPricePerUnit: 2800, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
+  { name: "ماك بوك إير M2", category: "حواسيب", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 12, marketPricePerUnit: 4200, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
+  { name: "ساعة أبل سيريز 8", category: "ساعات", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 24, marketPricePerUnit: 950, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3 },
+  { name: "كاميرا سوني A7 III", category: "كاميرات", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 20, marketPricePerUnit: 5500, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "medium", deliveryDays: 3 },
+  { name: "دراجة كهربائية", category: "وسائل تنقل", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 10, marketPricePerUnit: 2100, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "medium", deliveryDays: 5 },
+];
+const SAMPLE_SERVICES: Product[] = [
+  { name: "تصميم هوية بصرية كاملة", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 1800, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 7 },
+  { name: "استشارة قانونية متخصصة", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0, marketPricePerUnit: 350, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1 },
+  { name: "تطوير موقع ويب 5 صفحات", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 3500, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "medium", deliveryDays: 14 },
+  { name: "دروس خصوصية رياضيات", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 10, condition: "new", ageMonths: 0, marketPricePerUnit: 80, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 1 },
+  { name: "تصوير حفل زفاف", category: "خدمات يدوية", itemType: "service", unit: "حدث", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 2200, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 5 },
+];
+
 export function PricingEngine() {
-  const [sideA, setSideA] = useState<Product[]>([DEFAULT_A]);
-  const [sideB, setSideB] = useState<Product[]>([DEFAULT_B]);
-  const [serviceBarter, setServiceBarter] = useState(false);
+  const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
+  const [sideA, setSideA] = useState<Product[]>([{ ...DEFAULT_A, currency: defaultCurrency }]);
+  const [sideB, setSideB] = useState<Product[]>([{ ...DEFAULT_B, currency: defaultCurrency }]);
   const [result, setResult] = useState<PricingResult | null>(null);
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { sideA, sideB, shariahMode: SHARIAH_MODE, serviceBarter } }),
+    mutationFn: () => fn({ data: { sideA, sideB, shariahMode: SHARIAH_MODE, serviceBarter: false } }),
     onSuccess: (r) => {
       setResult(r);
-      // ربط النتيجة بصفحة البروفايل
       try {
         sessionStorage.setItem("lastAnalysis", JSON.stringify({
           at: Date.now(),
@@ -88,7 +117,6 @@ export function PricingEngine() {
           recommendation: r.recommendation,
           shariahLevel: r.shariah.level,
           shariahRule: r.shariah.rule,
-          serviceBarter,
         }));
       } catch { /* ignore */ }
     },
@@ -98,21 +126,8 @@ export function PricingEngine() {
   const fairnessColor =
     fairness >= 85 ? "text-primary" : fairness >= 65 ? "text-accent" : "text-destructive";
 
-  // شروط صحة مقايضة الخدمات — تُحسب لحظياً
-  const serviceChecks = (() => {
-    const all = [...sideA, ...sideB];
-    const allServices = all.every((p) => p.itemType === "service" || p.itemType === "labor_hours");
-    const benefitDefined = all.every((p) => p.name.trim().length >= 3 && p.category.startsWith("خدمات"));
-    const termKnown = all.every((p) => p.deliveryDays > 0);
-    const hoursA = sideA.reduce((s, p) => s + p.quantity, 0);
-    const hoursB = sideB.reduce((s, p) => s + p.quantity, 0);
-    const gap = Math.abs(hoursA - hoursB) / Math.max(hoursA, hoursB, 1);
-    const timeBalanced = gap <= 0.25;
-    return { allServices, benefitDefined, termKnown, timeBalanced, hoursA, hoursB, gap };
-  })();
-
   const addToSide = (side: "A" | "B") => {
-    const def = serviceBarter ? DEFAULT_SERVICE : { ...DEFAULT_B, name: "سلعة إضافية" };
+    const def = { ...DEFAULT_B, name: "سلعة إضافية", currency: defaultCurrency };
     if (side === "A") setSideA([...sideA, def]); else setSideB([...sideB, def]);
   };
   const removeFromSide = (side: "A" | "B", idx: number) => {
@@ -124,19 +139,11 @@ export function PricingEngine() {
     else setSideB(sideB.map((x, i) => i === idx ? p : x));
   };
 
-  // تطبيق وضع الخدمات تلقائياً — يحول كل العناصر إلى خدمة
-  const toggleServiceBarter = () => {
-    const next = !serviceBarter;
-    setServiceBarter(next);
-    if (next) {
-      const asService = (p: Product): Product => ({
-        ...p, itemType: "service", category: p.category.startsWith("خدمات") ? p.category : "خدمات مهنية",
-        unit: p.unit === "قطعة" ? "ساعة" : p.unit, deliveryDays: Math.max(1, p.deliveryDays),
-      });
-      setSideA(sideA.map(asService));
-      setSideB(sideB.map(asService));
-    }
+  const loadSample = (side: "A" | "B", item: Product) => {
+    const p = { ...item, currency: defaultCurrency };
+    if (side === "A") setSideA([p]); else setSideB([p]);
   };
+
 
   return (
     <section className="animate-in bg-card rounded-3xl ring-1 ring-black/5 shadow-2xl overflow-hidden mb-16">

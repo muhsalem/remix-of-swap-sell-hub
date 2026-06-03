@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox, Wallet, History, AlertTriangle } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet, History } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 export function Nav() {

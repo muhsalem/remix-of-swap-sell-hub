@@ -207,12 +207,17 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           commercial_register: string | null
+          company_kyc_doc_url: string | null
+          company_kyc_notes: string | null
+          company_kyc_status: Database["public"]["Enums"]["kyc_status"]
           company_name: string | null
           company_verified: boolean
           created_at: string
           display_name: string
           id: string
           rating: number | null
+          terms_accepted_at: string | null
+          terms_version: string | null
           trades_count: number | null
           updated_at: string
         }
@@ -221,12 +226,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           commercial_register?: string | null
+          company_kyc_doc_url?: string | null
+          company_kyc_notes?: string | null
+          company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
           created_at?: string
           display_name: string
           id: string
           rating?: number | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
         }
@@ -235,12 +245,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           commercial_register?: string | null
+          company_kyc_doc_url?: string | null
+          company_kyc_notes?: string | null
+          company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
           created_at?: string
           display_name?: string
           id?: string
           rating?: number | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
         }
@@ -399,6 +414,7 @@ export type Database = {
       account_type: "individual" | "company"
       app_role: "admin" | "moderator" | "user"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
+      kyc_status: "none" | "pending" | "verified" | "rejected"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
       offer_status:
@@ -537,6 +553,7 @@ export const Constants = {
       account_type: ["individual", "company"],
       app_role: ["admin", "moderator", "user"],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
+      kyc_status: ["none", "pending", "verified", "rejected"],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],
       offer_status: [

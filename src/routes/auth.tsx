@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { TERMS_VERSION } from "./legal.$doc";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -25,6 +26,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -41,6 +43,11 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        if (!acceptedTerms) {
+          toast.error("يجب الموافقة على الشروط وسياسة الخصوصية للمتابعة");
+          setLoading(false);
+          return;
+        }
         const displayName = accountType === "company"
           ? (companyName || name || email.split("@")[0])
           : (name || email.split("@")[0]);
@@ -52,6 +59,8 @@ function AuthPage() {
               display_name: displayName,
               account_type: accountType,
               company_name: accountType === "company" ? companyName : null,
+              terms_accepted: "true",
+              terms_version: TERMS_VERSION,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
@@ -202,9 +211,27 @@ function AuthPage() {
                 className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border focus:ring-2 ring-primary/30 outline-none text-sm"
               />
             </Field>
+            {mode === "signup" && (
+              <label className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 size-4 accent-primary"
+                />
+                <span>
+                  أوافق على{" "}
+                  <Link to="/legal/$doc" params={{ doc: "terms" }} target="_blank" className="text-primary font-bold hover:underline">شروط الاستخدام</Link>
+                  {" "}و{" "}
+                  <Link to="/legal/$doc" params={{ doc: "privacy" }} target="_blank" className="text-primary font-bold hover:underline">سياسة الخصوصية</Link>
+                  {" "}و{" "}
+                  <Link to="/legal/$doc" params={{ doc: "anti-riba" }} target="_blank" className="text-primary font-bold hover:underline">سياسة مكافحة الربا</Link>.
+                </span>
+              </label>
+            )}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === "signup" && !acceptedTerms)}
               className="w-full px-4 py-3 bg-foreground text-background rounded-xl font-bold text-sm hover:bg-primary transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="size-4 animate-spin" />}

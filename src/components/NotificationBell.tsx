@@ -2,24 +2,39 @@ import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { listNotifications, markNotificationRead } from "@/lib/notifications.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const fetchFn = useServerFn(listNotifications);
-  const markFn = useServerFn(markNotificationRead);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const { data } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => fetchFn(),
+    queryKey: ["notifications", user?.id],
+    queryFn: async () => {
+      if (!user) return { items: [], unread: 0 };
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw new Error(error.message);
+      const items = data ?? [];
+      return { items, unread: items.filter((n: any) => !n.read).length };
+    },
     enabled: !!user,
     refetchInterval: 60_000,
   });
+
+  const markRead = async (id?: string) => {
+    if (!user) return;
+    let query = supabase.from("notifications").update({ read: true }).eq("user_id", user.id);
+    if (id) query = query.eq("id", id);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -58,7 +73,7 @@ export function NotificationBell() {
             <span className="font-bold text-sm">الإشعارات</span>
             {unread > 0 && (
               <button
-                onClick={async () => { await markFn({ data: { all: true } }); qc.invalidateQueries({ queryKey: ["notifications"] }); }}
+                onClick={async () => { await markRead(); qc.invalidateQueries({ queryKey: ["notifications", user.id] }); }}
                 className="text-xs text-primary hover:underline"
               >
                 تعليم الكل كمقروء
@@ -73,7 +88,7 @@ export function NotificationBell() {
                 <Link
                   key={n.id}
                   to={n.link ?? "/"}
-                  onClick={async () => { if (!n.read) await markFn({ data: { id: n.id } }); setOpen(false); qc.invalidateQueries({ queryKey: ["notifications"] }); }}
+                  onClick={async () => { if (!n.read) await markRead(n.id); setOpen(false); qc.invalidateQueries({ queryKey: ["notifications", user.id] }); }}
                   className={`block px-4 py-3 text-sm border-b border-border hover:bg-stone-soft ${!n.read ? "bg-primary/5" : ""}`}
                 >
                   <div className="font-bold text-xs">{n.title}</div>

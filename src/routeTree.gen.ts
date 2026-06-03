@@ -21,6 +21,7 @@ import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -83,6 +84,12 @@ const AuthenticatedOfferListingIdRoute =
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminDisputesRoute =
+  AuthenticatedAdminDisputesRouteImport.update({
+    id: '/admin/disputes',
+    path: '/admin/disputes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -107,6 +115,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -122,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/transactions'
     | '/listings/$id'
+    | '/admin/disputes'
     | '/offer/$listingId'
     | '/offers/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/transactions'
     | '/listings/$id'
+    | '/admin/disputes'
     | '/offer/$listingId'
     | '/offers/$id'
   id:
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/transactions'
     | '/listings/$id'
+    | '/_authenticated/admin/disputes'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
   fileRoutesById: FileRoutesById
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/disputes': {
+      id: '/_authenticated/admin/disputes'
+      path: '/admin/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AuthenticatedAdminDisputesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -282,6 +302,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
+  AuthenticatedAdminDisputesRoute: typeof AuthenticatedAdminDisputesRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
 }
 
@@ -292,6 +313,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
+  AuthenticatedAdminDisputesRoute: AuthenticatedAdminDisputesRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
 }
 
@@ -307,3 +329,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

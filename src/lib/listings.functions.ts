@@ -64,6 +64,34 @@ export const createListing = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    // Price Oracle auto-alert: warn owner if price deviates >30% from market avg
+    try {
+      const key = data.title.toLowerCase().trim();
+      const { data: history } = await supabase
+        .from("price_history")
+        .select("price")
+        .eq("category", data.category)
+        .eq("title_key", key)
+        .order("recorded_at", { ascending: false })
+        .limit(30);
+      const prices = (history ?? []).map((r: any) => Number(r.price)).filter((n) => n > 0);
+      if (prices.length >= 3) {
+        const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+        const dev = Math.abs(data.market_price - avg) / avg;
+        if (dev > 0.3) {
+          const direction = data.market_price > avg ? "أعلى" : "أقل";
+          await supabase.from("notifications").insert({
+            user_id: userId,
+            type: "price_alert",
+            title: "تنبيه: سعر منتجك خارج المتوسط",
+            body: `سعرك (${data.market_price} ر.س) ${direction} من متوسط السوق (${Math.round(avg)} ر.س) بنسبة ${Math.round(dev * 100)}%.`,
+            link: `/listings/${row.id}`,
+          });
+        }
+      }
+    } catch { /* non-blocking */ }
+
     return { id: row.id };
   });
 

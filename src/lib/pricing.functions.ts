@@ -252,9 +252,12 @@ function valueWithBreakdown(p: Product): ValueBreakdown {
   const locationFactor = LOCATION_FACTOR[p.locationTier];
   const riskFactor = RISK_FACTOR[p.riskLevel];
   const timeFactor = Math.max(0.85, 1 - p.deliveryDays * 0.004);
+  // خصم تكلفة الشحن التقديرية حسب المسافة (~ 0.5 ر.س/كم، يبدأ بعد 50 كم، حد أقصى 15% من القيمة)
+  const shippingSAR = p.distanceKm > 50 ? Math.min(baseSAR * 0.15, (p.distanceKm - 50) * 0.5) : 0;
+  const shippingFactor = baseSAR > 0 ? Math.max(0.85, 1 - shippingSAR / baseSAR) : 1;
   const finalSAR = Math.round(
     baseSAR * cond * ageFactor * qualityFactor * scarcityFactor *
-      locationFactor * riskFactor * timeFactor * profile.demand,
+      locationFactor * riskFactor * timeFactor * shippingFactor * profile.demand,
   );
   return {
     base: p.marketPricePerUnit,

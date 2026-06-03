@@ -3,7 +3,7 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getWalletStats } from "@/lib/wallet.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
-import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban } from "lucide-react";
+import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 
@@ -79,11 +79,30 @@ function ProfilePage() {
           {(profile?.display_name ?? "U").slice(0, 1).toUpperCase()}
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-extrabold">{profile?.display_name ?? "مستخدم"}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-extrabold">
+              {profile?.account_type === "company" && profile?.company_name
+                ? profile.company_name
+                : profile?.display_name ?? "مستخدم"}
+            </h1>
+            {profile?.account_type === "company" ? (
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-accent/15 text-accent-foreground font-bold border border-accent/30">
+                <Building2 className="size-3" /> شركة
+                {profile?.company_verified && <BadgeCheck className="size-3 text-primary" />}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-stone-soft text-muted-foreground font-bold">
+                <UserIcon className="size-3" /> فرد
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-bold">
               <Award className="size-3" /> {trustLevel}
             </span>
+            {profile?.account_type === "company" && profile?.display_name && (
+              <span className="text-xs text-muted-foreground">المسؤول: {profile.display_name}</span>
+            )}
             {profile?.bio ? <span className="text-sm text-muted-foreground">{profile.bio}</span> : null}
           </div>
         </div>

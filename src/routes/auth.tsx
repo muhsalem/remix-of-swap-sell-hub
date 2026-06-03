@@ -19,9 +19,11 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [accountType, setAccountType] = useState<"individual" | "company">("individual");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,11 +41,18 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const displayName = accountType === "company"
+          ? (companyName || name || email.split("@")[0])
+          : (name || email.split("@")[0]);
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { display_name: name || email.split("@")[0] },
+            data: {
+              display_name: displayName,
+              account_type: accountType,
+              company_name: accountType === "company" ? companyName : null,
+            },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
@@ -122,16 +131,57 @@ function AuthPage() {
 
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
-              <Field label="الاسم">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  maxLength={60}
-                  className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border focus:ring-2 ring-primary/30 outline-none text-sm"
-                />
-              </Field>
+              <>
+                <div>
+                  <label className="text-[11px] uppercase tracking-widest text-muted-foreground block mb-1.5 font-bold">نوع الحساب</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("individual")}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                        accountType === "individual"
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-stone-soft border-border hover:bg-stone-soft/70"
+                      }`}
+                    >
+                      فرد
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("company")}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                        accountType === "company"
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-stone-soft border-border hover:bg-stone-soft/70"
+                      }`}
+                    >
+                      شركة
+                    </button>
+                  </div>
+                </div>
+                {accountType === "company" && (
+                  <Field label="اسم الشركة">
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      required
+                      maxLength={120}
+                      className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border focus:ring-2 ring-primary/30 outline-none text-sm"
+                    />
+                  </Field>
+                )}
+                <Field label={accountType === "company" ? "اسم المسؤول" : "الاسم"}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={60}
+                    className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border focus:ring-2 ring-primary/30 outline-none text-sm"
+                  />
+                </Field>
+              </>
             )}
             <Field label="البريد الإلكتروني">
               <input

@@ -76,21 +76,7 @@ function detectCurrency(): string {
   return "SAR";
 }
 
-// عينات تجربة: 5 سلع + 5 خدمات
-const SAMPLE_GOODS: Product[] = [
-  { name: "آيفون 13 برو 256GB", category: "هواتف", itemType: "good", unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 18, marketPricePerUnit: 2800, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
-  { name: "ماك بوك إير M2", category: "حواسيب", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 12, marketPricePerUnit: 4200, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
-  { name: "ساعة أبل سيريز 8", category: "ساعات", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 24, marketPricePerUnit: 950, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3 },
-  { name: "كاميرا سوني A7 III", category: "كاميرات", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 20, marketPricePerUnit: 5500, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "medium", deliveryDays: 3 },
-  { name: "دراجة كهربائية", category: "وسائل تنقل", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 10, marketPricePerUnit: 2100, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "medium", deliveryDays: 5 },
-];
-const SAMPLE_SERVICES: Product[] = [
-  { name: "تصميم هوية بصرية كاملة", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 1800, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 7 },
-  { name: "استشارة قانونية متخصصة", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0, marketPricePerUnit: 350, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1 },
-  { name: "تطوير موقع ويب 5 صفحات", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 3500, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "medium", deliveryDays: 14 },
-  { name: "دروس خصوصية رياضيات", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 10, condition: "new", ageMonths: 0, marketPricePerUnit: 80, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 1 },
-  { name: "تصوير حفل زفاف", category: "خدمات يدوية", itemType: "service", unit: "حدث", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 2200, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 5 },
-];
+// (تم الاستغناء عن العينات الجاهزة لصالح كتالوج التصنيف الرباعي)
 
 export function PricingEngine() {
   const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";

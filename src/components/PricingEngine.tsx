@@ -539,6 +539,11 @@ function ProductCard({
                 className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none" />
             </Field>
           </div>
+          <Field label={`المسافة بين الطرفين: ${product.distanceKm} كم ${product.distanceKm > 50 ? "(يُحسب خصم شحن)" : ""}`}>
+            <input type="number" min={0} max={5000} step={10} value={product.distanceKm}
+              onChange={(e) => setProduct({ ...product, distanceKm: Number(e.target.value) || 0 })}
+              className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none" />
+          </Field>
         </div>
       )}
     </div>

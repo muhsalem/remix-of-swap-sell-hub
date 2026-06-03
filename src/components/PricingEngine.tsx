@@ -186,14 +186,14 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </span>
               )}
             </div>
-            <h3 className="font-display text-xl md:text-2xl font-extrabold tracking-tight leading-tight">
+            <h3 className="font-display text-2xl md:text-3xl font-black tracking-tight leading-tight">
               محرّك التسعير العادل
             </h3>
-            <p className="text-muted-foreground mt-1 text-xs md:text-sm">
-              ابدأ من الكتالوج، اضبط القيمة، اعرف ما تملكه يساوي كم.
+            <p className="text-foreground/70 mt-1 text-sm md:text-base font-bold">
+              اختر من الكتالوج، اضبط القيمة، واعرض ما تريده بالمقابل.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-xs bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
+          <label className="flex items-center gap-2 text-xs font-extrabold bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
             <input
               type="checkbox" checked={autoCalc}
               onChange={(e) => setAutoCalc(e.target.checked)}
@@ -203,7 +203,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             حساب تلقائي
           </label>
         </div>
-        <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} />
       </div>
 
       {/* ============ Hero value display ============ */}

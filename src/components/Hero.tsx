@@ -15,12 +15,17 @@ export function Hero() {
               <Sparkles className="size-3" /> أول منصة مقايضة ذكية في العالم العربي
             </div>
             <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
-              قايِض ما لا تحتاج،
+              بدّل ما تملك
               <br />
-              <span className="text-primary">بقيمته الحقيقية.</span>
+              بما تحتاج{" "}
+              <span className="relative inline-block text-primary">
+                بسهولة
+                <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
+              </span>
+              .
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
-              منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير مدعوم بالذكاء الاصطناعي يقيس قيمة كل منتج وعدالة كل مقايضة.
+              منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير ذكي يقيس قيمة كل سلعة وعدالة كل مقايضة بأربعة مستويات تصنيف دولية.
             </p>
             <div className="flex flex-wrap gap-3 mb-10">
               <Link

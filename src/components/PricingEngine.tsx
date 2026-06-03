@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
-import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, TrendingUp, Package, Wrench } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, TrendingUp } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
+import { CatalogPicker, type CatalogPick } from "@/components/CatalogPicker";
 
 type Product = {
   name: string;
@@ -75,21 +76,7 @@ function detectCurrency(): string {
   return "SAR";
 }
 
-// عينات تجربة: 5 سلع + 5 خدمات
-const SAMPLE_GOODS: Product[] = [
-  { name: "آيفون 13 برو 256GB", category: "هواتف", itemType: "good", unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 18, marketPricePerUnit: 2800, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
-  { name: "ماك بوك إير M2", category: "حواسيب", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 12, marketPricePerUnit: 4200, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
-  { name: "ساعة أبل سيريز 8", category: "ساعات", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 24, marketPricePerUnit: 950, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3 },
-  { name: "كاميرا سوني A7 III", category: "كاميرات", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 20, marketPricePerUnit: 5500, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "medium", deliveryDays: 3 },
-  { name: "دراجة كهربائية", category: "وسائل تنقل", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 10, marketPricePerUnit: 2100, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "medium", deliveryDays: 5 },
-];
-const SAMPLE_SERVICES: Product[] = [
-  { name: "تصميم هوية بصرية كاملة", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 1800, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 7 },
-  { name: "استشارة قانونية متخصصة", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0, marketPricePerUnit: 350, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1 },
-  { name: "تطوير موقع ويب 5 صفحات", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 3500, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "medium", deliveryDays: 14 },
-  { name: "دروس خصوصية رياضيات", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 10, condition: "new", ageMonths: 0, marketPricePerUnit: 80, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 1 },
-  { name: "تصوير حفل زفاف", category: "خدمات يدوية", itemType: "service", unit: "حدث", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 2200, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 5 },
-];
+// (تم الاستغناء عن العينات الجاهزة لصالح كتالوج التصنيف الرباعي)
 
 export function PricingEngine() {
   const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
@@ -133,9 +120,26 @@ export function PricingEngine() {
     else setSideB(sideB.map((x, i) => i === idx ? p : x));
   };
 
-  const loadSample = (side: "A" | "B", item: Product) => {
-    const p = { ...item, currency: defaultCurrency };
-    if (side === "A") setSideA([p]); else setSideB([p]);
+
+  const onCatalogPick = (side: "A" | "B", pick: CatalogPick) => {
+    const f = pick.family;
+    const product: Product = {
+      name: pick.itemName,
+      category: f.category,
+      itemType: (f.itemType === "real-estate" ? "good" : f.itemType) as Product["itemType"],
+      unit: f.defaultUnit,
+      quantity: 1,
+      condition: f.dep ? "good" : "new",
+      ageMonths: f.dep ? 12 : 0,
+      marketPricePerUnit: 0,
+      currency: defaultCurrency,
+      quality: 8,
+      scarcity: f.mkt === "spec" ? "high" : f.mkt === "uns" ? "abundant" : "normal",
+      locationTier: "tier1",
+      riskLevel: f.dep ? "medium" : "low",
+      deliveryDays: f.type === "service" ? 1 : 3,
+    };
+    if (side === "A") setSideA([product]); else setSideB([product]);
   };
 
 
@@ -159,22 +163,12 @@ export function PricingEngine() {
           </div>
         </div>
 
-        {/* عينات تجربة سريعة */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SamplePicker
-            title="جرّب على سلعة"
-            icon={<Package className="size-3.5" />}
-            items={SAMPLE_GOODS}
-            onPick={(p, side) => loadSample(side, p)}
-          />
-          <SamplePicker
-            title="جرّب على خدمة"
-            icon={<Wrench className="size-3.5" />}
-            items={SAMPLE_SERVICES}
-            onPick={(p, side) => loadSample(side, p)}
-          />
+        {/* كتالوج التصنيف الرباعي */}
+        <div className="mt-6">
+          <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} />
         </div>
       </div>
+
 
       {/* الطرفان مع الزر في المنتصف */}
       <div className="grid grid-cols-1 lg:grid-cols-12">
@@ -626,53 +620,6 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
         <div className="font-bold">مرجع السوق ({ref.count} عرض)</div>
         <div>المتوسط: {ref.avg.toLocaleString()} — المدى: {ref.min?.toLocaleString()} ~ {ref.max?.toLocaleString()}</div>
         {abnormal && <div className="font-bold mt-0.5">⚠ سعرك يختلف بنسبة {diff.toFixed(0)}% عن السوق</div>}
-      </div>
-    </div>
-  );
-}
-
-function SamplePicker({ title, icon, items, onPick }: {
-  title: string;
-  icon: React.ReactNode;
-  items: Product[];
-  onPick: (p: Product, side: "A" | "B") => void;
-}) {
-  const [open, setOpen] = useState<number | null>(null);
-  return (
-    <div className="p-4 bg-card border border-border rounded-2xl">
-      <div className="flex items-center gap-2 mb-3 text-xs font-bold text-muted-foreground">
-        {icon} {title}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((it, i) => (
-          <div key={i} className="relative">
-            <button
-              type="button"
-              onClick={() => setOpen(open === i ? null : i)}
-              className="px-3 py-1.5 text-[11px] font-bold rounded-full bg-stone-soft hover:bg-primary/10 border border-border transition-all"
-            >
-              {it.name}
-            </button>
-            {open === i && (
-              <div className="absolute z-20 top-full mt-1 right-0 bg-card border border-border rounded-xl shadow-xl p-2 min-w-[140px] flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => { onPick(it, "A"); setOpen(null); }}
-                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-primary/10 text-right"
-                >
-                  حمّل في الطرف (أ)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { onPick(it, "B"); setOpen(null); }}
-                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-accent/10 text-right"
-                >
-                  حمّل في الطرف (ب)
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
       </div>
     </div>
   );

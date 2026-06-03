@@ -26,7 +26,7 @@ export const setShipping = createServerFn({ method: "POST" })
         shipping_carrier: data.shipping_carrier,
         tracking_number: data.tracking_number,
         expected_delivery: data.expected_delivery || null,
-      })
+      } as never)
       .eq("id", data.offer_id);
     if (error) throw new Error(error.message);
     return { ok: true };

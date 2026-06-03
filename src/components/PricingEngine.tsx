@@ -598,3 +598,19 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function ServiceStep({ ok, title, okMsg, failMsg }: { ok: boolean; title: string; okMsg: string; failMsg: string }) {
+  return (
+    <li className={`flex items-start gap-2 p-2 rounded-lg border ${ok ? "bg-primary/5 border-primary/20" : "bg-destructive/5 border-destructive/30"}`}>
+      <span className={`shrink-0 mt-0.5 size-5 rounded-full grid place-items-center ${ok ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
+        {ok ? <Check className="size-3" /> : <XCircle className="size-3" />}
+      </span>
+      <div className="flex-1">
+        <div className="font-bold text-[12px]">{title}</div>
+        <div className={`text-[11px] leading-relaxed ${ok ? "text-foreground/70" : "text-destructive"}`}>
+          {ok ? okMsg : failMsg}
+        </div>
+      </div>
+    </li>
+  );
+}

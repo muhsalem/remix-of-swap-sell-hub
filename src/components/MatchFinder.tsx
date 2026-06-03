@@ -33,7 +33,7 @@ export function MatchFinder() {
   return (
     <section className="space-y-8 mb-16">
       {/* ===== Search bar ===== */}
-      <div className="bg-card rounded-3xl ring-1 ring-black/5 shadow-xl overflow-hidden">
+      <div id="match-finder-search" className="bg-card rounded-3xl ring-1 ring-black/5 shadow-xl overflow-hidden scroll-mt-20">
         <div className="p-6 md:p-8 bg-gradient-to-br from-primary/8 via-card to-accent/5 border-b border-border">
           <div className="flex items-center gap-3 mb-3">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5">

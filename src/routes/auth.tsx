@@ -183,6 +183,7 @@ function AuthPage() {
                 </Field>
               </>
             )}
+            <Field label="البريد الإلكتروني">
               <input
                 type="email"
                 value={email}

@@ -59,7 +59,7 @@ export const confirmDelivery = createServerFn({ method: "POST" })
       updates.status = "completed";
     }
 
-    const { error } = await supabase.from("trade_offers").update(updates).eq("id", data.offer_id);
+    const { error } = await supabase.from("trade_offers").update(updates as never).eq("id", data.offer_id);
     if (error) throw new Error(error.message);
     return { ok: true, completed: bothConfirmed };
   });

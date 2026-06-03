@@ -231,12 +231,7 @@ export function PricingEngine() {
               )}
             </div>
 
-            {result?.equivalence && (
-              <div className="p-3 bg-accent/10 border border-accent/20 rounded-2xl text-right">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-accent mb-1">معادلة القيمة</p>
-                <p className="text-[11px] leading-relaxed font-mono">{result.equivalence}</p>
-              </div>
-            )}
+            {result && <MarketExpertAdvice result={result} sideA={sideA} sideB={sideB} />}
 
             {result?.shariah && (
               <div className={`p-4 rounded-2xl text-right border ${

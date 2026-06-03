@@ -42,6 +42,7 @@ const ProductSchema = z.object({
   locationTier: z.enum(["tier1","tier2","tier3","rural"]).default("tier2"),
   riskLevel: z.enum(["low","medium","high"]).default("low"),
   deliveryDays: z.number().min(0).max(365).default(0),
+  distanceKm: z.number().min(0).max(20000).default(0),
 });
 
 const InputSchema = z.object({

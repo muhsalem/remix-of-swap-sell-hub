@@ -21,9 +21,9 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   head: () => ({
     meta: [
-      { title: "بادل بادل — منصة المقايضة الذكية بالذكاء الاصطناعي" },
+      { title: "بادل — منصة المقايضة الذكية بالذكاء الاصطناعي" },
       { name: "description", content: "بيع، اشترِ، أو قايض بعدالة عبر محرك تسعير ذكي مدعوم بالذكاء الاصطناعي." },
-      { property: "og:title", content: "بادل بادل — منصة المقايضة الذكية" },
+      { property: "og:title", content: "بادل — منصة المقايضة الذكية" },
       { property: "og:description", content: "بيع واشترِ وقايض بثقة وعدالة." },
     ],
   }),

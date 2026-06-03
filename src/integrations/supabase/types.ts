@@ -336,46 +336,64 @@ export type Database = {
         Row: {
           cash_balance: number | null
           created_at: string
+          delivery_confirmed_by_from: boolean
+          delivery_confirmed_by_to: boolean
+          delivery_proof_url: string | null
           escrow_locked: boolean
           escrow_released_at: string | null
+          expected_delivery: string | null
           fairness_score: number | null
           from_user: string
           id: string
           message: string | null
           offered_listing: string
           requested_listing: string
+          shipping_carrier: string | null
           status: Database["public"]["Enums"]["offer_status"]
           to_user: string
+          tracking_number: string | null
           updated_at: string
         }
         Insert: {
           cash_balance?: number | null
           created_at?: string
+          delivery_confirmed_by_from?: boolean
+          delivery_confirmed_by_to?: boolean
+          delivery_proof_url?: string | null
           escrow_locked?: boolean
           escrow_released_at?: string | null
+          expected_delivery?: string | null
           fairness_score?: number | null
           from_user: string
           id?: string
           message?: string | null
           offered_listing: string
           requested_listing: string
+          shipping_carrier?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           to_user: string
+          tracking_number?: string | null
           updated_at?: string
         }
         Update: {
           cash_balance?: number | null
           created_at?: string
+          delivery_confirmed_by_from?: boolean
+          delivery_confirmed_by_to?: boolean
+          delivery_proof_url?: string | null
           escrow_locked?: boolean
           escrow_released_at?: string | null
+          expected_delivery?: string | null
           fairness_score?: number | null
           from_user?: string
           id?: string
           message?: string | null
           offered_listing?: string
           requested_listing?: string
+          shipping_carrier?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           to_user?: string
+          tracking_number?: string | null
           updated_at?: string
         }
         Relationships: [

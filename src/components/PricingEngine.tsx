@@ -589,7 +589,7 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
 // Suggestions pool by item type
 function suggestFor(product: Product): string[] {
   const pool: string[] = [];
-  if (product.itemType === "labor_hours") {
+  if (product.itemType === "service" || product.itemType === "labor_hours") {
     pool.push(...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g12 || []), ...(CATALOG_ITEMS.g1 || []));
   } else {
     pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g10 || []), ...(CATALOG_ITEMS.s9 || []));

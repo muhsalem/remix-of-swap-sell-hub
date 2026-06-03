@@ -52,9 +52,8 @@ export const createOffer = createServerFn({ method: "POST" })
         "🚫 لا يجوز إضافة فرق نقدي عند وجود صنف ربوي (ذهب/فضة/نقد) — راجع سياسة مكافحة الربا.",
       );
     }
-    if (shariah.level === "forbidden") {
-      throw new Error(`🚫 معاملة غير شرعية — ${shariah.rule}`);
-    }
+
+
 
     const { data: row, error } = await supabase
       .from("trade_offers")

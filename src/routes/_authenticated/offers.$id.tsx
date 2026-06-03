@@ -192,6 +192,10 @@ function OfferDetailPage() {
                 {data.myReview.comment && <p className="text-xs">{data.myReview.comment}</p>}
               </div>
             )}
+
+            {(offer.status === "accepted" || offer.status === "completed") && (
+              <DisputeBlock offerId={id} disputes={disputes} qc={qc} />
+            )}
           </aside>
         </div>
       </main>

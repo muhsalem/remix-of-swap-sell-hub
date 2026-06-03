@@ -164,6 +164,22 @@ export function PricingEngine() {
             </p>
           </div>
         </div>
+
+        {/* عينات تجربة سريعة */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SamplePicker
+            title="جرّب على سلعة"
+            icon={<Package className="size-3.5" />}
+            items={SAMPLE_GOODS}
+            onPick={(p, side) => loadSample(side, p)}
+          />
+          <SamplePicker
+            title="جرّب على خدمة"
+            icon={<Wrench className="size-3.5" />}
+            items={SAMPLE_SERVICES}
+            onPick={(p, side) => loadSample(side, p)}
+          />
+        </div>
       </div>
 
       {/* الطرفان مع الزر في المنتصف */}

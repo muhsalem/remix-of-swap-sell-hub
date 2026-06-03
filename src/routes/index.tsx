@@ -196,9 +196,9 @@ function Index() {
           )}
         </section>
 
-        {/* محرك التسعير */}
+        {/* محرك التسعير + باحث المطابقات */}
         <div id="engine" className="scroll-mt-20">
-          <PricingEngine />
+          <EngineTabs />
         </div>
 
         <section id="how" className="mt-24">

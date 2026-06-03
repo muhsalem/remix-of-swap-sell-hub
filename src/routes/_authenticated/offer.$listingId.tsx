@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/offer/$listingId")({
       context.queryClient.ensureQueryData(targetQ(params.listingId)),
     ]);
   },
-  head: () => ({ meta: [{ title: "اقترح مقايضة — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "اقترح مقايضة — بادل بادل" }] }),
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,
   notFoundComponent: () => <div className="p-12 text-center">غير موجود</div>,
   component: NewOfferPage,

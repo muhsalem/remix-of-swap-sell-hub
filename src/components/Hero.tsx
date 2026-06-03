@@ -20,7 +20,7 @@ export function Hero() {
               <span className="text-primary">بقيمته الحقيقية.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
-              منصة <strong className="text-foreground">إيكال</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير مدعوم بالذكاء الاصطناعي يقيس قيمة كل منتج وعدالة كل مقايضة.
+              منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير مدعوم بالذكاء الاصطناعي يقيس قيمة كل منتج وعدالة كل مقايضة.
             </p>
             <div className="flex flex-wrap gap-3 mb-10">
               <Link

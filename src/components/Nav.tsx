@@ -37,7 +37,7 @@ export function Nav() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link to="/" className="font-display text-2xl font-extrabold tracking-tighter text-primary">
-            إيكال <span className="text-foreground">EQAL</span>
+            بادل <span className="text-foreground">بادل</span>
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium">
             <Link to="/" hash="engine" className="hover:text-primary transition-colors">المقايضة</Link>

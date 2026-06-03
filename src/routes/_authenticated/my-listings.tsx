@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ListingImage } from "@/components/ListingImage";
 
 export const Route = createFileRoute("/_authenticated/my-listings")({
-  head: () => ({ meta: [{ title: "عروضي — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "عروضي — بادل بادل" }] }),
   component: MyListings,
 });
 

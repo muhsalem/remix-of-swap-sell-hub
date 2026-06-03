@@ -11,7 +11,7 @@ const q = queryOptions({ queryKey: ["admin", "disputes"], queryFn: () => listAll
 
 export const Route = createFileRoute("/_authenticated/admin/disputes")({
   loader: ({ context }) => context.queryClient.ensureQueryData(q),
-  head: () => ({ meta: [{ title: "لوحة النزاعات (مشرف) — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "لوحة النزاعات (مشرف) — بادل بادل" }] }),
   errorComponent: ({ error }) => (
     <div dir="rtl" className="min-h-screen bg-background"><Nav />
       <div className="max-w-2xl mx-auto px-6 py-20 text-center">

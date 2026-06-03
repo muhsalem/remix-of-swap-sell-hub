@@ -2,9 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, ShoppingBag, Tag, Sparkles, ArrowLeftRight } from "lucide-react";
-import { PricingEngine } from "@/components/PricingEngine";
 import { MatchFinder } from "@/components/MatchFinder";
-import { Calculator, Repeat2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
@@ -196,10 +194,11 @@ function Index() {
           )}
         </section>
 
-        {/* محرك التسعير + باحث المطابقات */}
+        {/* محرك التسعير + باحث المطابقات (مدمجان) */}
         <div id="engine" className="scroll-mt-20">
-          <EngineTabs />
+          <MatchFinder />
         </div>
+
 
         <section id="how" className="mt-24">
           <h2 className="font-display text-2xl md:text-3xl font-extrabold mb-8">كيف تعمل المنصة؟</h2>

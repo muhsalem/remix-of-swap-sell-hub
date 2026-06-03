@@ -256,43 +256,6 @@ export function PricingEngine() {
               </div>
             )}
 
-            {serviceBarter && (
-              <div className="p-4 bg-card rounded-2xl border border-accent/30 text-right">
-                <p className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <Briefcase className="size-4 text-accent" />
-                  شروط صحة مقايضة الخدمات (إجارة بإجارة)
-                </p>
-                <ul className="space-y-2 text-xs">
-                  <ServiceStep
-                    ok={serviceChecks.allServices}
-                    title="١. النوع: كل العناصر خدمات"
-                    okMsg="كل عنصر مُصنّف كخدمة أو ساعات عمل."
-                    failMsg="بعض العناصر ليست خدمة — حوّل النوع إلى «خدمة» في الطرفين."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.benefitDefined}
-                    title="٢. المنفعة محددة"
-                    okMsg="اسم وفئة كل خدمة واضحان (لا غرر)."
-                    failMsg="اكتب اسماً دقيقاً (≥3 أحرف) واختر فئة «خدمات مهنية/يدوية»."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.termKnown}
-                    title="٣. الأجل/المدة معلومة"
-                    okMsg="مدة التنفيذ محددة لكل طرف."
-                    failMsg="حدّد «أيام التسليم» > 0 لكل خدمة لتفادي التأجيل المفتوح."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.timeBalanced}
-                    title="٤. التماثل في الزمن/القيمة"
-                    okMsg={`متوازن — (أ) ${serviceChecks.hoursA}س مقابل (ب) ${serviceChecks.hoursB}س.`}
-                    failMsg={`تفاوت ${(serviceChecks.gap * 100).toFixed(0)}% بين زمن الطرفين (${serviceChecks.hoursA}س / ${serviceChecks.hoursB}س) — يُستحب التقارب.`}
-                  />
-                </ul>
-                <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed border-t border-border pt-2">
-                  لا تُقبل المقايضة شرعياً إلا إذا تحققت الشروط الأربعة. يُغلق زر إتمام الصفقة تلقائياً عند الإخلال.
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

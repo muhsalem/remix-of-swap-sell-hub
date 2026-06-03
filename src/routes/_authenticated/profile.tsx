@@ -3,7 +3,7 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getWalletStats } from "@/lib/wallet.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
-import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban } from "lucide-react";
+import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 

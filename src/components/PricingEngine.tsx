@@ -139,6 +139,27 @@ export function PricingEngine() {
     if (side === "A") setSideA([p]); else setSideB([p]);
   };
 
+  const onCatalogPick = (side: "A" | "B", pick: CatalogPick) => {
+    const f = pick.family;
+    const product: Product = {
+      name: pick.itemName,
+      category: f.category,
+      itemType: (f.itemType === "real-estate" ? "good" : f.itemType) as Product["itemType"],
+      unit: f.defaultUnit,
+      quantity: 1,
+      condition: f.dep ? "good" : "new",
+      ageMonths: f.dep ? 12 : 0,
+      marketPricePerUnit: 0,
+      currency: defaultCurrency,
+      quality: 8,
+      scarcity: f.mkt === "spec" ? "high" : f.mkt === "uns" ? "abundant" : "normal",
+      locationTier: "tier1",
+      riskLevel: f.dep ? "medium" : "low",
+      deliveryDays: f.type === "service" ? 1 : 3,
+    };
+    if (side === "A") setSideA([product]); else setSideB([product]);
+  };
+
 
   return (
     <section className="animate-in bg-card rounded-3xl ring-1 ring-black/5 shadow-2xl overflow-hidden mb-16">
@@ -160,22 +181,12 @@ export function PricingEngine() {
           </div>
         </div>
 
-        {/* عينات تجربة سريعة */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SamplePicker
-            title="جرّب على سلعة"
-            icon={<Package className="size-3.5" />}
-            items={SAMPLE_GOODS}
-            onPick={(p, side) => loadSample(side, p)}
-          />
-          <SamplePicker
-            title="جرّب على خدمة"
-            icon={<Wrench className="size-3.5" />}
-            items={SAMPLE_SERVICES}
-            onPick={(p, side) => loadSample(side, p)}
-          />
+        {/* كتالوج التصنيف الرباعي */}
+        <div className="mt-6">
+          <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} />
         </div>
       </div>
+
 
       {/* الطرفان مع الزر في المنتصف */}
       <div className="grid grid-cols-1 lg:grid-cols-12">

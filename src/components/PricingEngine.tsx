@@ -153,22 +153,8 @@ export function PricingEngine() {
               محرك التسعير الاقتصادي للمقايضة العادلة
             </h1>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-              قارن سلعة بسلعة، أو سلعة بسلعتين، أو أي تركيبة. يدعم أيضاً مقايضة خدمة بخدمة وفق شروط الإجارة (المنفعة، الأجل، التماثل).
+              قارن سلعة بسلعة، أو سلعة بسلعتين، أو أي تركيبة. يحسب الحالة والجودة والندرة والموقع وتكلفة الشحن تلقائياً.
             </p>
-          </div>
-          <div className="flex flex-col items-stretch gap-2 min-w-[220px]">
-            <button
-              type="button"
-              onClick={toggleServiceBarter}
-              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold border transition-all ${
-                serviceBarter
-                  ? "bg-accent text-accent-foreground border-accent shadow-md"
-                  : "bg-card border-border hover:border-accent/40"
-              }`}
-            >
-              <Briefcase className="size-3.5" />
-              مقايضة خدمة بخدمة {serviceBarter ? "(مُفعّل)" : ""}
-            </button>
           </div>
         </div>
       </div>

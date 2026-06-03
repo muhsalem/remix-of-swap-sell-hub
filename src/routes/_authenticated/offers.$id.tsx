@@ -6,10 +6,11 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getOffer, respondToOffer, sendMessage, submitReview } from "@/lib/offers.functions";
 import { openDispute, listOfferDisputes } from "@/lib/disputes.functions";
+import { setShipping, confirmDelivery } from "@/lib/logistics.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
-import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle } from "lucide-react";
+import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle, Truck } from "lucide-react";
 
 const offerQuery = (id: string) =>
   queryOptions({ queryKey: ["offer", id], queryFn: () => getOffer({ data: { id } }) });
@@ -129,10 +130,9 @@ function OfferDetailPage() {
               </button>
             )}
             {offer.status === "accepted" && (
-              <button onClick={() => respond.mutate("complete")} disabled={respond.isPending}
-                className="px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold flex items-center gap-2 hover:bg-primary">
-                <CheckCircle2 className="size-4" /> تأكيد إتمام الصفقة
-              </button>
+              <span className="px-4 py-2.5 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                <Truck className="size-4" /> أكمل الشحن والاستلام في الأسفل
+              </span>
             )}
             <span className="px-4 py-2.5 bg-stone-soft rounded-full text-xs font-bold">الحالة: {offer.status}</span>
           </div>
@@ -191,6 +191,10 @@ function OfferDetailPage() {
                 </div>
                 {data.myReview.comment && <p className="text-xs">{data.myReview.comment}</p>}
               </div>
+            )}
+
+            {(offer.status === "accepted" || offer.status === "completed") && (
+              <ShippingBlock offer={offer} userId={data.userId} qc={qc} />
             )}
 
             {(offer.status === "accepted" || offer.status === "completed") && (

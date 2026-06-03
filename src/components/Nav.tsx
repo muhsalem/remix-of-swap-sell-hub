@@ -48,12 +48,6 @@ export function Nav() {
                 <History className="size-4" /> السجل
               </Link>
               <Link
-                to="/disputes"
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <AlertTriangle className="size-4" /> النزاعات
-              </Link>
-              <Link
                 to="/profile"
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
               >

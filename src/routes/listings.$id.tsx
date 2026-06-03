@@ -19,7 +19,7 @@ export const Route = createFileRoute("/listings/$id")({
   head: ({ loaderData }) => ({
     meta: loaderData?.listing
       ? [
-          { title: `${loaderData.listing.title} — إيكال EQAL` },
+          { title: `${loaderData.listing.title} — بادل بادل` },
           { name: "description", content: `للمقايضة: ${loaderData.listing.title}. مطلوب: ${loaderData.listing.wants}` },
           { property: "og:title", content: loaderData.listing.title },
           { property: "og:description", content: `للمقايضة بـ ${loaderData.listing.wants}` },

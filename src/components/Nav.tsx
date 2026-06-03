@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import badelLogo from "@/assets/badel-logo.png";
 import { useAuth, signOut } from "@/lib/auth";
 import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -36,8 +37,9 @@ export function Nav() {
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="font-display text-2xl font-extrabold tracking-tighter text-primary">
-            إيكال <span className="text-foreground">EQAL</span>
+          <Link to="/" className="flex items-center gap-2 font-display text-2xl font-extrabold tracking-tighter text-primary">
+            <img src={badelLogo} alt="بادل" width={36} height={36} className="h-9 w-9" />
+            <span className="text-foreground">بادل</span>
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium">
             <Link to="/" hash="engine" className="hover:text-primary transition-colors">المقايضة</Link>

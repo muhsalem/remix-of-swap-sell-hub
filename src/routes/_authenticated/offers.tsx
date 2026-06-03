@@ -12,7 +12,7 @@ const offersQuery = queryOptions({
 
 export const Route = createFileRoute("/_authenticated/offers")({
   loader: ({ context }) => context.queryClient.ensureQueryData(offersQuery),
-  head: () => ({ meta: [{ title: "صندوق المقايضات — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "صندوق المقايضات — بادل بادل" }] }),
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,
   notFoundComponent: () => <div className="p-12 text-center">غير موجود</div>,
   component: OffersPage,

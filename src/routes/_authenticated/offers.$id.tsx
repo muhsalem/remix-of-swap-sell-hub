@@ -17,7 +17,7 @@ const offerQuery = (id: string) =>
 
 export const Route = createFileRoute("/_authenticated/offers/$id")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(offerQuery(params.id)),
-  head: () => ({ meta: [{ title: "تفاصيل المقايضة — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل المقايضة — بادل بادل" }] }),
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,
   notFoundComponent: () => <div className="p-12 text-center">العرض غير موجود</div>,
   component: OfferDetailPage,

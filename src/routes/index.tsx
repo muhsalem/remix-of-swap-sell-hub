@@ -21,9 +21,9 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   head: () => ({
     meta: [
-      { title: "إيكال EQAL — منصة المقايضة الذكية بالذكاء الاصطناعي" },
+      { title: "بادل — منصة المقايضة الذكية بالذكاء الاصطناعي" },
       { name: "description", content: "بيع، اشترِ، أو قايض بعدالة عبر محرك تسعير ذكي مدعوم بالذكاء الاصطناعي." },
-      { property: "og:title", content: "إيكال EQAL — منصة المقايضة الذكية" },
+      { property: "og:title", content: "بادل — منصة المقايضة الذكية" },
       { property: "og:description", content: "بيع واشترِ وقايض بثقة وعدالة." },
     ],
   }),
@@ -221,8 +221,8 @@ function Index() {
 
       <footer className="py-12 border-t border-border mt-16 bg-card">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <span className="font-display text-xl font-extrabold tracking-tighter opacity-40">EQAL</span>
-          <div className="text-xs text-muted-foreground font-mono">© 2026 EQAL AI ENGINE</div>
+          <span className="font-display text-xl font-extrabold tracking-tighter opacity-40">بادل</span>
+          <div className="text-xs text-muted-foreground font-mono">© 2026 بادل AI ENGINE</div>
         </div>
       </footer>
     </div>

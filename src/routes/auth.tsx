@@ -10,8 +10,8 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — إيكال EQAL" },
-      { name: "description", content: "أنشئ حسابك في منصة إيكال لبدء عرض ومقايضة منتجاتك بعدالة." },
+      { title: "تسجيل الدخول — بادل بادل" },
+      { name: "description", content: "أنشئ حسابك في منصة بادل لبدء عرض ومقايضة منتجاتك بعدالة." },
     ],
   }),
   component: AuthPage,
@@ -98,7 +98,7 @@ function AuthPage() {
     <div dir="rtl" className="min-h-screen grid lg:grid-cols-2 bg-background font-body">
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-primary to-accent text-primary-foreground">
         <Link to="/" className="font-display text-3xl font-extrabold tracking-tighter">
-          إيكال EQAL
+          بادل بادل
         </Link>
         <div>
           <h2 className="font-display text-4xl font-extrabold leading-tight mb-4">
@@ -108,13 +108,13 @@ function AuthPage() {
             اعرض منتجاتك، احسب عدالة المقايضة، وتبادل بثقة مع آلاف المستخدمين.
           </p>
         </div>
-        <div className="text-xs opacity-70 font-mono">© 2026 EQAL AI ENGINE</div>
+        <div className="text-xs opacity-70 font-mono">© 2026 بادل AI ENGINE</div>
       </div>
 
       <div className="flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="font-display text-3xl font-extrabold text-primary">إيكال EQAL</Link>
+            <Link to="/" className="font-display text-3xl font-extrabold text-primary">بادل بادل</Link>
           </div>
           <h1 className="font-display text-3xl font-extrabold mb-2">
             {mode === "signin" ? "مرحباً بعودتك" : "أنشئ حسابك"}

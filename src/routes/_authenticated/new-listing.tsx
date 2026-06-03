@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Upload, X, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/new-listing")({
-  head: () => ({ meta: [{ title: "أضف عرضاً جديداً — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "أضف عرضاً جديداً — بادل بادل" }] }),
   component: NewListing,
 });
 

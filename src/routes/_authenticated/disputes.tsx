@@ -28,7 +28,7 @@ const q = queryOptions({ queryKey: ["my-disputes"], queryFn: () => listMyDispute
 
 export const Route = createFileRoute("/_authenticated/disputes")({
   loader: ({ context }) => context.queryClient.ensureQueryData(q),
-  head: () => ({ meta: [{ title: "النزاعات — إيكال EQAL" }] }),
+  head: () => ({ meta: [{ title: "النزاعات — بادل بادل" }] }),
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,
   notFoundComponent: () => <div className="p-12 text-center">غير موجود</div>,
   component: DisputesPage,

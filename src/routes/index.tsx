@@ -2,9 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, ShoppingBag, Tag, Sparkles, ArrowLeftRight } from "lucide-react";
-import { PricingEngine } from "@/components/PricingEngine";
 import { MatchFinder } from "@/components/MatchFinder";
-import { Calculator, Repeat2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
@@ -196,10 +194,11 @@ function Index() {
           )}
         </section>
 
-        {/* محرك التسعير + باحث المطابقات */}
+        {/* محرك التسعير + باحث المطابقات (مدمجان) */}
         <div id="engine" className="scroll-mt-20">
-          <EngineTabs />
+          <MatchFinder />
         </div>
+
 
         <section id="how" className="mt-24">
           <h2 className="font-display text-2xl md:text-3xl font-extrabold mb-8">كيف تعمل المنصة؟</h2>
@@ -255,31 +254,3 @@ function CatChip({ active, onClick, children }: { active: boolean; onClick: () =
   );
 }
 
-function EngineTabs() {
-  const [tab, setTab] = useState<"match" | "calc">("match");
-  return (
-    <div>
-      <div className="flex justify-center mb-6">
-        <div className="inline-flex bg-stone-soft rounded-full p-1 ring-1 ring-black/5">
-          <button
-            onClick={() => setTab("match")}
-            className={`px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all ${
-              tab === "match" ? "bg-card shadow-md text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Repeat2 className="size-4" /> أُقايض / أبحث عن
-          </button>
-          <button
-            onClick={() => setTab("calc")}
-            className={`px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all ${
-              tab === "calc" ? "bg-card shadow-md text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Calculator className="size-4" /> محرك التسعير
-          </button>
-        </div>
-      </div>
-      {tab === "match" ? <MatchFinder /> : <PricingEngine />}
-    </div>
-  );
-}

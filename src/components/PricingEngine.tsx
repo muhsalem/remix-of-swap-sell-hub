@@ -4,13 +4,13 @@ import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import {
-  Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban,
-  ChevronDown, Plus, X, TrendingUp, Zap,
+  Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
+  ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2,
 } from "lucide-react";
 import { CatalogPicker, type CatalogPick } from "@/components/CatalogPicker";
 
 // ============================================================
-// Types & constants
+// Types
 // ============================================================
 type Product = {
   name: string;
@@ -56,17 +56,11 @@ const RISKS = [
   { value: "low", label: "منخفض" }, { value: "medium", label: "متوسط" }, { value: "high", label: "مرتفع" },
 ] as const;
 
-const DEFAULT_A: Product = {
-  name: "ساعة استشارة قانونية", category: "خدمات مهنية", itemType: "service",
-  unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0,
-  marketPricePerUnit: 250, currency: "SAR", quality: 9,
-  scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1, distanceKm: 0,
-};
-const DEFAULT_B: Product = {
-  name: "قمح بلدي", category: "حبوب وأغذية", itemType: "commodity",
-  unit: "كجم", quantity: 100, condition: "new", ageMonths: 0,
-  marketPricePerUnit: 5, currency: "SAR", quality: 8,
-  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0, distanceKm: 0,
+const DEFAULT_ITEM: Product = {
+  name: "", category: "إلكترونيات", itemType: "good",
+  unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 6,
+  marketPricePerUnit: 0, currency: "SAR", quality: 9,
+  scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 1, distanceKm: 0,
 };
 
 function detectCurrency(): string {
@@ -83,62 +77,50 @@ function detectCurrency(): string {
 }
 
 // ============================================================
-// Main component — compact, auto-calc, single-source layout
+// Main component — single-side valuation (the user's own items)
 // ============================================================
-export function PricingEngine() {
+export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
-  const [sideA, setSideA] = useState<Product[]>([{ ...DEFAULT_A, currency: defaultCurrency }]);
-  const [sideB, setSideB] = useState<Product[]>([{ ...DEFAULT_B, currency: defaultCurrency }]);
+  const [items, setItems] = useState<Product[]>([{ ...DEFAULT_ITEM, currency: defaultCurrency }]);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
 
   const fn = useServerFn(calculateBarter);
+  // We reuse calculateBarter by mirroring items as sideB to satisfy the schema,
+  // and we only surface side A's valuation in the UI.
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { sideA, sideB, shariahMode: true, serviceBarter: false } }),
+    mutationFn: () => fn({ data: { sideA: items, sideB: items, shariahMode: true, serviceBarter: false } }),
     onSuccess: (r) => {
       setResult(r);
       try {
-        sessionStorage.setItem("lastAnalysis", JSON.stringify({
-          at: Date.now(), fairness: r.fairness, diA: r.diA, diB: r.diB,
-          itemsA: r.itemsA, itemsB: r.itemsB,
-          recommendation: r.recommendation,
-          shariahLevel: r.shariah.level, shariahRule: r.shariah.rule,
+        sessionStorage.setItem("lastValuation", JSON.stringify({
+          at: Date.now(), valueSAR: r.valueA, valueDI: r.diA, items: r.itemsA,
+          shariahLevel: r.shariah.level,
         }));
       } catch { /* ignore */ }
     },
   });
 
-  // Auto-calc with debounce when inputs are valid
-  const stateKey = useMemo(() => JSON.stringify({ sideA, sideB }), [sideA, sideB]);
+  const stateKey = useMemo(() => JSON.stringify(items), [items]);
   const firstRun = useRef(true);
   useEffect(() => {
     if (!autoCalc) return;
-    const allValid = [...sideA, ...sideB].every(
+    const allValid = items.every(
       (p) => p.name.trim().length > 0 && p.marketPricePerUnit > 0 && p.quantity > 0,
     );
     if (!allValid) return;
-    const delay = firstRun.current ? 100 : 700;
+    const delay = firstRun.current ? 100 : 600;
     firstRun.current = false;
     const t = setTimeout(() => mutation.mutate(), delay);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateKey, autoCalc]);
 
-  // Sides operations
-  const addToSide = (side: "A" | "B") => {
-    const def = { ...DEFAULT_B, name: "سلعة جديدة", currency: defaultCurrency };
-    if (side === "A") setSideA([...sideA, def]); else setSideB([...sideB, def]);
-  };
-  const removeFromSide = (side: "A" | "B", idx: number) => {
-    if (side === "A" && sideA.length > 1) setSideA(sideA.filter((_, i) => i !== idx));
-    if (side === "B" && sideB.length > 1) setSideB(sideB.filter((_, i) => i !== idx));
-  };
-  const updateProduct = (side: "A" | "B", idx: number, p: Product) => {
-    if (side === "A") setSideA(sideA.map((x, i) => i === idx ? p : x));
-    else setSideB(sideB.map((x, i) => i === idx ? p : x));
-  };
+  const addItem = () => setItems([...items, { ...DEFAULT_ITEM, name: "", currency: defaultCurrency }]);
+  const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
+  const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
 
-  const onCatalogPick = (side: "A" | "B", pick: CatalogPick) => {
+  const onCatalogPick = (_side: "A" | "B", pick: CatalogPick) => {
     const f = pick.family;
     const product: Product = {
       name: pick.itemName,
@@ -157,39 +139,50 @@ export function PricingEngine() {
       deliveryDays: f.type === "service" ? 1 : 3,
       distanceKm: 0,
     };
-    if (side === "A") setSideA([product]); else setSideB([product]);
+    // إذا كان السطر الفارغ هو الأول → أبدله، وإلا أضف عنصر جديد
+    if (items.length === 1 && !items[0].name.trim() && items[0].marketPricePerUnit === 0) {
+      setItems([product]);
+    } else {
+      setItems([...items, product]);
+    }
   };
 
-  const fairness = result?.fairness ?? 0;
-  const fairnessColor =
-    fairness >= 85 ? "text-primary" : fairness >= 65 ? "text-accent" : "text-destructive";
-  const fairnessBg =
-    fairness >= 85 ? "from-primary/15 to-primary/5" : fairness >= 65 ? "from-accent/15 to-accent/5" : "from-destructive/15 to-destructive/5";
+  const valueSAR = result?.valueA ?? 0;
+  const valueDI = result?.diA ?? 0;
+  const shariah = result?.shariah;
 
   return (
-    <section className="animate-in bg-card rounded-3xl ring-1 ring-black/5 shadow-2xl overflow-hidden mb-16">
-      {/* ============ Header ============ */}
-      <div className="px-6 md:px-10 pt-8 pb-6 border-b border-border bg-gradient-to-b from-stone-soft to-card">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+    <section
+      className={
+        embedded
+          ? "rounded-3xl border border-border bg-gradient-to-br from-card via-card to-stone-soft/40 overflow-hidden"
+          : "animate-in bg-card rounded-3xl ring-1 ring-black/5 shadow-2xl overflow-hidden mb-16"
+      }
+    >
+      {/* ============ Hero header ============ */}
+      <div className="relative px-5 md:px-8 pt-6 pb-5 border-b border-border bg-gradient-to-br from-primary/8 via-card to-accent/5 overflow-hidden">
+        <div className="absolute -top-12 -left-12 size-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -right-16 size-48 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="size-3" /> Pricing Engine v4
+                <Sparkles className="size-3" /> قيّم ممتلكاتك
               </span>
               {mutation.isPending && (
                 <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="size-3 animate-spin" /> يحسب...
+                  <Loader2 className="size-3 animate-spin" /> يحسب القيمة...
                 </span>
               )}
             </div>
-            <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+            <h3 className="font-display text-xl md:text-2xl font-extrabold tracking-tight leading-tight">
               محرّك التسعير العادل
-            </h1>
+            </h3>
             <p className="text-muted-foreground mt-1 text-xs md:text-sm">
-              ابدأ من الكتالوج، اضبط القيمة، النتيجة تظهر فورًا.
+              ابدأ من الكتالوج، اضبط القيمة، اعرف ما تملكه يساوي كم.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-xs bg-stone-soft px-3 py-2 rounded-xl border border-border cursor-pointer">
+          <label className="flex items-center gap-2 text-xs bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
             <input
               type="checkbox" checked={autoCalc}
               onChange={(e) => setAutoCalc(e.target.checked)}
@@ -202,139 +195,118 @@ export function PricingEngine() {
         <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} />
       </div>
 
-      {/* ============ Result bar (sticky-ish) ============ */}
-      <div className={`px-6 md:px-10 py-5 bg-gradient-to-r ${fairnessBg} border-b border-border`}>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          {/* Fairness gauge */}
-          <div className="md:col-span-3 flex items-center gap-4">
-            <div className="relative size-20 shrink-0">
-              <svg viewBox="0 0 36 36" className="size-20 -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" strokeWidth="3" className="text-border" />
-                <circle
-                  cx="18" cy="18" r="15.9" fill="none" strokeWidth="3" strokeLinecap="round"
-                  strokeDasharray={`${fairness}, 100`}
-                  className={`transition-all duration-700 ${fairnessColor}`} stroke="currentColor"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-lg font-display font-extrabold ${fairnessColor}`}>
-                  {result ? `${fairness}%` : "—"}
-                </span>
-              </div>
+      {/* ============ Hero value display ============ */}
+      <div className="relative px-5 md:px-8 py-6 bg-gradient-to-br from-primary/95 via-primary to-primary/85 text-primary-foreground overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          <div className="md:col-span-7">
+            <div className="text-[10px] uppercase tracking-[0.2em] opacity-70 font-bold mb-1">القيمة الإجمالية المقدّرة</div>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span className="font-display text-4xl md:text-5xl font-extrabold tabular-nums leading-none">
+                {result ? valueSAR.toLocaleString() : "—"}
+              </span>
+              <span className="text-sm opacity-80 font-bold">ر.س</span>
+              <span className="text-xs opacity-60 mx-2">•</span>
+              <span className="flex items-center gap-1.5 font-mono font-bold text-base opacity-95">
+                <Coins className="size-4" />
+                {result ? valueDI.toLocaleString() : "0"} <span className="text-xs opacity-70">DI</span>
+              </span>
             </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">معدّل التوافق</div>
-              <div className="text-sm font-bold mt-0.5">
-                {!result ? "أكمل البيانات" :
-                  fairness >= 85 ? "صفقة عادلة" :
-                  fairness >= 65 ? "تحتاج موازنة" : "فجوة كبيرة"}
-              </div>
-            </div>
+            {result && items.length > 1 && (
+              <p className="text-xs opacity-80 mt-2">
+                مجموع <b>{items.length}</b> عناصر — متوسط {Math.round(valueSAR / items.length).toLocaleString()} ر.س/عنصر
+              </p>
+            )}
           </div>
-
-          {/* Gap */}
-          <div className="md:col-span-3 px-4 py-3 bg-card/70 rounded-2xl border border-border">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">الفجوة</div>
-            {result ? (
-              <div className="flex items-baseline gap-2">
-                <span className="font-display font-bold text-xl text-accent">
-                  {result.gap === 0 ? "متوازن" : `${result.cashBalanceDI.toLocaleString()} DI`}
-                </span>
-                {result.inFavorOf !== "balanced" && (
-                  <span className="text-xs text-muted-foreground">
-                    لصالح ({result.inFavorOf === "A" ? "أ" : "ب"})
-                  </span>
-                )}
+          <div className="md:col-span-5 flex items-center gap-2">
+            {shariah ? (
+              <div className={`flex-1 px-3 py-2.5 rounded-2xl text-xs font-bold flex items-start gap-2 backdrop-blur ${
+                shariah.level === "forbidden" ? "bg-destructive/30 ring-1 ring-destructive/50" :
+                shariah.level === "warning" ? "bg-accent/30 ring-1 ring-accent/50" :
+                "bg-white/15 ring-1 ring-white/20"
+              }`}>
+                {shariah.level === "forbidden" ? <Ban className="size-3.5 shrink-0 mt-0.5" />
+                  : shariah.level === "warning" ? <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+                  : <ShieldCheck className="size-3.5 shrink-0 mt-0.5" />}
+                <span className="leading-snug line-clamp-2">{shariah.rule}</span>
               </div>
-            ) : <span className="text-sm text-muted-foreground">—</span>}
-            {result && result.gap !== 0 && (
-              <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                ≈ {Math.abs(result.gap).toLocaleString()} ر.س
+            ) : (
+              <div className="flex-1 px-3 py-2.5 rounded-2xl text-xs bg-white/10 backdrop-blur opacity-70">
+                أكمل البيانات لرؤية التقييم الشرعي
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Shariah */}
-          <div className="md:col-span-3 px-4 py-3 bg-card/70 rounded-2xl border border-border">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">التحليل الشرعي</div>
-            {result?.shariah ? (
-              <div className={`text-xs font-bold flex items-start gap-1.5 ${
-                result.shariah.level === "forbidden" ? "text-destructive" :
-                result.shariah.level === "warning" ? "text-accent-foreground" : "text-primary"
-              }`}>
-                {result.shariah.level === "forbidden" ? <Ban className="size-3.5 shrink-0 mt-0.5" />
-                  : result.shariah.level === "warning" ? <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                  : <ShieldCheck className="size-3.5 shrink-0 mt-0.5" />}
-                <span className="leading-snug line-clamp-2">{result.shariah.rule}</span>
-              </div>
-            ) : <span className="text-xs text-muted-foreground">—</span>}
+      {/* ============ Items list ============ */}
+      <div className="p-5 md:p-7 bg-card">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-xl grid place-items-center bg-primary/10 text-primary">
+              <Package2 className="size-4" />
+            </div>
+            <h4 className="font-bold text-sm">ممتلكاتك ({items.length})</h4>
           </div>
-
-          {/* Action */}
-          <div className="md:col-span-3">
+          {!autoCalc && (
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
-              className="w-full px-4 py-3 rounded-2xl text-sm font-bold text-primary-foreground bg-gradient-to-br from-primary to-accent shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
-              {mutation.isPending ? "..." : autoCalc ? "إعادة الحساب" : "احسب الآن"}
+              {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+              احسب القيمة
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Expert advice — single concise line */}
-        {result && <ExpertAdviceLine result={result} />}
+        <div className="space-y-2">
+          {items.map((p, i) => (
+            <ItemRow
+              key={i}
+              index={i}
+              product={p}
+              onUpdate={(np) => updateItem(i, np)}
+              onRemove={items.length > 1 ? () => removeItem(i) : undefined}
+            />
+          ))}
+
+          <button
+            type="button" onClick={addItem} disabled={items.length >= 5}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 text-xs font-bold transition-all disabled:opacity-50"
+          >
+            <Plus className="size-3.5" /> أضف عنصر آخر ({items.length}/5)
+          </button>
+        </div>
       </div>
 
-      {/* ============ Two compact sides ============ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border rtl:md:divide-x-reverse">
-        <SidePanel
-          side="A" label="الطرف (أ) — يعرض" total={result?.valueA} totalDI={result?.diA}
-          products={sideA}
-          onUpdate={(i, p) => updateProduct("A", i, p)}
-          onRemove={(i) => removeFromSide("A", i)}
-          onAdd={() => addToSide("A")}
-        />
-        <SidePanel
-          side="B" label="الطرف (ب) — يطلب" total={result?.valueB} totalDI={result?.diB}
-          products={sideB}
-          onUpdate={(i, p) => updateProduct("B", i, p)}
-          onRemove={(i) => removeFromSide("B", i)}
-          onAdd={() => addToSide("B")}
-        />
-      </div>
-
-      {/* ============ Optional factors table ============ */}
+      {/* ============ Breakdown ============ */}
       {result && (
         <details className="border-t border-border bg-stone-soft/40">
           <summary className="px-6 md:px-10 py-4 cursor-pointer font-bold text-sm flex items-center gap-2 hover:bg-stone-soft transition-colors">
             <ChevronDown className="size-4" />
-            تفصيل العوامل الاقتصادية
+            تفصيل العوامل الاقتصادية المؤثرة في التقييم
           </summary>
           <div className="px-6 md:px-10 pb-6 overflow-x-auto">
             <table className="w-full text-xs text-right border-collapse">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="py-2 px-3 font-bold">العامل</th>
-                  <th className="py-2 px-3 font-bold">(أ)</th>
-                  <th className="py-2 px-3 font-bold">(ب)</th>
-                </tr>
-              </thead>
               <tbody className="font-mono">
-                <Row label="القيمة السوقية (ر.س)" a={result.breakdownA.baseSAR.toLocaleString()} b={result.breakdownB.baseSAR.toLocaleString()} />
-                <Row label="الحالة" a={result.breakdownA.conditionFactor} b={result.breakdownB.conditionFactor} />
-                <Row label="العمر/الإهلاك" a={result.breakdownA.ageFactor} b={result.breakdownB.ageFactor} />
-                <Row label="الجودة" a={result.breakdownA.qualityFactor} b={result.breakdownB.qualityFactor} />
-                <Row label="الندرة" a={result.breakdownA.scarcityFactor} b={result.breakdownB.scarcityFactor} />
-                <Row label="الموقع" a={result.breakdownA.locationFactor} b={result.breakdownB.locationFactor} />
-                <Row label="المخاطرة" a={result.breakdownA.riskFactor} b={result.breakdownB.riskFactor} />
-                <Row label="زمن التسليم" a={result.breakdownA.timeFactor} b={result.breakdownB.timeFactor} />
-                <Row label="الفئة/الطلب" a={result.breakdownA.categoryFactor} b={result.breakdownB.categoryFactor} />
+                <Row label="القيمة السوقية الأولية" v={`${result.breakdownA.baseSAR.toLocaleString()} ر.س`} />
+                <Row label="معامل الحالة" v={result.breakdownA.conditionFactor} />
+                <Row label="معامل العمر/الإهلاك" v={result.breakdownA.ageFactor} />
+                <Row label="معامل الجودة" v={result.breakdownA.qualityFactor} />
+                <Row label="معامل الندرة" v={result.breakdownA.scarcityFactor} />
+                <Row label="معامل الموقع" v={result.breakdownA.locationFactor} />
+                <Row label="معامل المخاطرة" v={result.breakdownA.riskFactor} />
+                <Row label="معامل زمن التسليم" v={result.breakdownA.timeFactor} />
+                <Row label="معامل الفئة/الطلب" v={result.breakdownA.categoryFactor} />
                 <tr className="border-t-2 border-primary/30 font-bold">
-                  <td className="py-3 px-3">القيمة الإجمالية</td>
-                  <td className="py-3 px-3 text-primary">{result.diA.toLocaleString()} DI</td>
-                  <td className="py-3 px-3 text-primary">{result.diB.toLocaleString()} DI</td>
+                  <td className="py-3 px-3">القيمة النهائية</td>
+                  <td className="py-3 px-3 text-primary text-left">
+                    {result.diA.toLocaleString()} DI · {result.valueA.toLocaleString()} ر.س
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -345,113 +317,12 @@ export function PricingEngine() {
   );
 }
 
-// ============================================================
-// Expert advice — one concise sentence per side
-// ============================================================
-function ExpertAdviceLine({ result }: { result: PricingResult }) {
-  const fair = result.fairness;
-  const stronger = result.inFavorOf;
-  const cash = result.cashBalanceDI;
-
-  let toA = "", toB = "";
-  if (fair >= 85) {
-    toA = "السعر عادل — أتمم الصفقة قبل أن تتغير قيمتها.";
-    toB = "تكسب وقتاً وتتجنب عمولة البيع — صفقة موفقة.";
-  } else if (fair >= 65) {
-    toA = stronger === "A"
-      ? `أنت الأقوى — اطلب ${cash} DI إضافية أو سلعة مكافئة.`
-      : `أضف ${cash} DI لإقفال الصفقة بسرعة.`;
-    toB = stronger === "B"
-      ? `أنت الأقوى — اطلب ${cash} DI إضافية لتعديل التوازن.`
-      : `الفارق ${cash} DI صغير — مكسبك في السرعة.`;
-  } else {
-    toA = "الفجوة كبيرة — أعد التفاوض أو ابحث عن عرض أفضل.";
-    toB = "الطرف الآخر سيرفض غالباً — خفّض المطلوب.";
-  }
-
-  return (
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
-      <div className="px-3 py-2 bg-card/60 rounded-lg border border-border flex gap-2">
-        <TrendingUp className="size-3.5 text-primary shrink-0 mt-0.5" />
-        <span><b className="text-primary">إلى (أ): </b>{toA}</span>
-      </div>
-      <div className="px-3 py-2 bg-card/60 rounded-lg border border-border flex gap-2">
-        <TrendingUp className="size-3.5 text-accent shrink-0 mt-0.5" />
-        <span><b className="text-accent">إلى (ب): </b>{toB}</span>
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, a, b }: { label: string; a: number | string; b: number | string }) {
+function Row({ label, v }: { label: string; v: number | string }) {
   return (
     <tr className="border-b border-border/50">
       <td className="py-2 px-3 text-muted-foreground font-sans">{label}</td>
-      <td className="py-2 px-3">{a}</td>
-      <td className="py-2 px-3">{b}</td>
+      <td className="py-2 px-3 text-left">{v}</td>
     </tr>
-  );
-}
-
-// ============================================================
-// Side panel — compact list of item rows
-// ============================================================
-function SidePanel({
-  side, label, products, onUpdate, onRemove, onAdd, total, totalDI,
-}: {
-  side: "A" | "B"; label: string;
-  products: Product[];
-  onUpdate: (i: number, p: Product) => void;
-  onRemove: (i: number) => void;
-  onAdd: () => void;
-  total?: number; totalDI?: number;
-}) {
-  const [expanded, setExpanded] = useState<number | null>(0);
-  const accent = side === "A" ? "primary" : "accent";
-
-  return (
-    <div className="p-5 md:p-6 bg-card">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`size-8 rounded-lg grid place-items-center text-sm font-display font-bold ${
-            side === "A" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
-          }`}>{side === "A" ? "أ" : "ب"}</div>
-          <h3 className="font-bold text-sm">{label}</h3>
-        </div>
-        {totalDI != null && (
-          <div className="text-right">
-            <div className={`font-mono font-bold text-base ${side === "A" ? "text-primary" : "text-accent"}`}>
-              {totalDI.toLocaleString()} DI
-            </div>
-            <div className="text-[10px] text-muted-foreground font-mono">
-              ≈ {total?.toLocaleString()} ر.س
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        {products.map((p, i) => (
-          <ItemRow
-            key={i}
-            index={i} side={side}
-            product={p}
-            isOpen={expanded === i}
-            onToggle={() => setExpanded(expanded === i ? null : i)}
-            onUpdate={(np) => onUpdate(i, np)}
-            onRemove={products.length > 1 ? () => onRemove(i) : undefined}
-            accent={accent}
-          />
-        ))}
-
-        <button
-          type="button" onClick={onAdd} disabled={products.length >= 5}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 text-[11px] font-bold transition-all disabled:opacity-50"
-        >
-          <Plus className="size-3" /> أضف عنصر ({products.length}/5)
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -459,30 +330,29 @@ function SidePanel({
 // Item row — compact inline, expands details
 // ============================================================
 function ItemRow({
-  index, side, product, isOpen, onToggle, onUpdate, onRemove, accent,
+  index, product, onUpdate, onRemove,
 }: {
-  index: number; side: "A" | "B";
-  product: Product; isOpen: boolean;
-  onToggle: () => void;
+  index: number;
+  product: Product;
   onUpdate: (p: Product) => void;
   onRemove?: () => void;
-  accent: string;
 }) {
+  const [isOpen, setIsOpen] = useState(index === 0);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);
 
   return (
-    <div className={`rounded-2xl border transition-all ${isOpen ? "border-primary/40 shadow-sm" : "border-border hover:border-primary/20"}`}>
+    <div className={`rounded-2xl border transition-all ${isOpen ? "border-primary/40 shadow-sm bg-card" : "border-border hover:border-primary/20 bg-card"}`}>
       {/* Compact row */}
-      <div className="p-3 flex items-center gap-2">
-        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-          side === "A" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
-        }`}>{side}{index + 1}</span>
+      <div className="p-3 flex items-center gap-2 flex-wrap md:flex-nowrap">
+        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+          #{index + 1}
+        </span>
 
         <input
           type="text" value={product.name}
           onChange={(e) => onUpdate({ ...product, name: e.target.value })}
           placeholder="اسم العنصر"
-          className="flex-1 min-w-0 px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm outline-none"
+          className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm outline-none"
         />
 
         <input
@@ -497,13 +367,14 @@ function ItemRow({
           type="number" min={0.01} step={0.01} value={product.marketPricePerUnit}
           onChange={(e) => onUpdate({ ...product, marketPricePerUnit: Number(e.target.value) || 0 })}
           className="w-20 px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm text-center outline-none"
+          placeholder="السعر"
           title="السعر/وحدة"
         />
         <span className="text-[10px] text-muted-foreground">{product.currency}</span>
 
         <button
-          type="button" onClick={onToggle}
-          className={`size-7 grid place-items-center rounded-lg hover:bg-primary/10 transition-colors`}
+          type="button" onClick={() => setIsOpen(!isOpen)}
+          className="size-7 grid place-items-center rounded-lg hover:bg-primary/10 transition-colors"
           title="تفاصيل متقدمة"
         >
           <ChevronDown className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -520,14 +391,12 @@ function ItemRow({
         )}
       </div>
 
-      {/* Subtotal + condition pill (always visible compact line) */}
+      {/* Subtotal + condition pill */}
       <div className="px-3 pb-2 flex items-center justify-between text-[10px] text-muted-foreground">
         <span>
-          الإجمالي: <span className="font-mono font-bold text-foreground">{subtotal.toLocaleString()} {product.currency}</span>
+          إجمالي: <span className="font-mono font-bold text-foreground">{subtotal.toLocaleString()} {product.currency}</span>
         </span>
-        <span className="flex items-center gap-2">
-          <ConditionPill product={product} onUpdate={onUpdate} />
-        </span>
+        <ConditionPill product={product} onUpdate={onUpdate} />
       </div>
 
       {/* Expanded advanced section */}
@@ -625,7 +494,6 @@ function ItemRow({
 }
 
 function ConditionPill({ product, onUpdate }: { product: Product; onUpdate: (p: Product) => void }) {
-  const c = CONDITIONS.find((x) => x.value === product.condition);
   const colors: Record<Product["condition"], string> = {
     "new": "bg-primary/10 text-primary",
     "like-new": "bg-primary/10 text-primary",
@@ -641,7 +509,6 @@ function ConditionPill({ product, onUpdate }: { product: Product; onUpdate: (p: 
         onUpdate({ ...product, condition: v, quality: CONDITION_TO_QUALITY[v] });
       }}
       className={`text-[10px] font-bold px-2 py-0.5 rounded-full border-0 outline-none cursor-pointer ${colors[product.condition]}`}
-      title={`الحالة: ${c?.label}`}
     >
       {CONDITIONS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
     </select>
@@ -659,9 +526,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// ============================================================
-// Price oracle warning
-// ============================================================
 function PriceOracleWarning({ category, title, price }: { category: string; title: string; price: number }) {
   const fetchFn = useServerFn(getReferencePrice);
   const [ref, setRef] = useState<{ avg: number | null; count: number; min: number | null; max: number | null } | null>(null);

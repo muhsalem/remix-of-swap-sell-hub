@@ -203,8 +203,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
           bio: string | null
+          commercial_register: string | null
+          company_name: string | null
+          company_verified: boolean
           created_at: string
           display_name: string
           id: string
@@ -213,8 +217,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
+          commercial_register?: string | null
+          company_name?: string | null
+          company_verified?: boolean
           created_at?: string
           display_name: string
           id: string
@@ -223,8 +231,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
+          commercial_register?: string | null
+          company_name?: string | null
+          company_verified?: boolean
           created_at?: string
           display_name?: string
           id?: string
@@ -384,6 +396,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "individual" | "company"
       app_role: "admin" | "moderator" | "user"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
@@ -521,6 +534,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["individual", "company"],
       app_role: ["admin", "moderator", "user"],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
-import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle } from "lucide-react";
+import { getReferencePrice } from "@/lib/price-oracle.functions";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle, TrendingUp } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -521,6 +522,8 @@ function ProductCard({
           onChange={(e) => setProduct({ ...product, marketPricePerUnit: Number(e.target.value) || 0 })}
           className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none" />
       </Field>
+      <PriceOracleWarning category={product.category} title={product.name} price={product.marketPricePerUnit} />
+
 
       <button
         type="button"
@@ -612,5 +615,36 @@ function ServiceStep({ ok, title, okMsg, failMsg }: { ok: boolean; title: string
         </div>
       </div>
     </li>
+  );
+}
+
+function PriceOracleWarning({ category, title, price }: { category: string; title: string; price: number }) {
+  const fetchFn = useServerFn(getReferencePrice);
+  const [ref, setRef] = useState<{ avg: number | null; count: number; min: number | null; max: number | null } | null>(null);
+
+  useEffect(() => {
+    if (!category || title.trim().length < 3 || price <= 0) { setRef(null); return; }
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetchFn({ data: { category, title } });
+        setRef(r);
+      } catch { /* ignore */ }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [category, title, price, fetchFn]);
+
+  if (!ref || !ref.avg || ref.count < 2) return null;
+  const diff = ((price - ref.avg) / ref.avg) * 100;
+  const abnormal = Math.abs(diff) > 30;
+
+  return (
+    <div className={`text-[11px] p-2 rounded-lg border flex items-start gap-2 ${abnormal ? "bg-destructive/5 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20"}`}>
+      <TrendingUp className="size-3.5 mt-0.5 shrink-0" />
+      <div className="flex-1">
+        <div className="font-bold">مرجع السوق ({ref.count} عرض)</div>
+        <div>المتوسط: {ref.avg.toLocaleString()} — المدى: {ref.min?.toLocaleString()} ~ {ref.max?.toLocaleString()}</div>
+        {abnormal && <div className="font-bold mt-0.5">⚠ سعرك يختلف بنسبة {diff.toFixed(0)}% عن السوق</div>}
+      </div>
+    </div>
   );
 }

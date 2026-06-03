@@ -54,12 +54,6 @@ export function Nav() {
               >
                 <Plus className="size-4" /> أضف عرضاً
               </Link>
-              <Link
-                to="/offers"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <Inbox className="size-4" /> الصندوق
-              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors outline-none ${

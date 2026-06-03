@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
-import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle, TrendingUp } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, TrendingUp, Package, Wrench } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -58,27 +58,50 @@ const DEFAULT_B: Product = {
   marketPricePerUnit: 5, currency: "SAR", quality: 8,
   scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
 };
-const DEFAULT_SERVICE: Product = {
-  name: "تصميم شعار احترافي", category: "خدمات مهنية", itemType: "service",
-  unit: "ساعة", quantity: 5, condition: "new", ageMonths: 0,
-  marketPricePerUnit: 150, currency: "SAR", quality: 9,
-  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3,
-};
 
 const SHARIAH_MODE = true; // مفعّل تلقائياً — لا يُعرض للمستخدم
 
+// عملة افتراضية بحسب لغة المتصفح
+function detectCurrency(): string {
+  if (typeof navigator === "undefined") return "SAR";
+  const lang = (navigator.language || "ar-SA").toLowerCase();
+  if (lang.includes("-eg")) return "EGP";
+  if (lang.includes("-ae")) return "AED";
+  if (lang.includes("-kw")) return "KWD";
+  if (lang.includes("-qa")) return "QAR";
+  if (lang.includes("-gb")) return "GBP";
+  if (lang.includes("-us")) return "USD";
+  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
+  return "SAR";
+}
+
+// عينات تجربة: 5 سلع + 5 خدمات
+const SAMPLE_GOODS: Product[] = [
+  { name: "آيفون 13 برو 256GB", category: "هواتف", itemType: "good", unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 18, marketPricePerUnit: 2800, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
+  { name: "ماك بوك إير M2", category: "حواسيب", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 12, marketPricePerUnit: 4200, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 2 },
+  { name: "ساعة أبل سيريز 8", category: "ساعات", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 24, marketPricePerUnit: 950, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3 },
+  { name: "كاميرا سوني A7 III", category: "كاميرات", itemType: "good", unit: "قطعة", quantity: 1, condition: "excellent", ageMonths: 20, marketPricePerUnit: 5500, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "medium", deliveryDays: 3 },
+  { name: "دراجة كهربائية", category: "وسائل تنقل", itemType: "good", unit: "قطعة", quantity: 1, condition: "good", ageMonths: 10, marketPricePerUnit: 2100, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "medium", deliveryDays: 5 },
+];
+const SAMPLE_SERVICES: Product[] = [
+  { name: "تصميم هوية بصرية كاملة", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 1800, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 7 },
+  { name: "استشارة قانونية متخصصة", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0, marketPricePerUnit: 350, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1 },
+  { name: "تطوير موقع ويب 5 صفحات", category: "خدمات مهنية", itemType: "service", unit: "مشروع", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 3500, currency: "SAR", quality: 9, scarcity: "normal", locationTier: "tier1", riskLevel: "medium", deliveryDays: 14 },
+  { name: "دروس خصوصية رياضيات", category: "خدمات مهنية", itemType: "service", unit: "ساعة", quantity: 10, condition: "new", ageMonths: 0, marketPricePerUnit: 80, currency: "SAR", quality: 8, scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 1 },
+  { name: "تصوير حفل زفاف", category: "خدمات يدوية", itemType: "service", unit: "حدث", quantity: 1, condition: "new", ageMonths: 0, marketPricePerUnit: 2200, currency: "SAR", quality: 9, scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 5 },
+];
+
 export function PricingEngine() {
-  const [sideA, setSideA] = useState<Product[]>([DEFAULT_A]);
-  const [sideB, setSideB] = useState<Product[]>([DEFAULT_B]);
-  const [serviceBarter, setServiceBarter] = useState(false);
+  const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
+  const [sideA, setSideA] = useState<Product[]>([{ ...DEFAULT_A, currency: defaultCurrency }]);
+  const [sideB, setSideB] = useState<Product[]>([{ ...DEFAULT_B, currency: defaultCurrency }]);
   const [result, setResult] = useState<PricingResult | null>(null);
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { sideA, sideB, shariahMode: SHARIAH_MODE, serviceBarter } }),
+    mutationFn: () => fn({ data: { sideA, sideB, shariahMode: SHARIAH_MODE, serviceBarter: false } }),
     onSuccess: (r) => {
       setResult(r);
-      // ربط النتيجة بصفحة البروفايل
       try {
         sessionStorage.setItem("lastAnalysis", JSON.stringify({
           at: Date.now(),
@@ -88,7 +111,6 @@ export function PricingEngine() {
           recommendation: r.recommendation,
           shariahLevel: r.shariah.level,
           shariahRule: r.shariah.rule,
-          serviceBarter,
         }));
       } catch { /* ignore */ }
     },
@@ -98,21 +120,8 @@ export function PricingEngine() {
   const fairnessColor =
     fairness >= 85 ? "text-primary" : fairness >= 65 ? "text-accent" : "text-destructive";
 
-  // شروط صحة مقايضة الخدمات — تُحسب لحظياً
-  const serviceChecks = (() => {
-    const all = [...sideA, ...sideB];
-    const allServices = all.every((p) => p.itemType === "service" || p.itemType === "labor_hours");
-    const benefitDefined = all.every((p) => p.name.trim().length >= 3 && p.category.startsWith("خدمات"));
-    const termKnown = all.every((p) => p.deliveryDays > 0);
-    const hoursA = sideA.reduce((s, p) => s + p.quantity, 0);
-    const hoursB = sideB.reduce((s, p) => s + p.quantity, 0);
-    const gap = Math.abs(hoursA - hoursB) / Math.max(hoursA, hoursB, 1);
-    const timeBalanced = gap <= 0.25;
-    return { allServices, benefitDefined, termKnown, timeBalanced, hoursA, hoursB, gap };
-  })();
-
   const addToSide = (side: "A" | "B") => {
-    const def = serviceBarter ? DEFAULT_SERVICE : { ...DEFAULT_B, name: "سلعة إضافية" };
+    const def = { ...DEFAULT_B, name: "سلعة إضافية", currency: defaultCurrency };
     if (side === "A") setSideA([...sideA, def]); else setSideB([...sideB, def]);
   };
   const removeFromSide = (side: "A" | "B", idx: number) => {
@@ -124,19 +133,11 @@ export function PricingEngine() {
     else setSideB(sideB.map((x, i) => i === idx ? p : x));
   };
 
-  // تطبيق وضع الخدمات تلقائياً — يحول كل العناصر إلى خدمة
-  const toggleServiceBarter = () => {
-    const next = !serviceBarter;
-    setServiceBarter(next);
-    if (next) {
-      const asService = (p: Product): Product => ({
-        ...p, itemType: "service", category: p.category.startsWith("خدمات") ? p.category : "خدمات مهنية",
-        unit: p.unit === "قطعة" ? "ساعة" : p.unit, deliveryDays: Math.max(1, p.deliveryDays),
-      });
-      setSideA(sideA.map(asService));
-      setSideB(sideB.map(asService));
-    }
+  const loadSample = (side: "A" | "B", item: Product) => {
+    const p = { ...item, currency: defaultCurrency };
+    if (side === "A") setSideA([p]); else setSideB([p]);
   };
+
 
   return (
     <section className="animate-in bg-card rounded-3xl ring-1 ring-black/5 shadow-2xl overflow-hidden mb-16">
@@ -153,23 +154,25 @@ export function PricingEngine() {
               محرك التسعير الاقتصادي للمقايضة العادلة
             </h1>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-              قارن سلعة بسلعة، أو سلعة بسلعتين، أو أي تركيبة. يدعم أيضاً مقايضة خدمة بخدمة وفق شروط الإجارة (المنفعة، الأجل، التماثل).
+              قارن سلعة بسلعة، أو سلعة بسلعتين، أو أي تركيبة. يحسب الحالة والجودة والندرة والموقع وتكلفة الشحن تلقائياً.
             </p>
           </div>
-          <div className="flex flex-col items-stretch gap-2 min-w-[220px]">
-            <button
-              type="button"
-              onClick={toggleServiceBarter}
-              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold border transition-all ${
-                serviceBarter
-                  ? "bg-accent text-accent-foreground border-accent shadow-md"
-                  : "bg-card border-border hover:border-accent/40"
-              }`}
-            >
-              <Briefcase className="size-3.5" />
-              مقايضة خدمة بخدمة {serviceBarter ? "(مُفعّل)" : ""}
-            </button>
-          </div>
+        </div>
+
+        {/* عينات تجربة سريعة */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SamplePicker
+            title="جرّب على سلعة"
+            icon={<Package className="size-3.5" />}
+            items={SAMPLE_GOODS}
+            onPick={(p, side) => loadSample(side, p)}
+          />
+          <SamplePicker
+            title="جرّب على خدمة"
+            icon={<Wrench className="size-3.5" />}
+            items={SAMPLE_SERVICES}
+            onPick={(p, side) => loadSample(side, p)}
+          />
         </div>
       </div>
 
@@ -245,12 +248,7 @@ export function PricingEngine() {
               )}
             </div>
 
-            {result?.equivalence && (
-              <div className="p-3 bg-accent/10 border border-accent/20 rounded-2xl text-right">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-accent mb-1">معادلة القيمة</p>
-                <p className="text-[11px] leading-relaxed font-mono">{result.equivalence}</p>
-              </div>
-            )}
+            {result && <MarketExpertAdvice result={result} sideA={sideA} sideB={sideB} />}
 
             {result?.shariah && (
               <div className={`p-4 rounded-2xl text-right border ${
@@ -275,43 +273,6 @@ export function PricingEngine() {
               </div>
             )}
 
-            {serviceBarter && (
-              <div className="p-4 bg-card rounded-2xl border border-accent/30 text-right">
-                <p className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <Briefcase className="size-4 text-accent" />
-                  شروط صحة مقايضة الخدمات (إجارة بإجارة)
-                </p>
-                <ul className="space-y-2 text-xs">
-                  <ServiceStep
-                    ok={serviceChecks.allServices}
-                    title="١. النوع: كل العناصر خدمات"
-                    okMsg="كل عنصر مُصنّف كخدمة أو ساعات عمل."
-                    failMsg="بعض العناصر ليست خدمة — حوّل النوع إلى «خدمة» في الطرفين."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.benefitDefined}
-                    title="٢. المنفعة محددة"
-                    okMsg="اسم وفئة كل خدمة واضحان (لا غرر)."
-                    failMsg="اكتب اسماً دقيقاً (≥3 أحرف) واختر فئة «خدمات مهنية/يدوية»."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.termKnown}
-                    title="٣. الأجل/المدة معلومة"
-                    okMsg="مدة التنفيذ محددة لكل طرف."
-                    failMsg="حدّد «أيام التسليم» > 0 لكل خدمة لتفادي التأجيل المفتوح."
-                  />
-                  <ServiceStep
-                    ok={serviceChecks.timeBalanced}
-                    title="٤. التماثل في الزمن/القيمة"
-                    okMsg={`متوازن — (أ) ${serviceChecks.hoursA}س مقابل (ب) ${serviceChecks.hoursB}س.`}
-                    failMsg={`تفاوت ${(serviceChecks.gap * 100).toFixed(0)}% بين زمن الطرفين (${serviceChecks.hoursA}س / ${serviceChecks.hoursB}س) — يُستحب التقارب.`}
-                  />
-                </ul>
-                <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed border-t border-border pt-2">
-                  لا تُقبل المقايضة شرعياً إلا إذا تحققت الشروط الأربعة. يُغلق زر إتمام الصفقة تلقائياً عند الإخلال.
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
@@ -602,21 +563,53 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ServiceStep({ ok, title, okMsg, failMsg }: { ok: boolean; title: string; okMsg: string; failMsg: string }) {
+function MarketExpertAdvice({ result, sideA, sideB }: { result: PricingResult; sideA: Product[]; sideB: Product[] }) {
+  const stronger = result.inFavorOf;
+  const gapPct = Math.round((Math.abs(result.gap) / Math.max(result.valueA, result.valueB, 1)) * 100);
+  const fair = result.fairness;
+  const namesA = sideA.map((p) => p.name).join(" + ");
+  const namesB = sideB.map((p) => p.name).join(" + ");
+
+  let headline = "";
+  let toA = "";
+  let toB = "";
+  if (fair >= 85) {
+    headline = "صفقة عادلة — أنصح بإتمامها مباشرة";
+    toA = `سعر السوق الحالي لـ«${namesA}» قريب من قيمة ما ستحصل عليه. لا تتأخر — السلع المماثلة قد تخسر 5-8% شهرياً.`;
+    toB = `قيمة ما تعرضه ≈ ما ستحصل عليه. هذه صفقة رابحة من حيث الوقت (دون عمولة بيع كامل ولا انتظار مشتري).`;
+  } else if (fair >= 65) {
+    headline = `فجوة ${gapPct}% لصالح الطرف (${stronger === "A" ? "أ" : "ب"}) — يمكن تعديلها`;
+    toA = stronger === "A"
+      ? `أنت في موقع الأقوى. الطرف (ب) يحتاج إضافة ${result.cashBalanceDI} DI نقداً أو سلعة صغيرة لتعادل الصفقة.`
+      : `يفصلك ${result.cashBalanceDI} DI عن صفقة عادلة — اعرض دفعها نقداً أو أضف سلعة بقيمة مقاربة.`;
+    toB = stronger === "B"
+      ? `قيمتك أعلى — اطلب من (أ) إضافة ${result.cashBalanceDI} DI أو خدمة مكافئة.`
+      : `أنت تكسب وقتاً وعمولة بيع. الفارق ${result.cashBalanceDI} DI صغير مقابل سرعة الإنجاز.`;
+  } else {
+    headline = "فجوة كبيرة — لا أنصح بإتمامها بهذا الشكل";
+    toA = `الفجوة ${gapPct}% كبيرة جداً. أعد التفاوض أو ابحث عن عرض مكافئ في «أُقايض/أبحث عن».`;
+    toB = `الطرف الآخر يخسر ${gapPct}% — لن يقبل غالباً. خفّض المطلوب أو أضف قيمة لجذبه.`;
+  }
+
   return (
-    <li className={`flex items-start gap-2 p-2 rounded-lg border ${ok ? "bg-primary/5 border-primary/20" : "bg-destructive/5 border-destructive/30"}`}>
-      <span className={`shrink-0 mt-0.5 size-5 rounded-full grid place-items-center ${ok ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
-        {ok ? <Check className="size-3" /> : <XCircle className="size-3" />}
-      </span>
-      <div className="flex-1">
-        <div className="font-bold text-[12px]">{title}</div>
-        <div className={`text-[11px] leading-relaxed ${ok ? "text-foreground/70" : "text-destructive"}`}>
-          {ok ? okMsg : failMsg}
+    <div className="p-4 bg-gradient-to-br from-accent/15 to-primary/10 border border-accent/30 rounded-2xl text-right space-y-3">
+      <p className="text-sm font-bold flex items-center gap-2">
+        <TrendingUp className="size-4 text-accent" />
+        نصيحة الخبير التسويقي
+      </p>
+      <p className="text-xs font-bold leading-relaxed">{headline}</p>
+      <div className="grid grid-cols-1 gap-2 text-[11px]">
+        <div className="p-2 bg-card/60 rounded-lg border border-border">
+          <span className="font-bold text-primary">إلى الطرف (أ): </span>{toA}
+        </div>
+        <div className="p-2 bg-card/60 rounded-lg border border-border">
+          <span className="font-bold text-accent">إلى الطرف (ب): </span>{toB}
         </div>
       </div>
-    </li>
+    </div>
   );
 }
+
 
 function PriceOracleWarning({ category, title, price }: { category: string; title: string; price: number }) {
   const fetchFn = useServerFn(getReferencePrice);
@@ -644,6 +637,53 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
         <div className="font-bold">مرجع السوق ({ref.count} عرض)</div>
         <div>المتوسط: {ref.avg.toLocaleString()} — المدى: {ref.min?.toLocaleString()} ~ {ref.max?.toLocaleString()}</div>
         {abnormal && <div className="font-bold mt-0.5">⚠ سعرك يختلف بنسبة {diff.toFixed(0)}% عن السوق</div>}
+      </div>
+    </div>
+  );
+}
+
+function SamplePicker({ title, icon, items, onPick }: {
+  title: string;
+  icon: React.ReactNode;
+  items: Product[];
+  onPick: (p: Product, side: "A" | "B") => void;
+}) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="p-4 bg-card border border-border rounded-2xl">
+      <div className="flex items-center gap-2 mb-3 text-xs font-bold text-muted-foreground">
+        {icon} {title}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {items.map((it, i) => (
+          <div key={i} className="relative">
+            <button
+              type="button"
+              onClick={() => setOpen(open === i ? null : i)}
+              className="px-3 py-1.5 text-[11px] font-bold rounded-full bg-stone-soft hover:bg-primary/10 border border-border transition-all"
+            >
+              {it.name}
+            </button>
+            {open === i && (
+              <div className="absolute z-20 top-full mt-1 right-0 bg-card border border-border rounded-xl shadow-xl p-2 min-w-[140px] flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => { onPick(it, "A"); setOpen(null); }}
+                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-primary/10 text-right"
+                >
+                  حمّل في الطرف (أ)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onPick(it, "B"); setOpen(null); }}
+                  className="text-[11px] px-3 py-1.5 rounded-lg hover:bg-accent/10 text-right"
+                >
+                  حمّل في الطرف (ب)
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

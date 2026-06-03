@@ -589,14 +589,11 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
 // Suggestions pool by item type
 function suggestFor(product: Product): string[] {
   const pool: string[] = [];
-  if (product.itemType === "service") {
+  if (product.itemType === "labor_hours") {
     pool.push(...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g12 || []), ...(CATALOG_ITEMS.g1 || []));
-  } else if (product.itemType === "digital") {
-    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.s6 || []), ...(CATALOG_ITEMS.g7 || []));
   } else {
     pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g10 || []), ...(CATALOG_ITEMS.s9 || []));
   }
-  // unique + first 5
   return Array.from(new Set(pool)).slice(0, 5);
 }
 

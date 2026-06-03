@@ -23,6 +23,12 @@ type Product = {
   locationTier: "tier1" | "tier2" | "tier3" | "rural";
   riskLevel: "low" | "medium" | "high";
   deliveryDays: number;
+  distanceKm: number;
+};
+
+// خريطة ربط الحالة بالجودة الافتراضية (يمكن للمستخدم تعديلها يدويًا بعد ذلك)
+const CONDITION_TO_QUALITY: Record<Product["condition"], number> = {
+  "new": 10, "like-new": 9, "excellent": 8, "good": 6, "fair": 4,
 };
 
 const CONDITIONS = [
@@ -51,13 +57,13 @@ const DEFAULT_A: Product = {
   name: "ساعة استشارة قانونية", category: "خدمات مهنية", itemType: "service",
   unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0,
   marketPricePerUnit: 250, currency: "SAR", quality: 9,
-  scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1,
+  scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1, distanceKm: 0,
 };
 const DEFAULT_B: Product = {
   name: "قمح بلدي", category: "حبوب وأغذية", itemType: "commodity",
   unit: "كجم", quantity: 100, condition: "new", ageMonths: 0,
   marketPricePerUnit: 5, currency: "SAR", quality: 8,
-  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
+  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0, distanceKm: 0,
 };
 
 const SHARIAH_MODE = true; // مفعّل تلقائياً — لا يُعرض للمستخدم
@@ -138,6 +144,7 @@ export function PricingEngine() {
       locationTier: "tier1",
       riskLevel: f.dep ? "medium" : "low",
       deliveryDays: f.type === "service" ? 1 : 3,
+      distanceKm: 0,
     };
     if (side === "A") setSideA([product]); else setSideB([product]);
   };
@@ -483,7 +490,10 @@ function ProductCard({
           <div className="grid grid-cols-2 gap-2">
             <Field label="الحالة">
               <select value={product.condition}
-                onChange={(e) => setProduct({ ...product, condition: e.target.value as Product["condition"] })}
+                onChange={(e) => {
+                  const newCondition = e.target.value as Product["condition"];
+                  setProduct({ ...product, condition: newCondition, quality: CONDITION_TO_QUALITY[newCondition] });
+                }}
                 className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none">
                 {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
@@ -529,6 +539,11 @@ function ProductCard({
                 className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none" />
             </Field>
           </div>
+          <Field label={`المسافة بين الطرفين: ${product.distanceKm} كم ${product.distanceKm > 50 ? "(يُحسب خصم شحن)" : ""}`}>
+            <input type="number" min={0} max={5000} step={10} value={product.distanceKm}
+              onChange={(e) => setProduct({ ...product, distanceKm: Number(e.target.value) || 0 })}
+              className="w-full px-2 py-2 rounded-xl bg-card border border-border text-sm outline-none" />
+          </Field>
         </div>
       )}
     </div>
@@ -617,9 +632,14 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
     <div className={`text-[11px] p-2 rounded-lg border flex items-start gap-2 ${abnormal ? "bg-destructive/5 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20"}`}>
       <TrendingUp className="size-3.5 mt-0.5 shrink-0" />
       <div className="flex-1">
-        <div className="font-bold">مرجع السوق ({ref.count} عرض)</div>
+        <div className="font-bold">مرجع السوق ({ref.count} عرض مماثل)</div>
         <div>المتوسط: {ref.avg.toLocaleString()} — المدى: {ref.min?.toLocaleString()} ~ {ref.max?.toLocaleString()}</div>
-        {abnormal && <div className="font-bold mt-0.5">⚠ سعرك يختلف بنسبة {diff.toFixed(0)}% عن السوق</div>}
+        {abnormal && (
+          <div className="mt-1 space-y-0.5">
+            <div className="font-bold">⚠ سعرك {diff > 0 ? "أعلى" : "أقل"} من السوق بنسبة {Math.abs(diff).toFixed(0)}%</div>
+            <div className="font-bold">💡 السعر العادل المقترح: {Math.round(ref.avg).toLocaleString()}</div>
+          </div>
+        )}
       </div>
     </div>
   );

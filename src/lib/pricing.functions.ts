@@ -42,6 +42,7 @@ const ProductSchema = z.object({
   locationTier: z.enum(["tier1","tier2","tier3","rural"]).default("tier2"),
   riskLevel: z.enum(["low","medium","high"]).default("low"),
   deliveryDays: z.number().min(0).max(365).default(0),
+  distanceKm: z.number().min(0).max(20000).default(0),
 });
 
 const InputSchema = z.object({
@@ -145,7 +146,7 @@ export function quickShariahCheckByText(
     name: x.title, category: x.category, itemType: "good",
     unit: "قطعة", quantity: 1, condition: "good", ageMonths: 0,
     marketPricePerUnit: 1, currency: "SAR", quality: 7,
-    scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
+    scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0, distanceKm: 0,
   });
   return analyzeShariahPair(fake(a), fake(b), cashBalance);
 }
@@ -251,9 +252,12 @@ function valueWithBreakdown(p: Product): ValueBreakdown {
   const locationFactor = LOCATION_FACTOR[p.locationTier];
   const riskFactor = RISK_FACTOR[p.riskLevel];
   const timeFactor = Math.max(0.85, 1 - p.deliveryDays * 0.004);
+  // خصم تكلفة الشحن التقديرية حسب المسافة (~ 0.5 ر.س/كم، يبدأ بعد 50 كم، حد أقصى 15% من القيمة)
+  const shippingSAR = p.distanceKm > 50 ? Math.min(baseSAR * 0.15, (p.distanceKm - 50) * 0.5) : 0;
+  const shippingFactor = baseSAR > 0 ? Math.max(0.85, 1 - shippingSAR / baseSAR) : 1;
   const finalSAR = Math.round(
     baseSAR * cond * ageFactor * qualityFactor * scarcityFactor *
-      locationFactor * riskFactor * timeFactor * profile.demand,
+      locationFactor * riskFactor * timeFactor * shippingFactor * profile.demand,
   );
   return {
     base: p.marketPricePerUnit,

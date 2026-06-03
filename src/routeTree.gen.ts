@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const ListingsIdRoute = ListingsIdRouteImport.update({
   id: '/listings/$id',
   path: '/listings/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDocRoute = LegalDocRouteImport.update({
+  id: '/legal/$doc',
+  path: '/legal/$doc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTransactionsRoute =
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/profile'
     | '/transactions'
+    | '/legal/$doc'
     | '/listings/$id'
     | '/admin/disputes'
     | '/offer/$listingId'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/profile'
     | '/transactions'
+    | '/legal/$doc'
     | '/listings/$id'
     | '/admin/disputes'
     | '/offer/$listingId'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/offers'
     | '/_authenticated/profile'
     | '/_authenticated/transactions'
+    | '/legal/$doc'
     | '/listings/$id'
     | '/_authenticated/admin/disputes'
     | '/_authenticated/offer/$listingId'
@@ -185,6 +197,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
 }
 
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/listings/$id'
       fullPath: '/listings/$id'
       preLoaderRoute: typeof ListingsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/$doc': {
+      id: '/legal/$doc'
+      path: '/legal/$doc'
+      fullPath: '/legal/$doc'
+      preLoaderRoute: typeof LegalDocRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/transactions': {
@@ -324,8 +344,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

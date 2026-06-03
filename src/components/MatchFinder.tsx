@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
@@ -14,6 +14,19 @@ export function MatchFinder() {
   const m = useMutation({
     mutationFn: () => fn({ data: { have, want } }),
   });
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ have: string; want: string }>).detail;
+      if (!detail) return;
+      setHave(detail.have);
+      setWant(detail.want);
+      setTimeout(() => m.mutate(), 50);
+    };
+    window.addEventListener("badel:match", handler);
+    return () => window.removeEventListener("badel:match", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const matches = m.data?.matches ?? [];
 

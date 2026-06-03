@@ -5,9 +5,10 @@ import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.f
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
-  ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2,
+  ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
 } from "lucide-react";
 import { CatalogPicker, type CatalogPick } from "@/components/CatalogPicker";
+import { ITEMS as CATALOG_ITEMS } from "@/lib/badel-catalog";
 
 // ============================================================
 // Types

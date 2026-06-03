@@ -130,10 +130,9 @@ function OfferDetailPage() {
               </button>
             )}
             {offer.status === "accepted" && (
-              <button onClick={() => respond.mutate("complete")} disabled={respond.isPending}
-                className="px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold flex items-center gap-2 hover:bg-primary">
-                <CheckCircle2 className="size-4" /> تأكيد إتمام الصفقة
-              </button>
+              <span className="px-4 py-2.5 bg-primary/10 text-primary rounded-full text-xs font-bold flex items-center gap-2">
+                <Truck className="size-4" /> أكمل الشحن والاستلام في الأسفل
+              </span>
             )}
             <span className="px-4 py-2.5 bg-stone-soft rounded-full text-xs font-bold">الحالة: {offer.status}</span>
           </div>

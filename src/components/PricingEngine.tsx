@@ -57,13 +57,13 @@ const DEFAULT_A: Product = {
   name: "ساعة استشارة قانونية", category: "خدمات مهنية", itemType: "service",
   unit: "ساعة", quantity: 2, condition: "new", ageMonths: 0,
   marketPricePerUnit: 250, currency: "SAR", quality: 9,
-  scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1,
+  scarcity: "high", locationTier: "tier1", riskLevel: "low", deliveryDays: 1, distanceKm: 0,
 };
 const DEFAULT_B: Product = {
   name: "قمح بلدي", category: "حبوب وأغذية", itemType: "commodity",
   unit: "كجم", quantity: 100, condition: "new", ageMonths: 0,
   marketPricePerUnit: 5, currency: "SAR", quality: 8,
-  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
+  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0, distanceKm: 0,
 };
 
 const SHARIAH_MODE = true; // مفعّل تلقائياً — لا يُعرض للمستخدم

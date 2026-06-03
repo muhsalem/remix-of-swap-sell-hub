@@ -103,3 +103,45 @@ export const deleteListing = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// مطابقة المقايضة: ابحث عن إعلانات تطابق ما يريده المستخدم
+// وتنتمي لأصحاب يبحثون عن ما يملكه المستخدم
+export const matchListings = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    z.object({
+      have: z.string().trim().min(2).max(200),
+      want: z.string().trim().min(2).max(200),
+    }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    const tokens = (s: string) =>
+      s.toLowerCase().split(/[\s,،.\-_/]+/).filter((t) => t.length >= 2).slice(0, 6);
+    const wantTokens = tokens(data.want);
+    const haveTokens = tokens(data.have);
+
+    // ابحث عن إعلانات تطابق "ما أريد" في العنوان/الفئة
+    const wantOr = wantTokens.flatMap((t) => [
+      `title.ilike.%${t}%`, `category.ilike.%${t}%`, `description.ilike.%${t}%`,
+    ]).join(",");
+
+    const { data: candidates, error } = await anonClient
+      .from("listings")
+      .select("id,title,category,condition,market_price,wants,images,owner_id,profiles:owner_id(display_name,avatar_url,rating)")
+      .eq("status", "active")
+      .or(wantOr || "title.ilike.%%")
+      .limit(40);
+    if (error) throw new Error(error.message);
+
+    // رتّب: ضاعف النقاط إذا كان "wants" الخاص بصاحب الإعلان يطابق "ما أملك"
+    const scored = (candidates ?? []).map((l: any) => {
+      const wantsLower = (l.wants ?? "").toLowerCase();
+      const titleLower = (l.title ?? "").toLowerCase();
+      const catLower = (l.category ?? "").toLowerCase();
+      const haveMatch = haveTokens.filter((t) => wantsLower.includes(t)).length;
+      const wantMatch = wantTokens.filter((t) => titleLower.includes(t) || catLower.includes(t)).length;
+      const score = wantMatch * 2 + haveMatch * 3;
+      return { ...l, _score: score, _mutual: haveMatch > 0 };
+    }).filter((x) => x._score > 0).sort((a, b) => b._score - a._score).slice(0, 12);
+
+    return { matches: scored };
+  });

@@ -97,6 +97,19 @@ export function PricingEngine() {
   const fairnessColor =
     fairness >= 85 ? "text-primary" : fairness >= 65 ? "text-accent" : "text-destructive";
 
+  // شروط صحة مقايضة الخدمات — تُحسب لحظياً
+  const serviceChecks = (() => {
+    const all = [...sideA, ...sideB];
+    const allServices = all.every((p) => p.itemType === "service" || p.itemType === "labor_hours");
+    const benefitDefined = all.every((p) => p.name.trim().length >= 3 && p.category.startsWith("خدمات"));
+    const termKnown = all.every((p) => p.deliveryDays > 0);
+    const hoursA = sideA.reduce((s, p) => s + p.quantity, 0);
+    const hoursB = sideB.reduce((s, p) => s + p.quantity, 0);
+    const gap = Math.abs(hoursA - hoursB) / Math.max(hoursA, hoursB, 1);
+    const timeBalanced = gap <= 0.25;
+    return { allServices, benefitDefined, termKnown, timeBalanced, hoursA, hoursB, gap };
+  })();
+
   const addToSide = (side: "A" | "B") => {
     const def = serviceBarter ? DEFAULT_SERVICE : { ...DEFAULT_B, name: "سلعة إضافية" };
     if (side === "A") setSideA([...sideA, def]); else setSideB([...sideB, def]);

@@ -1,9 +1,13 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { quickShariahCheckByText, SAR_PER_DI } from "@/lib/pricing.functions";
-import { History, CheckCircle2, XCircle, Clock, AlertTriangle, Ban, ShieldCheck, ArrowLeftRight } from "lucide-react";
+import {
+  History, CheckCircle2, XCircle, Clock, AlertTriangle, Ban, ShieldCheck,
+  ArrowLeftRight, Filter, ArrowUpDown,
+} from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; color: string; Icon: React.ElementType }> = {
   pending: { label: "قيد الانتظار", color: "bg-amber-100 text-amber-800 border-amber-200", Icon: Clock },
@@ -76,8 +80,46 @@ export const Route = createFileRoute("/_authenticated/transactions")({
   ),
 });
 
+type TypeFilter = "all" | "buy" | "sell" | "swap";
+type StatusFilter = "all" | "pending" | "accepted" | "rejected" | "completed" | "cancelled";
+type PeriodFilter = "all" | "7d" | "30d" | "90d" | "year";
+type SortOrder = "desc" | "asc";
+
 function TransactionsPage() {
   const { data: rows } = useSuspenseQuery(txQO);
+
+  const [typeF, setTypeF] = useState<TypeFilter>("all");
+  const [statusF, setStatusF] = useState<StatusFilter>("all");
+  const [periodF, setPeriodF] = useState<PeriodFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  const filtered = useMemo(() => {
+    const now = Date.now();
+    const periodMs: Record<PeriodFilter, number> = {
+      all: Infinity,
+      "7d": 7 * 864e5,
+      "30d": 30 * 864e5,
+      "90d": 90 * 864e5,
+      year: 365 * 864e5,
+    };
+    const cutoff = now - periodMs[periodF];
+    const out = rows.filter((r) => {
+      if (statusF !== "all" && r.status !== statusF) return false;
+      if (periodF !== "all" && new Date(r.created_at).getTime() < cutoff) return false;
+      if (typeF === "buy" && r.direction !== "incoming") return false;
+      if (typeF === "sell" && r.direction !== "outgoing") return false;
+      if (typeF === "swap" && (r.cash_balance ?? 0) > 0) return false;
+      return true;
+    });
+    out.sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      return sortOrder === "desc" ? db - da : da - db;
+    });
+    return out;
+  }, [rows, typeF, statusF, periodF, sortOrder]);
+
+  const resetFilters = () => { setTypeF("all"); setStatusF("all"); setPeriodF("all"); setSortOrder("desc"); };
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
@@ -91,14 +133,74 @@ function TransactionsPage() {
         <Link to="/profile" className="text-sm text-primary hover:underline">← العودة للبروفايل</Link>
       </div>
 
-      {rows.length === 0 ? (
+      {/* Filters */}
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="size-4 text-primary" />
+          <span className="text-sm font-bold">تصفية</span>
+          <button onClick={resetFilters} className="ms-auto text-[11px] text-muted-foreground hover:text-primary underline">
+            مسح الكل
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <FilterSelect
+            label="النوع" value={typeF} onChange={(v) => setTypeF(v as TypeFilter)}
+            options={[
+              { v: "all", l: "الكل" },
+              { v: "buy", l: "شراء (وارد)" },
+              { v: "sell", l: "بيع (صادر)" },
+              { v: "swap", l: "مقايضة خالصة" },
+            ]}
+          />
+          <FilterSelect
+            label="الحالة" value={statusF} onChange={(v) => setStatusF(v as StatusFilter)}
+            options={[
+              { v: "all", l: "الكل" },
+              { v: "pending", l: "قيد الانتظار" },
+              { v: "accepted", l: "مقبولة" },
+              { v: "rejected", l: "مرفوضة" },
+              { v: "completed", l: "مكتملة" },
+              { v: "cancelled", l: "ملغاة" },
+            ]}
+          />
+          <FilterSelect
+            label="الفترة" value={periodF} onChange={(v) => setPeriodF(v as PeriodFilter)}
+            options={[
+              { v: "all", l: "كل الفترات" },
+              { v: "7d", l: "آخر 7 أيام" },
+              { v: "30d", l: "آخر 30 يوم" },
+              { v: "90d", l: "آخر 90 يوم" },
+              { v: "year", l: "آخر سنة" },
+            ]}
+          />
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">الترتيب</label>
+            <button
+              onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+              className="h-9 rounded-lg border border-border bg-card text-sm flex items-center justify-center gap-2 hover:border-primary/40"
+            >
+              <ArrowUpDown className="size-3.5" />
+              {sortOrder === "desc" ? "الأحدث أولاً" : "الأقدم أولاً"}
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 text-[11px] text-muted-foreground">
+          عرض <b className="text-foreground">{filtered.length}</b> من أصل <b className="text-foreground">{rows.length}</b> معاملة
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-dashed border-border bg-card">
           <ArrowLeftRight className="size-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">لا توجد معاملات بعد. ابدأ بإنشاء عرض أو قبول مقايضة.</p>
+          <p className="text-muted-foreground">
+            {rows.length === 0
+              ? "لا توجد معاملات بعد. ابدأ بإنشاء عرض أو قبول مقايضة."
+              : "لا توجد نتائج تطابق الفلاتر الحالية."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {rows.map((r) => {
+          {filtered.map((r) => {
             const st = STATUS_LABEL[r.status] ?? STATUS_LABEL.pending;
             const StIcon = st.Icon;
             const ShIcon = r.shariah?.level === "forbidden" ? Ban : r.shariah?.level === "warning" ? AlertTriangle : ShieldCheck;
@@ -109,8 +211,11 @@ function TransactionsPage() {
                     <StIcon className="size-3.5" /> {st.label}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-stone-soft text-foreground/70">
-                    {r.direction === "outgoing" ? "صادر مني" : "وارد إليّ"}
+                    {r.direction === "outgoing" ? "بيع (صادر مني)" : "شراء (وارد إليّ)"}
                   </span>
+                  {(r.cash_balance ?? 0) === 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">مقايضة خالصة</span>
+                  )}
                   <span className="text-xs text-muted-foreground font-mono">
                     {new Date(r.created_at).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" })}
                   </span>
@@ -162,6 +267,28 @@ function TransactionsPage() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function FilterSelect({
+  label, value, onChange, options,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  options: { v: string; l: string }[];
+}) {
+  return (
+    <div className="flex flex-col">
+      <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 rounded-lg border border-border bg-card px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+      >
+        {options.map((o) => (
+          <option key={o.v} value={o.v}>{o.l}</option>
+        ))}
+      </select>
     </div>
   );
 }

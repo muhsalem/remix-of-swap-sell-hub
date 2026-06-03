@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES, SAR_PER_DI } from "@/lib/pricing.functions";
-import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, ChevronDown, Plus, X, Briefcase, Check, XCircle } from "lucide-react";
 import phoneImg from "@/assets/product-phone.jpg";
 import headphonesImg from "@/assets/product-headphones.jpg";
 
@@ -96,6 +96,19 @@ export function PricingEngine() {
   const fairness = result?.fairness ?? 0;
   const fairnessColor =
     fairness >= 85 ? "text-primary" : fairness >= 65 ? "text-accent" : "text-destructive";
+
+  // شروط صحة مقايضة الخدمات — تُحسب لحظياً
+  const serviceChecks = (() => {
+    const all = [...sideA, ...sideB];
+    const allServices = all.every((p) => p.itemType === "service" || p.itemType === "labor_hours");
+    const benefitDefined = all.every((p) => p.name.trim().length >= 3 && p.category.startsWith("خدمات"));
+    const termKnown = all.every((p) => p.deliveryDays > 0);
+    const hoursA = sideA.reduce((s, p) => s + p.quantity, 0);
+    const hoursB = sideB.reduce((s, p) => s + p.quantity, 0);
+    const gap = Math.abs(hoursA - hoursB) / Math.max(hoursA, hoursB, 1);
+    const timeBalanced = gap <= 0.25;
+    return { allServices, benefitDefined, termKnown, timeBalanced, hoursA, hoursB, gap };
+  })();
 
   const addToSide = (side: "A" | "B") => {
     const def = serviceBarter ? DEFAULT_SERVICE : { ...DEFAULT_B, name: "سلعة إضافية" };
@@ -258,6 +271,44 @@ export function PricingEngine() {
                     {result.shariah.notes.map((n, i) => <li key={i}>{n}</li>)}
                   </ul>
                 )}
+              </div>
+            )}
+
+            {serviceBarter && (
+              <div className="p-4 bg-card rounded-2xl border border-accent/30 text-right">
+                <p className="text-sm font-bold mb-3 flex items-center gap-2">
+                  <Briefcase className="size-4 text-accent" />
+                  شروط صحة مقايضة الخدمات (إجارة بإجارة)
+                </p>
+                <ul className="space-y-2 text-xs">
+                  <ServiceStep
+                    ok={serviceChecks.allServices}
+                    title="١. النوع: كل العناصر خدمات"
+                    okMsg="كل عنصر مُصنّف كخدمة أو ساعات عمل."
+                    failMsg="بعض العناصر ليست خدمة — حوّل النوع إلى «خدمة» في الطرفين."
+                  />
+                  <ServiceStep
+                    ok={serviceChecks.benefitDefined}
+                    title="٢. المنفعة محددة"
+                    okMsg="اسم وفئة كل خدمة واضحان (لا غرر)."
+                    failMsg="اكتب اسماً دقيقاً (≥3 أحرف) واختر فئة «خدمات مهنية/يدوية»."
+                  />
+                  <ServiceStep
+                    ok={serviceChecks.termKnown}
+                    title="٣. الأجل/المدة معلومة"
+                    okMsg="مدة التنفيذ محددة لكل طرف."
+                    failMsg="حدّد «أيام التسليم» > 0 لكل خدمة لتفادي التأجيل المفتوح."
+                  />
+                  <ServiceStep
+                    ok={serviceChecks.timeBalanced}
+                    title="٤. التماثل في الزمن/القيمة"
+                    okMsg={`متوازن — (أ) ${serviceChecks.hoursA}س مقابل (ب) ${serviceChecks.hoursB}س.`}
+                    failMsg={`تفاوت ${(serviceChecks.gap * 100).toFixed(0)}% بين زمن الطرفين (${serviceChecks.hoursA}س / ${serviceChecks.hoursB}س) — يُستحب التقارب.`}
+                  />
+                </ul>
+                <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed border-t border-border pt-2">
+                  لا تُقبل المقايضة شرعياً إلا إذا تحققت الشروط الأربعة. يُغلق زر إتمام الصفقة تلقائياً عند الإخلال.
+                </p>
               </div>
             )}
           </div>
@@ -545,5 +596,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       </label>
       {children}
     </div>
+  );
+}
+
+function ServiceStep({ ok, title, okMsg, failMsg }: { ok: boolean; title: string; okMsg: string; failMsg: string }) {
+  return (
+    <li className={`flex items-start gap-2 p-2 rounded-lg border ${ok ? "bg-primary/5 border-primary/20" : "bg-destructive/5 border-destructive/30"}`}>
+      <span className={`shrink-0 mt-0.5 size-5 rounded-full grid place-items-center ${ok ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
+        {ok ? <Check className="size-3" /> : <XCircle className="size-3" />}
+      </span>
+      <div className="flex-1">
+        <div className="font-bold text-[12px]">{title}</div>
+        <div className={`text-[11px] leading-relaxed ${ok ? "text-foreground/70" : "text-destructive"}`}>
+          {ok ? okMsg : failMsg}
+        </div>
+      </div>
+    </li>
   );
 }

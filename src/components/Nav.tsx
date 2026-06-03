@@ -9,6 +9,16 @@ import { checkIsAdmin } from "@/lib/admin.functions";
 export function Nav() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const checkAdmin = useServerFn(checkIsAdmin);
+  const { data: adminData } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => checkAdmin(),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+  const isAdmin = adminData?.isAdmin ?? false;
+
+
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">

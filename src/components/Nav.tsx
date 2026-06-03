@@ -1,10 +1,20 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/admin.functions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const ACCOUNT_PATHS = ["/offers", "/my-listings", "/transactions", "/profile"];
 
 export function Nav() {
   const { user, loading } = useAuth();
@@ -17,6 +27,8 @@ export function Nav() {
     staleTime: 5 * 60 * 1000,
   });
   const isAdmin = adminData?.isAdmin ?? false;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const accountActive = ACCOUNT_PATHS.some((p) => pathname.startsWith(p));
 
 
 
@@ -42,30 +54,50 @@ export function Nav() {
               >
                 <Plus className="size-4" /> أضف عرضاً
               </Link>
-              <Link
-                to="/offers"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <Inbox className="size-4" /> الصندوق
-              </Link>
-              <Link
-                to="/my-listings"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <User className="size-4" /> عروضي
-              </Link>
-              <Link
-                to="/transactions"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <History className="size-4" /> السجل
-              </Link>
-              <Link
-                to="/profile"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium hover:bg-stone-soft"
-              >
-                <Wallet className="size-4" /> محفظتي
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors outline-none ${
+                    accountActive ? "bg-stone-soft text-primary" : "hover:bg-stone-soft"
+                  }`}
+                >
+                  <UserCircle className="size-4" />
+                  حسابي
+                  <ChevronDown className="size-3.5 opacity-60" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {user.email ?? "حسابي"}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/offers" className="flex items-center gap-2 cursor-pointer">
+                      <Inbox className="size-4" /> الصندوق
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-listings" className="flex items-center gap-2 cursor-pointer">
+                      <User className="size-4" /> عروضي
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/transactions" className="flex items-center gap-2 cursor-pointer">
+                      <History className="size-4" /> السجل
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <Wallet className="size-4" /> محفظتي
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+                    className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="size-4" /> تسجيل الخروج
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               {isAdmin && (
                 <Link
                   to="/admin/disputes"

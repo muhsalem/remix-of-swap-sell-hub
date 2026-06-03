@@ -18,6 +18,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
 import { Route as AuthenticatedNewListingRouteImport } from './routes/_authenticated/new-listing'
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
+import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
 
@@ -66,6 +67,11 @@ const AuthenticatedMyListingsRoute = AuthenticatedMyListingsRouteImport.update({
   path: '/my-listings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOffersIdRoute = AuthenticatedOffersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -81,6 +87,7 @@ const AuthenticatedOfferListingIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/disputes'
     | '/my-listings'
     | '/new-listing'
     | '/offers'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/disputes'
     | '/my-listings'
     | '/new-listing'
     | '/offers'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/disputes'
     | '/_authenticated/my-listings'
     | '/_authenticated/new-listing'
     | '/_authenticated/offers'
@@ -228,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyListingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/disputes': {
+      id: '/_authenticated/disputes'
+      path: '/disputes'
+      fullPath: '/disputes'
+      preLoaderRoute: typeof AuthenticatedDisputesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/offers/$id': {
       id: '/_authenticated/offers/$id'
       path: '/$id'
@@ -257,6 +276,7 @@ const AuthenticatedOffersRouteWithChildren =
   AuthenticatedOffersRoute._addFileChildren(AuthenticatedOffersRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
@@ -266,6 +286,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
@@ -286,3 +307,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

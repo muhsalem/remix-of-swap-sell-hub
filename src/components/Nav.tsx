@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, signOut } from "@/lib/auth";
 import { LogOut, Plus, User, Inbox, Wallet, History } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function Nav() {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ export function Nav() {
               >
                 <Wallet className="size-4" /> محفظتي
               </Link>
+              <NotificationBell />
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}
                 title="تسجيل الخروج"

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      disputes: {
+        Row: {
+          created_at: string
+          evidence: string | null
+          id: string
+          offer_id: string
+          opened_by: string
+          reason: string
+          resolution: string | null
+          status: Database["public"]["Enums"]["dispute_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          offer_id: string
+          opened_by: string
+          reason: string
+          resolution?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          offer_id?: string
+          opened_by?: string
+          reason?: string
+          resolution?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           age_months: number
@@ -105,6 +141,66 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      price_history: {
+        Row: {
+          category: string
+          id: string
+          price: number
+          recorded_at: string
+          source: string
+          title_key: string
+        }
+        Insert: {
+          category: string
+          id?: string
+          price: number
+          recorded_at?: string
+          source?: string
+          title_key: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          price?: number
+          recorded_at?: string
+          source?: string
+          title_key?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -180,6 +276,8 @@ export type Database = {
         Row: {
           cash_balance: number | null
           created_at: string
+          escrow_locked: boolean
+          escrow_released_at: string | null
           fairness_score: number | null
           from_user: string
           id: string
@@ -193,6 +291,8 @@ export type Database = {
         Insert: {
           cash_balance?: number | null
           created_at?: string
+          escrow_locked?: boolean
+          escrow_released_at?: string | null
           fairness_score?: number | null
           from_user: string
           id?: string
@@ -206,6 +306,8 @@ export type Database = {
         Update: {
           cash_balance?: number | null
           created_at?: string
+          escrow_locked?: boolean
+          escrow_released_at?: string | null
           fairness_score?: number | null
           from_user?: string
           id?: string
@@ -255,6 +357,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      dispute_status: "open" | "under_review" | "resolved" | "rejected"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
       offer_status:
@@ -390,6 +493,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      dispute_status: ["open", "under_review", "resolved", "rejected"],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],
       offer_status: [

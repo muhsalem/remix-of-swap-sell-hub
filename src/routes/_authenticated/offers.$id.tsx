@@ -255,3 +255,61 @@ function ReviewForm({ offerId, reviewedUser, reviewFn, qc }: any) {
     </div>
   );
 }
+
+function DisputeBlock({ offerId, disputes, qc }: { offerId: string; disputes: any[]; qc: any }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const openFn = useServerFn(openDispute);
+  const m = useMutation({
+    mutationFn: () => openFn({ data: { offer_id: offerId, reason, evidence } }),
+    onSuccess: () => {
+      toast.success("تم فتح نزاع — تم تجميد الصفقة للمراجعة");
+      setOpen(false);
+      setReason("");
+      setEvidence("");
+      qc.invalidateQueries({ queryKey: ["disputes", offerId] });
+      qc.invalidateQueries({ queryKey: ["offer", offerId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+      <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
+        <AlertTriangle className="size-4 text-destructive" /> النزاعات والضمان
+      </h3>
+      {disputes.length > 0 ? (
+        <div className="space-y-2 mb-3">
+          {disputes.map((d) => (
+            <div key={d.id} className="text-xs p-2 rounded-lg bg-destructive/5 border border-destructive/20">
+              <div className="font-bold">الحالة: {d.status}</div>
+              <div className="text-muted-foreground mt-1">{d.reason}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground mb-3">لا توجد نزاعات على هذه الصفقة.</p>
+      )}
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="w-full text-xs px-3 py-2 rounded-full bg-destructive/10 text-destructive font-bold hover:bg-destructive/20">
+          فتح نزاع
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="سبب النزاع..." rows={2}
+            className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
+          <textarea value={evidence} onChange={(e) => setEvidence(e.target.value)} placeholder="أدلة/تفاصيل (اختياري)..." rows={2}
+            className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
+          <div className="flex gap-2">
+            <button onClick={() => m.mutate()} disabled={reason.length < 5 || m.isPending}
+              className="flex-1 px-3 py-2 bg-destructive text-destructive-foreground rounded-full text-xs font-bold disabled:opacity-50">
+              تأكيد فتح النزاع
+            </button>
+            <button onClick={() => setOpen(false)} className="px-3 py-2 rounded-full bg-muted text-xs">إلغاء</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -19,9 +19,11 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [accountType, setAccountType] = useState<"individual" | "company">("individual");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,11 +41,18 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const displayName = accountType === "company"
+          ? (companyName || name || email.split("@")[0])
+          : (name || email.split("@")[0]);
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { display_name: name || email.split("@")[0] },
+            data: {
+              display_name: displayName,
+              account_type: accountType,
+              company_name: accountType === "company" ? companyName : null,
+            },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });

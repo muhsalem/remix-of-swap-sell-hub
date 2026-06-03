@@ -58,12 +58,6 @@ const DEFAULT_B: Product = {
   marketPricePerUnit: 5, currency: "SAR", quality: 8,
   scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 0,
 };
-const DEFAULT_SERVICE: Product = {
-  name: "تصميم شعار احترافي", category: "خدمات مهنية", itemType: "service",
-  unit: "ساعة", quantity: 5, condition: "new", ageMonths: 0,
-  marketPricePerUnit: 150, currency: "SAR", quality: 9,
-  scarcity: "normal", locationTier: "tier2", riskLevel: "low", deliveryDays: 3,
-};
 
 const SHARIAH_MODE = true; // مفعّل تلقائياً — لا يُعرض للمستخدم
 

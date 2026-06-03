@@ -585,3 +585,68 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
     </div>
   );
 }
+
+// Suggestions pool by item type
+function suggestFor(product: Product): string[] {
+  const pool: string[] = [];
+  if (product.itemType === "service") {
+    pool.push(...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g12 || []), ...(CATALOG_ITEMS.g1 || []));
+  } else if (product.itemType === "digital") {
+    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.s6 || []), ...(CATALOG_ITEMS.g7 || []));
+  } else {
+    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g10 || []), ...(CATALOG_ITEMS.s9 || []));
+  }
+  // unique + first 5
+  return Array.from(new Set(pool)).slice(0, 5);
+}
+
+function BarterBar({
+  product, wantValue, onWantChange, onBarter,
+}: {
+  product: Product;
+  wantValue: string;
+  onWantChange: (v: string) => void;
+  onBarter: () => void;
+}) {
+  const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
+  const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
+
+  return (
+    <div className="border-t border-dashed border-border px-3 py-2.5 bg-gradient-to-l from-accent/5 to-transparent">
+      <div className="flex items-center gap-2 mb-1.5">
+        <ArrowLeftRight className="size-3.5 text-accent" />
+        <span className="text-[11px] font-extrabold text-foreground">قايض بـ</span>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+        <input
+          type="text"
+          value={wantValue}
+          onChange={(e) => onWantChange(e.target.value)}
+          placeholder="اكتب ما تريده مقابل هذا العنصر..."
+          className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-stone-soft border border-transparent focus:border-accent text-sm font-bold outline-none"
+        />
+        <button
+          type="button"
+          onClick={onBarter}
+          disabled={!canBarter}
+          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <ArrowLeftRight className="size-3.5" /> قايض
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        <span className="text-[10px] text-muted-foreground font-bold pt-1">اقتراحات:</span>
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onWantChange(s)}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

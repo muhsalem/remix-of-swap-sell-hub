@@ -100,12 +100,12 @@ function Index() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-display text-2xl md:text-3xl font-extrabold flex items-center gap-3">
-                {mode === "buy" && <Sparkles className="size-5 text-primary" />}
+                {(query || activeCat) && <Sparkles className="size-5 text-primary" />}
                 {sectionTitle}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {mode === "buy" && (query || activeCat)
-                  ? `${filtered.length} نتيجة مطابقة لاهتمامك`
+                {(query || activeCat)
+                  ? `${filtered.length} نتيجة مطابقة`
                   : `${listings.length} عرض نشط`}
               </p>
             </div>

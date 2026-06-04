@@ -155,22 +155,73 @@ function Index() {
               </div>
             </form>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <CatChip active={!activeCat} onClick={() => setActiveCat(null)}>كل الفئات</CatChip>
               {POPULAR.map((c) => (
                 <CatChip key={c} active={activeCat === c} onClick={() => setActiveCat(activeCat === c ? null : c)}>
                   {c}
                 </CatChip>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-expanded={showFilters}
+                aria-controls="market-filters"
+                className="ms-auto inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:border-primary/40 transition"
+              >
+                <SlidersHorizontal className="size-3.5" aria-hidden /> فلاتر متقدمة
+              </button>
               {matchMode && (
                 <button
                   onClick={() => matchM.reset()}
-                  className="ms-auto text-xs font-bold text-muted-foreground hover:text-foreground underline"
+                  className="text-xs font-bold text-muted-foreground hover:text-foreground underline"
                 >
                   مسح نتائج المطابقة
                 </button>
               )}
             </div>
+
+            {showFilters && (
+              <div id="market-filters" className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى (ر.س)</span>
+                  <input type="number" inputMode="numeric" min={0} value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى (ر.س)</span>
+                  <input type="number" inputMode="numeric" min={0} value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">الحالة</span>
+                  <select value={condFilter} onChange={(e) => setCondFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">الكل</option>
+                    <option value="new">جديد</option>
+                    <option value="like-new">شبه جديد</option>
+                    <option value="good">جيد</option>
+                    <option value="fair">مقبول</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="newest">الأحدث</option>
+                    <option value="price-asc">السعر: من الأقل</option>
+                    <option value="price-desc">السعر: من الأعلى</option>
+                  </select>
+                </label>
+                {hasAnyFilter && (
+                  <button onClick={resetFilters} className="col-span-2 md:col-span-4 text-xs font-bold text-muted-foreground hover:text-foreground underline justify-self-end">
+                    مسح كل الفلاتر
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </section>
 

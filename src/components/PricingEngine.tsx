@@ -1067,29 +1067,59 @@ function BarterBar({
             />
           </div>
 
-          {/* Settlement suggestions */}
-          {priceDiff !== 0 && (
-            <div className={`mt-3 pt-3 border-t ${embedded ? "border-white/20" : "border-border"}`}>
-              <div className={`text-[11px] font-extrabold mb-1.5 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>
-                💡 خيارات تسوية الفرق:
+          {/* Smart auto-generated settlement options */}
+          {(() => {
+            const absDiff = Math.abs(priceDiff);
+            const pctDiff = bestPrice > 0 ? (absDiff / bestPrice) * 100 : 0;
+            const condFactor = CONDITION_TO_QUALITY[product.condition] / 10; // 0.4..1
+            const condBonus = Math.round(absDiff * (1 - condFactor) * 0.5); // older = larger negotiation margin
+            const fairBand = bestPrice * 0.05;
+            const inFairBand = absDiff <= fairBand;
+            const diEquiv = (absDiff / DI_TO_SAR).toFixed(2);
+
+            type Opt = { tone: "ok" | "pay" | "gain" | "swap"; text: React.ReactNode };
+            const opts: Opt[] = [];
+
+            if (inFairBand) {
+              opts.push({ tone: "ok", text: <>✅ <b>أتمم الصفقة كما هي</b> — الفرق ({absDiff.toLocaleString()} ر.س ≈ {pctDiff.toFixed(1)}%) ضمن هامش العدالة (≤5%).</> });
+            }
+            if (priceDiff > 0) {
+              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً للطرف الآخر.</> });
+              if (condBonus > 50) {
+                opts.push({ tone: "swap", text: <>📉 <b>تفاوض بسبب الحالة ({product.condition}):</b> اعرض خصماً قدره <b>{condBonus.toLocaleString()} ر.س</b> فقط بدل المبلغ الكامل.</> });
+              }
+              opts.push({ tone: "swap", text: <>➕ <b>أضف عنصراً تكميلياً</b> من جهتك بقيمة تقارب <b>{absDiff.toLocaleString()} ر.س</b> لإلغاء الفرق نقدياً.</> });
+            } else if (priceDiff < 0) {
+              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً أو كرصيد DI.</> });
+              if (condBonus > 50) {
+                opts.push({ tone: "swap", text: <>📈 <b>زيادة بسبب الحالة:</b> اطلب علاوة <b>+{condBonus.toLocaleString()} ر.س</b> أعلى من الفرق الأساسي لتعويض جودة سلعتك.</> });
+              }
+              opts.push({ tone: "swap", text: <>➕ <b>اطلب عنصراً مكمّلاً</b> من الطرف الآخر بقيمة قريبة من <b>{absDiff.toLocaleString()} ر.س</b>.</> });
+            }
+
+            if (opts.length === 0) return null;
+            const toneCls = (t: Opt["tone"]) => embedded
+              ? "bg-white/10 ring-1 ring-white/20"
+              : t === "ok" ? "bg-emerald-50 ring-1 ring-emerald-200"
+              : t === "pay" ? "bg-amber-50 ring-1 ring-amber-200"
+              : t === "gain" ? "bg-sky-50 ring-1 ring-sky-200"
+              : "bg-stone-soft ring-1 ring-border";
+
+            return (
+              <div className={`mt-3 pt-3 border-t ${embedded ? "border-white/20" : "border-border"}`}>
+                <div className={`text-[11px] font-extrabold mb-2 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>
+                  💡 خيارات تسوية مقترحة تلقائياً (بناءً على السوق والحالة):
+                </div>
+                <ul className="space-y-1.5">
+                  {opts.map((o, idx) => (
+                    <li key={idx} className={`text-xs font-bold leading-relaxed px-2.5 py-1.5 rounded-lg ${toneCls(o.tone)}`}>
+                      {o.text}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className={`text-xs font-bold space-y-1 leading-relaxed ${embedded ? "" : "text-foreground"}`}>
-                {priceDiff > 0 ? (
-                  <>
-                    <li>• ادفع <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو ما يعادلها DI) لتعادل الصفقة.</li>
-                    <li>• أضف عنصراً إضافياً من جهتك بقيمة قريبة من الفرق.</li>
-                    <li>• تفاوض على تخفيض السعر أو حالة أفضل للسلعة المطلوبة.</li>
-                  </>
-                ) : (
-                  <>
-                    <li>• اطلب <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو DI) كفرق لصالحك.</li>
-                    <li>• اطلب إضافة عنصر مكمّل من الطرف الآخر بقيمة الفرق.</li>
-                    <li>• وافق على الصفقة لو الفرق ≤ 5% (ضمن هامش العدالة).</li>
-                  </>
-                )}
-              </ul>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 

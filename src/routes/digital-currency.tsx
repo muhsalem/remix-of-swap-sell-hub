@@ -80,12 +80,17 @@ function DigitalCurrencyPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
             <div>
-              <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1.5 font-extrabold">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 font-extrabold flex items-center gap-2">
                 بلدك / عملتك
+                {saved && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary normal-case tracking-normal">
+                    <Check className="size-3" /> تم الحفظ
+                  </span>
+                )}
               </label>
               <select
                 value={country}
-                onChange={(e) => setCountry(e.target.value)}
+                onChange={(e) => changeCountry(e.target.value)}
                 className="w-full px-3 py-3 rounded-xl bg-stone-soft border border-border text-base font-bold outline-none focus:ring-2 ring-primary/30"
               >
                 {Object.entries(FX_VS_SAR).map(([code, v]) => (

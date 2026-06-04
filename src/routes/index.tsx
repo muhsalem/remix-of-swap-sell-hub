@@ -28,7 +28,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Mode = "buy" | "sell" | "barter";
 
 function Index() {
   const { data } = useSuspenseQuery(listingsQuery);

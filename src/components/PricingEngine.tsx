@@ -1064,6 +1064,4 @@ function BarterBar({
     </div>
   );
 }
-    </div>
-  );
-}
+

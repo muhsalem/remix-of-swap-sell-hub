@@ -779,13 +779,13 @@ function AiPhotoOrManual({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={m.isPending}
-              className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-l from-primary to-primary/80 text-primary-foreground text-xs font-extrabold flex items-center gap-1.5 shadow-md hover:shadow-lg hover:from-primary/90 transition-all disabled:opacity-50 ring-1 ring-primary/30"
             >
               {m.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
               {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
             </button>
             {m.isSuccess && (
-              <span className="text-[11px] font-extrabold text-accent">✓ تم التحليل</span>
+              <span className="text-[11px] font-extrabold text-emerald-600">✓ تم التحليل</span>
             )}
           </div>
           <input

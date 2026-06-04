@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import { analyzeProductImage } from "@/lib/vision.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
   ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
-  Camera, Wrench, Package, Info,
+  Camera, Wrench, Package, Info, ArrowLeft,
+  Briefcase, GraduationCap, Stethoscope, Banknote, Code2,
 } from "lucide-react";
 import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
 

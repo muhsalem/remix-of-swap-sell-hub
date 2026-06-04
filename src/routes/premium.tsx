@@ -7,11 +7,8 @@ import { Nav } from "@/components/Nav";
 import { TIERS, getMySubscription, upgradeSubscription, type Tier } from "@/lib/subscriptions.functions";
 import { getOrCreateMyReferral, redeemReferral } from "@/lib/referrals.functions";
 import { useAuth } from "@/lib/auth";
-import { loadCashOnly, loadCountry } from "@/lib/region-mode" with { /* side-effect free */ };
-
-// Re-import (the `with { … }` above was illegal — remove)
-// (kept for the bundler to not get confused — actual import below)
-import { loadCashOnly as _loadCashOnly, loadCountry as _loadCountry } from "@/lib/region-mode";
+import { loadCashOnly } from "@/lib/region-mode";
+import { loadCountry } from "@/lib/currency-fx";
 
 export const Route = createFileRoute("/premium")({
   head: () => ({

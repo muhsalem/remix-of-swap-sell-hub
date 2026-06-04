@@ -43,6 +43,8 @@ const ProductSchema = z.object({
   riskLevel: z.enum(["low","medium","high"]).default("low"),
   deliveryDays: z.number().min(0).max(365).default(0),
   distanceKm: z.number().min(0).max(20000).default(0),
+  brandTier: z.enum(["premium","standard","generic","unknown"]).default("unknown"),
+  seasonality: z.enum(["peak","normal","off"]).default("normal"),
 });
 
 const InputSchema = z.object({

@@ -99,8 +99,12 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const changeCountry = (c: string) => { setCountry(c); saveCountry(c); };
 
   const fn = useServerFn(calculateBarter);
+  const sanitized = useMemo(
+    () => items.map((p) => ({ ...p, marketPricePerUnit: Math.max(Number(p.marketPricePerUnit) || 0, 0.01) })),
+    [items],
+  );
   const mutation = useMutation({
-    mutationFn: () => fn({ data: { sideA: items, sideB: items, shariahMode: true, serviceBarter: false } }),
+    mutationFn: () => fn({ data: { sideA: sanitized, sideB: sanitized, shariahMode: true, serviceBarter: false } }),
     onSuccess: (r) => {
       setResult(r);
       try {
@@ -117,7 +121,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   useEffect(() => {
     if (!autoCalc) return;
     const allValid = items.every(
-      (p) => p.name.trim().length > 0 && p.marketPricePerUnit > 0 && p.quantity > 0,
+      (p) => p.name.trim().length > 0 && p.marketPricePerUnit >= 0.01 && p.quantity > 0,
     );
     if (!allValid) return;
     const delay = firstRun.current ? 100 : 600;

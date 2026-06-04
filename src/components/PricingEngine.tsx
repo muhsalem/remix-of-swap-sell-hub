@@ -95,6 +95,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [items, setItems] = useState<Product[]>([defaultItem(defaultCurrency)]);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
+  const [country, setCountry] = useState<string>(defaultCurrency);
+  const changeCountry = (c: string) => { setCountry(c); saveCountry(c); };
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({

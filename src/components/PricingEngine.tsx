@@ -85,6 +85,8 @@ function defaultItem(currency = "SAR"): Product {
     riskLevel: "low",
     deliveryDays: 1,
     distanceKm: 0,
+    brandTier: "unknown",
+    seasonality: "normal",
   };
 }
 

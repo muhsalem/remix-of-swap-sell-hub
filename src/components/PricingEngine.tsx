@@ -245,9 +245,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 key={i}
                 index={i}
                 product={p}
-                wantValue={wantsByIdx[i] || ""}
-                onWantChange={(v) => setWant(i, v)}
-                onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
                 onUpdate={(np) => updateItem(i, np)}
                 onRemove={items.length > 1 ? () => removeItem(i) : undefined}
               />

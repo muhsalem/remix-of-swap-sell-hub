@@ -249,10 +249,7 @@ function Index() {
 
           {matchMode ? (
             matchM.isPending ? (
-              <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
-                <Loader2 className="size-8 mx-auto animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">نطابق طلبك مع إعلانات المنصة...</p>
-              </div>
+              <ListingsGridSkeleton count={4} />
             ) : matchResults.length === 0 ? (
               <div className="bg-card rounded-3xl p-12 text-center ring-1 ring-black/5">
                 <Sparkles className="size-10 mx-auto mb-3 opacity-40 text-muted-foreground" />

@@ -989,19 +989,71 @@ function BarterBar({
   const hasQuery = wantValue.trim().length >= 2;
   const noMatches = hasQuery && !searching && platformItems.length === 0;
 
+  // ── Compatibility score vs best platform match ──
+  const bestMatch = platformItems[0];
+  const bestPrice = bestMatch ? Number(bestMatch.market_price) || 0 : 0;
+  const priceDiff = bestPrice - valueSAR; // + = you owe, − = you gain
+  const matchPct = (valueSAR > 0 && bestPrice > 0)
+    ? Math.round(Math.max(0, 100 - (Math.abs(priceDiff) / Math.max(valueSAR, bestPrice)) * 100))
+    : 0;
+  const matchTone = matchPct >= 85 ? "emerald" : matchPct >= 65 ? "amber" : "rose";
+
   return (
-    <div className="rounded-2xl border-2 border-accent/40 bg-gradient-to-bl from-accent/10 via-accent/5 to-transparent p-4 shadow-sm">
+    <div className={
+      embedded
+        ? "rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20 p-4 text-primary-foreground"
+        : "rounded-2xl border-2 border-accent/40 bg-gradient-to-bl from-accent/10 via-accent/5 to-transparent p-4 shadow-sm"
+    }>
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded-xl grid place-items-center bg-accent/15 text-accent">
+          <div className={`size-8 rounded-xl grid place-items-center ${embedded ? "bg-white/15" : "bg-accent/15 text-accent"}`}>
             <ArrowLeftRight className="size-4" aria-hidden="true" />
           </div>
-          <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">
+          <label htmlFor={`barter-want-${product.familyId}`} className={`text-sm font-extrabold ${embedded ? "" : "text-foreground"}`}>
             قايض «{product.name || "—"}» بـ
           </label>
         </div>
-        {searching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {searching && <Loader2 className={`size-4 animate-spin ${embedded ? "opacity-80" : "text-muted-foreground"}`} />}
       </div>
+
+      {/* ===== Compatibility panel ===== */}
+      {bestMatch && valueSAR > 0 && (
+        <div className={`mb-3 p-3 rounded-xl ${embedded ? "bg-white/10 ring-1 ring-white/20" : "bg-card border border-border"}`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex flex-col">
+              <span className={`text-[10px] uppercase tracking-wider font-extrabold ${embedded ? "opacity-80" : "text-muted-foreground"}`}>نسبة التوافق</span>
+              <span className={`font-display text-2xl font-black tabular-nums ${
+                embedded ? "" :
+                matchTone === "emerald" ? "text-emerald-600" :
+                matchTone === "amber" ? "text-amber-600" : "text-rose-600"
+              }`}>
+                {matchPct}%
+              </span>
+            </div>
+            <div className="flex flex-col text-end">
+              <span className={`text-[10px] uppercase tracking-wider font-extrabold ${embedded ? "opacity-80" : "text-muted-foreground"}`}>فرق السعر</span>
+              <span className="font-mono text-base font-extrabold tabular-nums">
+                {priceDiff === 0 ? "متعادل" : (priceDiff > 0 ? `+${priceDiff.toLocaleString()}` : priceDiff.toLocaleString())}
+                <span className={`text-[10px] mr-1 ${embedded ? "opacity-80" : "text-muted-foreground"}`}>ر.س</span>
+              </span>
+              <span className={`text-[10px] font-bold mt-0.5 ${embedded ? "opacity-80" : "text-muted-foreground"}`}>
+                {priceDiff > 0 ? "تدفع فرقاً نقدياً" : priceDiff < 0 ? "تستلم فرقاً" : "مقايضة عادلة"}
+              </span>
+            </div>
+          </div>
+          <div className={`mt-2 h-2 rounded-full overflow-hidden ${embedded ? "bg-white/20" : "bg-muted"}`}>
+            <div
+              className={`h-full transition-all ${
+                embedded ? "bg-white" :
+                matchTone === "emerald" ? "bg-emerald-500" :
+                matchTone === "amber" ? "bg-amber-500" : "bg-rose-500"
+              }`}
+              style={{ width: `${matchPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
 
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input

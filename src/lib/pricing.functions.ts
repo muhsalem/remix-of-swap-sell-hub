@@ -258,9 +258,16 @@ function valueWithBreakdown(p: Product): ValueBreakdown {
   // خصم تكلفة الشحن التقديرية حسب المسافة (~ 0.5 ر.س/كم، يبدأ بعد 50 كم، حد أقصى 15% من القيمة)
   const shippingSAR = p.distanceKm > 50 ? Math.min(baseSAR * 0.15, (p.distanceKm - 50) * 0.5) : 0;
   const shippingFactor = baseSAR > 0 ? Math.max(0.85, 1 - shippingSAR / baseSAR) : 1;
+  // علامة تجارية: premium يرفع 20%، standard محايد، generic يخفض 10%
+  const BRAND_FACTOR: Record<string, number> = { premium: 1.2, standard: 1.0, generic: 0.9, unknown: 1.0 };
+  // موسمية: peak +15%، normal محايد، off -10%
+  const SEASON_FACTOR: Record<string, number> = { peak: 1.15, normal: 1.0, off: 0.9 };
+  const brandFactor = BRAND_FACTOR[p.brandTier];
+  const seasonFactor = SEASON_FACTOR[p.seasonality];
   const finalSAR = Math.round(
     baseSAR * cond * ageFactor * qualityFactor * scarcityFactor *
-      locationFactor * riskFactor * timeFactor * shippingFactor * profile.demand,
+      locationFactor * riskFactor * timeFactor * shippingFactor * profile.demand *
+      brandFactor * seasonFactor,
   );
   return {
     base: p.marketPricePerUnit,

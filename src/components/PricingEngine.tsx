@@ -337,41 +337,31 @@ function Row({ label, v }: { label: string; v: number | string }) {
 }
 
 // ============================================================
-// DI Explainer (Digital Internal currency)
+// DI Link Card — points to /digital-currency
 // ============================================================
-function DiExplainer() {
-  const [open, setOpen] = useState(false);
+function DiLinkCard() {
   return (
-    <div className="border-t border-border bg-stone-soft/40">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full px-6 md:px-8 py-4 flex items-center justify-between text-right hover:bg-stone-soft transition-colors"
-      >
-        <span className="flex items-center gap-2 font-extrabold text-base">
-          <Coins className="size-5 text-primary" />
-          كيف تعمل العملة الرقمية الداخلية (DI)؟
-        </span>
-        <ChevronDown className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="px-6 md:px-8 pb-6 text-sm md:text-base font-bold leading-relaxed space-y-3 text-foreground/85">
-          <p>
-            <b className="text-primary">DI</b> هي وحدة حساب داخلية ثابتة لقياس عدالة المقايضة بعيداً عن تقلب العملات.
-            ربط ثابت: <span className="font-mono bg-primary/10 px-2 py-0.5 rounded">1 DI = 5 ر.س</span>.
-          </p>
-          <ul className="list-disc pr-5 space-y-1.5">
-            <li><b>تكتسبها</b> عند إتمام صفقة بنجاح (مكافأة 50 DI لكل طرف).</li>
-            <li><b>تُخصم منها</b> عمولة المنصة (3% من قيمة الصفقة) من الطرف البادئ.</li>
-            <li><b>تستخدمها</b> لموازنة الفروقات بين عرضين غير متكافئين دون نقد.</li>
-            <li><b>لا تُسحب</b> كنقد — فقط رصيد داخلي يضمن استمرارية الثقة.</li>
-          </ul>
-          <p className="text-xs text-muted-foreground">
-            * النموذج الاقتصادي: عملة مرجعية (URV) داخلية، مدعومة بسلة الصفقات المُتمّة، لا تخضع لتداول خارجي.
-          </p>
+    <Link
+      to="/digital-currency"
+      className="block border-t border-border bg-gradient-to-l from-primary/5 via-stone-soft/40 to-transparent hover:from-primary/10 transition-colors"
+    >
+      <div className="px-6 md:px-8 py-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="size-11 rounded-2xl grid place-items-center bg-primary/10 text-primary shrink-0">
+            <Coins className="size-6" />
+          </div>
+          <div>
+            <div className="font-extrabold text-base md:text-lg">كيف تعمل العملة الرقمية الداخلية (DI)؟</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-bold mt-0.5">
+              اكتسابها، استخدامها، وقيمتها بعملتك المحلية حسب بلدك.
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-extrabold whitespace-nowrap">
+          افتح الصفحة <ArrowLeft className="size-4" />
+        </span>
+      </div>
+    </Link>
   );
 }
 

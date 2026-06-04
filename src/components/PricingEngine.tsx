@@ -806,7 +806,10 @@ function TypeTab({
   return (
     <button
       type="button" onClick={onClick}
-      className={`flex flex-col items-center gap-1 py-4 px-3 rounded-xl transition-all ${
+      role="tab"
+      aria-selected={active}
+      aria-label={`${label} — ${desc}`}
+      className={`flex flex-col items-center gap-1 py-4 px-3 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
         active
           ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]"
           : "bg-card text-foreground hover:bg-stone-soft border border-border"

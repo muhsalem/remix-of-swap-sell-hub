@@ -610,8 +610,32 @@ function ItemCard({
                 onChange={(v) => onUpdate({ ...product, condition: v as Product["condition"], quality: CONDITION_TO_QUALITY[v as Product["condition"]] })}>
                 {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </LabeledSelect>
-              <LabeledInput label="العمر (شهر)" type="number" min={0} value={product.ageMonths}
-                onChange={(v) => onUpdate({ ...product, ageMonths: Number(v) || 0 })} />
+              <div>
+                <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1 font-extrabold">
+                  العمر
+                </label>
+                <div className="flex gap-1">
+                  <input
+                    type="number" min={0}
+                    value={product.ageUnit === "days" ? Math.round(product.ageMonths * 30) : product.ageMonths}
+                    onChange={(v) => {
+                      const n = Number(v.target.value) || 0;
+                      const months = product.ageUnit === "days" ? n / 30 : n;
+                      onUpdate({ ...product, ageMonths: months });
+                    }}
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-card border border-border text-sm font-bold outline-none focus:border-primary"
+                  />
+                  <select
+                    value={product.ageUnit}
+                    onChange={(e) => onUpdate({ ...product, ageUnit: e.target.value as "days" | "months" })}
+                    aria-label="وحدة العمر"
+                    className="px-2 py-2 rounded-lg bg-card border border-border text-xs font-extrabold outline-none focus:border-primary"
+                  >
+                    <option value="days">يوم</option>
+                    <option value="months">شهر</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <LabeledSelect label="العملة" value={product.currency} onChange={(v) => onUpdate({ ...product, currency: v })}>

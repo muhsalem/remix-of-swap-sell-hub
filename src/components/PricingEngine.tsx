@@ -1121,7 +1121,11 @@ function BarterBar({
           list={listId}
           autoComplete="off"
           aria-label="ما تريد الحصول عليه بالمقايضة"
-          className="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-base font-bold outline-none"
+          className={`flex-1 min-w-[160px] px-3 py-2.5 rounded-xl text-base font-bold outline-none ${
+            embedded
+              ? "bg-white text-foreground border border-white placeholder:text-muted-foreground focus:ring-2 focus:ring-white/50"
+              : "bg-card border border-border focus:border-accent"
+          }`}
         />
         <datalist id={listId}>
           {allCatalog.map((n) => <option key={n} value={n} />)}
@@ -1138,18 +1142,22 @@ function BarterBar({
       {/* Platform matches */}
       {platformItems.length > 0 && (
         <div className="mt-3 space-y-1.5">
-          <div className="text-xs font-extrabold text-muted-foreground">عروض مطابقة من المنصة:</div>
+          <div className={`text-xs font-extrabold ${embedded ? "opacity-90" : "text-muted-foreground"}`}>عروض مطابقة من المنصة:</div>
           <div className="space-y-1">
             {platformItems.slice(0, 4).map((it) => (
               <Link
                 key={it.id} to="/listings/$id" params={{ id: it.id }}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition ${
+                  embedded
+                    ? "bg-white/15 ring-1 ring-white/20 hover:bg-white/25"
+                    : "bg-card border border-border hover:border-accent hover:bg-accent/5"
+                }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-extrabold truncate">{it.title}</div>
-                  <div className="text-[11px] text-muted-foreground font-bold">{it.category}</div>
+                  <div className={`text-[11px] font-bold ${embedded ? "opacity-80" : "text-muted-foreground"}`}>{it.category}</div>
                 </div>
-                <span className="shrink-0 text-xs font-mono font-extrabold text-primary">
+                <span className={`shrink-0 text-xs font-mono font-extrabold ${embedded ? "" : "text-primary"}`}>
                   {Number(it.market_price).toLocaleString()} ر.س
                 </span>
               </Link>
@@ -1160,39 +1168,47 @@ function BarterBar({
 
       {/* Not found — wishlist alert */}
       {noMatches && (
-        <div className="mt-3 px-3 py-2.5 rounded-xl bg-stone-soft/70 border border-dashed border-border">
-          <div className="text-xs font-bold text-muted-foreground mb-2">
+        <div className={`mt-3 px-3 py-2.5 rounded-xl border border-dashed ${
+          embedded ? "bg-white/10 border-white/30" : "bg-stone-soft/70 border-border"
+        }`}>
+          <div className={`text-xs font-bold mb-2 ${embedded ? "opacity-95" : "text-muted-foreground"}`}>
             لم نجد «{wantValue.trim()}» في المنصة حالياً. سجّل اهتمامك وسننبهك عند توفّره.
           </div>
           {alertState === "saved" ? (
-            <div className="text-xs font-extrabold text-emerald-600 flex items-center gap-1">
+            <div className={`text-xs font-extrabold flex items-center gap-1 ${embedded ? "" : "text-emerald-600"}`}>
               <Check className="size-3.5" /> تم — ستصلك إشعار عند توفّره
             </div>
           ) : alertState === "auth" ? (
-            <Link to="/auth" className="text-xs font-extrabold text-primary underline">
+            <Link to="/auth" className={`text-xs font-extrabold underline ${embedded ? "" : "text-primary"}`}>
               سجّل الدخول لتفعيل التنبيه
             </Link>
           ) : (
             <button
               type="button" onClick={notifyMe} disabled={alertState === "saving"}
-              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-extrabold inline-flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50 ${
+                embedded ? "bg-white text-primary" : "bg-primary text-primary-foreground"
+              }`}
             >
               {alertState === "saving" ? <Loader2 className="size-3.5 animate-spin" /> : <Bell className="size-3.5" />}
               نبّهني عند توفّره
             </button>
           )}
           {alertState === "error" && (
-            <div className="mt-1 text-[11px] font-bold text-destructive">تعذّر الحفظ، حاول لاحقاً.</div>
+            <div className={`mt-1 text-[11px] font-bold ${embedded ? "" : "text-destructive"}`}>تعذّر الحفظ، حاول لاحقاً.</div>
           )}
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5 mt-3">
-        <span className="text-xs text-muted-foreground font-bold pt-1">اقتراحات:</span>
+      <div className="flex flex-wrap gap-1.5 mt-3 items-center">
+        <span className={`text-xs font-extrabold pt-1 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>اقتراحات:</span>
         {suggestions.map((s) => (
           <button
             key={s} type="button" onClick={() => onWantChange(s)}
-            className="text-xs font-extrabold px-3 py-1 rounded-full bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+            className={`text-xs font-extrabold px-3 py-1 rounded-full transition ${
+              embedded
+                ? "bg-white text-foreground hover:bg-white/90 ring-1 ring-white/40"
+                : "bg-card border border-border hover:border-accent hover:bg-accent/5"
+            }`}
           >
             {s}
           </button>

@@ -581,13 +581,16 @@ function ItemCard({
           </div>
         )}
 
-        {/* Barter bar */}
-        <BarterBar
-          product={product}
-          wantValue={wantValue}
-          onWantChange={onWantChange}
-          onBarter={onBarter}
-        />
+        {/* Barter bar + DI link side by side */}
+        <div className="grid md:grid-cols-[1fr_auto] gap-3 items-stretch">
+          <BarterBar
+            product={product}
+            wantValue={wantValue}
+            onWantChange={onWantChange}
+            onBarter={onBarter}
+          />
+          <DiLinkCard compact />
+        </div>
       </div>
     </div>
   );

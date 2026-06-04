@@ -35,6 +35,8 @@ type Product = {
   riskLevel: "low" | "medium" | "high";
   deliveryDays: number;
   distanceKm: number;
+  brandTier: "premium" | "standard" | "generic" | "unknown";
+  seasonality: "peak" | "normal" | "off";
   // catalog wiring
   baseType: "good" | "service";
   familyId: string;
@@ -83,6 +85,8 @@ function defaultItem(currency = "SAR"): Product {
     riskLevel: "low",
     deliveryDays: 1,
     distanceKm: 0,
+    brandTier: "unknown",
+    seasonality: "normal",
   };
 }
 
@@ -677,6 +681,21 @@ function ItemCard({
               <LabeledSelect label="المخاطرة" value={product.riskLevel}
                 onChange={(v) => onUpdate({ ...product, riskLevel: v as Product["riskLevel"] })}>
                 {RISKS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </LabeledSelect>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <LabeledSelect label="العلامة التجارية" value={product.brandTier}
+                onChange={(v) => onUpdate({ ...product, brandTier: v as Product["brandTier"] })}>
+                <option value="unknown">غير محدّد</option>
+                <option value="premium">فاخرة (+20%)</option>
+                <option value="standard">قياسية</option>
+                <option value="generic">عامة (−10%)</option>
+              </LabeledSelect>
+              <LabeledSelect label="الموسمية" value={product.seasonality}
+                onChange={(v) => onUpdate({ ...product, seasonality: v as Product["seasonality"] })}>
+                <option value="peak">ذروة الطلب (+15%)</option>
+                <option value="normal">طبيعي</option>
+                <option value="off">خارج الموسم (−10%)</option>
               </LabeledSelect>
             </div>
             <div className="grid grid-cols-2 gap-2">

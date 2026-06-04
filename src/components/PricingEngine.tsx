@@ -504,7 +504,7 @@ function ItemCard({
 
       <div className="p-4 space-y-4">
         {/* BIG type tabs (سلعة / خدمة) */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-stone-soft border border-border">
+        <div role="tablist" aria-label="نوع العنصر" className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-stone-soft border border-border">
           <TypeTab
             active={product.baseType === "good"}
             onClick={() => switchType("good")}

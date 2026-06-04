@@ -613,42 +613,66 @@ function AiPhotoOrManual({
 
   return (
     <div className="rounded-xl border border-dashed border-border bg-gradient-to-br from-accent/5 to-transparent p-3">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-sm font-extrabold flex items-center gap-1.5">
-          <Sparkles className="size-4 text-accent" />
-          صوّر السلعة — الذكاء الاصطناعي يستخرج الخصائص تلقائياً
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={m.isPending}
-          className="px-4 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
-        >
-          {m.isPending ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
-          {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
-        </button>
-        <span className="text-xs text-muted-foreground font-bold flex items-center gap-1">
-          <Info className="size-3" /> أو اكتب الخصائص يدوياً أسفل
-        </span>
-        <input
-          ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
-        />
-      </div>
-
-      {preview && (
-        <div className="mt-3 flex items-center gap-3">
-          <img src={preview} alt="" className="size-16 rounded-lg object-cover ring-1 ring-border" />
-          {m.isSuccess && (
-            <div className="text-xs font-bold text-foreground/80 leading-snug">
-              <div className="text-accent">✓ تم التحليل — راجع الحقول وعدّلها إن لزم</div>
-              {m.data?.notes && <div className="text-muted-foreground mt-0.5">{m.data.notes}</div>}
-            </div>
-          )}
+      <div className="flex gap-3 items-stretch">
+        {/* LEFT: preview thumbnail / placeholder */}
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={m.isPending}
+            className="relative size-24 md:size-28 rounded-xl overflow-hidden ring-1 ring-border bg-stone-soft grid place-items-center hover:ring-accent transition disabled:opacity-50"
+          >
+            {preview ? (
+              <img src={preview} alt="معاينة" className="absolute inset-0 size-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                <Camera className="size-6" />
+                <span className="text-[10px] font-extrabold">إضافة صورة</span>
+              </div>
+            )}
+            {m.isPending && (
+              <div className="absolute inset-0 grid place-items-center bg-black/40 text-white">
+                <Loader2 className="size-5 animate-spin" />
+              </div>
+            )}
+          </button>
         </div>
+
+        {/* RIGHT: text + actions */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+          <div>
+            <div className="text-sm font-extrabold flex items-center gap-1.5">
+              <Sparkles className="size-4 text-accent" />
+              صوّر السلعة — الذكاء الاصطناعي يستخرج الخصائص تلقائياً
+            </div>
+            <div className="text-xs text-muted-foreground font-bold mt-1 flex items-center gap-1">
+              <Info className="size-3" /> أو اكتب الخصائص يدوياً أسفل
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={m.isPending}
+              className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+            >
+              {m.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+              {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
+            </button>
+            {m.isSuccess && (
+              <span className="text-[11px] font-extrabold text-accent">✓ تم التحليل</span>
+            )}
+          </div>
+          <input
+            ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
+          />
+        </div>
+      </div>
+
+      {m.isSuccess && m.data?.notes && (
+        <div className="mt-2 text-xs text-muted-foreground font-bold leading-snug">{m.data.notes}</div>
       )}
 
       {error && (
@@ -658,6 +682,44 @@ function AiPhotoOrManual({
       )}
     </div>
   );
+}
+
+// ============================================================
+// Service icon panel — symbolic representation when baseType=service
+// ============================================================
+const SERVICE_ICONS: Record<string, { Icon: React.ComponentType<{ className?: string }>; tone: string }> = {
+  s1: { Icon: Briefcase,     tone: "from-sky-500/15 to-sky-500/5 text-sky-600" },
+  s2: { Icon: GraduationCap, tone: "from-violet-500/15 to-violet-500/5 text-violet-600" },
+  s3: { Icon: Stethoscope,   tone: "from-rose-500/15 to-rose-500/5 text-rose-600" },
+  s4: { Icon: Banknote,      tone: "from-emerald-500/15 to-emerald-500/5 text-emerald-600" },
+  s5: { Icon: Code2,         tone: "from-amber-500/15 to-amber-500/5 text-amber-600" },
+};
+
+function ServiceIconPanel({ familyId, family }: { familyId: string; family: FamilyEntry }) {
+  const meta = SERVICE_ICONS[familyId] ?? { Icon: Wrench, tone: "from-primary/10 to-primary/5 text-primary" };
+  const Icon = meta.Icon;
+  return (
+    <div className={`rounded-xl border border-border bg-gradient-to-l ${meta.tone} p-3`}>
+      <div className="flex gap-3 items-center">
+        <div className="shrink-0 size-24 md:size-28 rounded-xl bg-card ring-1 ring-border grid place-items-center">
+          <Icon className="size-12" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-extrabold flex items-center gap-1.5">
+            <Wrench className="size-4" />
+            خدمة — {family.n}
+          </div>
+          <div className="text-xs text-muted-foreground font-bold mt-1 leading-snug">
+            الخدمات لا تتطلب صورة سلعة. الرمز أعلاه تمثيل مرئي لفئة الخدمة لتسهيل اكتشافها.
+          </div>
+          <div className="text-[11px] text-muted-foreground font-bold mt-1">
+            وحدة افتراضية: <span className="font-mono text-foreground">{family.defaultUnit}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 }
 
 // ============================================================

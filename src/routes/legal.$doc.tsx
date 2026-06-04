@@ -174,11 +174,13 @@ function LegalDoc() {
       <header className="border-b border-border">
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="font-display text-2xl font-extrabold text-primary">بادل بادل</Link>
-          <nav className="flex gap-4 text-xs text-muted-foreground">
+          <nav className="flex gap-3 text-xs text-muted-foreground flex-wrap justify-end">
             <Link to="/legal/$doc" params={{ doc: "terms" }} className="hover:text-foreground">الشروط</Link>
             <Link to="/legal/$doc" params={{ doc: "privacy" }} className="hover:text-foreground">الخصوصية</Link>
-            <Link to="/legal/$doc" params={{ doc: "barter-agreement" }} className="hover:text-foreground">اتفاقية المقايضة</Link>
+            <Link to="/legal/$doc" params={{ doc: "barter-agreement" }} className="hover:text-foreground">المقايضة</Link>
             <Link to="/legal/$doc" params={{ doc: "anti-riba" }} className="hover:text-foreground">مكافحة الربا</Link>
+            <Link to="/legal/$doc" params={{ doc: "refund-policy" }} className="hover:text-foreground">الاسترداد</Link>
+            <Link to="/legal/$doc" params={{ doc: "fees" }} className="hover:text-foreground">الرسوم</Link>
           </nav>
         </div>
       </header>

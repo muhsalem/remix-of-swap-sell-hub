@@ -913,24 +913,39 @@ function BarterBar({
   const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
 
+  // Full catalog autocomplete pool — everything the user could want in exchange
+  const allCatalog = useMemo(() => {
+    const all = Object.values(CATALOG_ITEMS).flat();
+    return Array.from(new Set(all)).sort();
+  }, []);
+  const listId = `barter-want-list-${product.familyId}`;
+
   return (
     <div className="rounded-xl border border-accent/30 bg-gradient-to-l from-accent/10 to-transparent p-3">
       <div className="flex items-center gap-2 mb-2">
-        <ArrowLeftRight className="size-4 text-accent" />
-        <span className="text-sm font-extrabold text-foreground">قايض بـ</span>
+        <ArrowLeftRight className="size-4 text-accent" aria-hidden="true" />
+        <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">قايض بـ</label>
       </div>
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input
+          id={`barter-want-${product.familyId}`}
           type="text" value={wantValue}
           onChange={(e) => onWantChange(e.target.value)}
-          placeholder="اكتب ما تريده مقابل هذا العنصر..."
+          placeholder="اكتب أو اختر ما تريده مقابل هذا العنصر..."
+          list={listId}
+          autoComplete="off"
+          aria-label="ما تريد الحصول عليه بالمقايضة"
           className="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-base font-bold outline-none"
         />
+        <datalist id={listId}>
+          {allCatalog.map((n) => <option key={n} value={n} />)}
+        </datalist>
         <button
           type="button" onClick={onBarter} disabled={!canBarter}
+          aria-label="ابدأ المقايضة"
           className="px-5 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <ArrowLeftRight className="size-4" /> قايض
+          <ArrowLeftRight className="size-4" aria-hidden="true" /> قايض
         </button>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-2.5">

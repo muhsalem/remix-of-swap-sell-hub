@@ -327,6 +327,63 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          redeemed_at: string | null
+          referred_user: string | null
+          referrer_id: string
+          reward_di: number
+          rewarded: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          referred_user?: string | null
+          referrer_id: string
+          reward_di?: number
+          rewarded?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          referred_user?: string | null
+          referrer_id?: string
+          reward_di?: number
+          rewarded?: boolean
+        }
+        Relationships: []
+      }
+      region_settings: {
+        Row: {
+          cash_only: boolean
+          country_code: string
+          di_enabled: boolean
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          cash_only?: boolean
+          country_code: string
+          di_enabled?: boolean
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cash_only?: boolean
+          country_code?: string
+          di_enabled?: boolean
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reserve_snapshots: {
         Row: {
           id: string
@@ -391,6 +448,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          canceled_at: string | null
+          created_at: string
+          id: string
+          price_sar: number
+          renews_at: string | null
+          started_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          price_sar?: number
+          renews_at?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          price_sar?: number
+          renews_at?: string | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       trade_offers: {
         Row: {
@@ -633,6 +729,8 @@ export type Database = {
         | "rejected"
         | "cancelled"
         | "completed"
+      subscription_status: "active" | "canceled" | "past_due" | "trialing"
+      subscription_tier: "free" | "plus" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -781,6 +879,8 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      subscription_status: ["active", "canceled", "past_due", "trialing"],
+      subscription_tier: ["free", "plus", "pro"],
     },
   },
 } as const

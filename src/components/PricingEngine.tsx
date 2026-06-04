@@ -496,7 +496,7 @@ function ItemCard({
           عنصر للمقايضة
         </span>
         {onRemove && (
-          <button onClick={onRemove} className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive" title="حذف">
+          <button onClick={onRemove} aria-label={`حذف العنصر رقم ${index + 1}`} className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive" title="حذف">
             <X className="size-4" />
           </button>
         )}

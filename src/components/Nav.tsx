@@ -37,9 +37,14 @@ export function Nav() {
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2 font-display text-2xl font-extrabold tracking-tighter text-primary">
-            <img src={badelLogo} alt="بادل" width={36} height={36} className="h-9 w-9" />
-            <span className="text-foreground">بادل</span>
+          <Link to="/" className="flex items-center gap-2.5 font-display text-2xl font-extrabold tracking-tighter text-primary">
+            <img src={badelLogo} alt="بادل" width={40} height={40} className="h-10 w-10 shrink-0" />
+            <span className="flex flex-col leading-none">
+              <span className="text-foreground">بادل</span>
+              <span className="text-[10px] md:text-[11px] font-bold text-muted-foreground tracking-normal mt-0.5">
+                بدّل ما تملكه بما تحتاجه
+              </span>
+            </span>
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium">
             <Link to="/" hash="engine" className="hover:text-primary transition-colors">المقايضة</Link>

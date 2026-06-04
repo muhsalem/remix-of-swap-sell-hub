@@ -212,3 +212,69 @@ function Card({ icon, title, children }: { icon: React.ReactNode; title: string;
     </div>
   );
 }
+
+function ProofOfReserve() {
+  const fetchSnap = useServerFn(getLatestReserveSnapshot);
+  const { data, isLoading } = useQuery({
+    queryKey: ["reserve-snapshot"],
+    queryFn: () => fetchSnap(),
+    staleTime: 60_000,
+  });
+  const snap = data?.snapshot;
+  const ratio = snap ? Number(snap.reserve_ratio) : 1;
+  const ratioPct = Math.round(ratio * 100);
+  const healthy = ratio >= 1;
+  const date = snap ? new Date(snap.recorded_at).toLocaleDateString("ar-SA") : "—";
+
+  return (
+    <section className="mt-10 rounded-3xl ring-1 ring-black/5 bg-gradient-to-br from-card via-card to-stone-soft/40 p-6 md:p-8">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="size-11 rounded-2xl grid place-items-center bg-emerald-100 text-emerald-700">
+          <Vault className="size-6" />
+        </div>
+        <div>
+          <h2 className="font-extrabold text-xl">إثبات الاحتياطي (Proof of Reserve)</h2>
+          <p className="text-xs text-muted-foreground font-bold">شفافية كاملة حول الدعم النقدي لكل DI مُصدَر.</p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground font-bold py-6 text-center">جاري تحميل آخر لقطة...</div>
+      ) : !snap ? (
+        <div className="text-sm text-muted-foreground font-bold py-6 text-center">لا توجد بيانات احتياطي بعد.</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="rounded-2xl bg-background ring-1 ring-border p-4">
+              <div className="text-[11px] uppercase tracking-wider font-extrabold text-muted-foreground mb-1">DI مُصدَر متداول</div>
+              <div className="font-display font-black text-2xl tabular-nums">{Number(snap.total_di_outstanding).toLocaleString()}</div>
+              <div className="text-[11px] text-muted-foreground font-bold mt-1">DI</div>
+            </div>
+            <div className="rounded-2xl bg-background ring-1 ring-border p-4">
+              <div className="text-[11px] uppercase tracking-wider font-extrabold text-muted-foreground mb-1">احتياطي نقدي</div>
+              <div className="font-display font-black text-2xl tabular-nums">{Number(snap.reserve_sar).toLocaleString()}</div>
+              <div className="text-[11px] text-muted-foreground font-bold mt-1">ر.س</div>
+            </div>
+            <div className={`rounded-2xl p-4 ring-1 ${healthy ? "bg-emerald-50 ring-emerald-200" : "bg-amber-50 ring-amber-200"}`}>
+              <div className="text-[11px] uppercase tracking-wider font-extrabold text-muted-foreground mb-1">نسبة التغطية</div>
+              <div className={`font-display font-black text-2xl tabular-nums ${healthy ? "text-emerald-700" : "text-amber-700"}`}>
+                {ratioPct}%
+              </div>
+              <div className="text-[11px] font-bold mt-1">
+                {healthy ? "✅ مغطّى بالكامل" : "⚠️ تغطية جزئية"}
+              </div>
+            </div>
+          </div>
+          {snap.note && (
+            <div className="text-xs text-muted-foreground font-bold leading-relaxed bg-stone-soft/50 p-3 rounded-xl">
+              📝 {snap.note}
+            </div>
+          )}
+          <div className="text-[11px] text-muted-foreground font-bold mt-3 text-end">
+            آخر تحديث: {date}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}

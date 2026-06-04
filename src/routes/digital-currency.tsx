@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Coins, ArrowLeftRight, ShieldCheck, TrendingUp, Wallet, Gift, Info, ArrowRight, Check, Vault } from "lucide-react";
+import { Coins, ArrowLeftRight, ShieldCheck, TrendingUp, Wallet, Gift, Info, ArrowRight, Check, Vault, Ban, Crown } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { getLatestReserveSnapshot } from "@/lib/reserve.functions";
+import { loadCashOnly, saveCashOnly, isRestrictedCountry } from "@/lib/region-mode";
 
 export const Route = createFileRoute("/digital-currency")({
   head: () => ({

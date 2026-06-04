@@ -499,6 +499,47 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_alerts: {
+        Row: {
+          created_at: string
+          fulfilled: boolean
+          fulfilled_at: string | null
+          fulfilled_listing_id: string | null
+          id: string
+          normalized: string
+          search_term: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fulfilled?: boolean
+          fulfilled_at?: string | null
+          fulfilled_listing_id?: string | null
+          id?: string
+          normalized: string
+          search_term: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fulfilled?: boolean
+          fulfilled_at?: string | null
+          fulfilled_listing_id?: string | null
+          id?: string
+          normalized?: string
+          search_term?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_alerts_fulfilled_listing_id_fkey"
+            columns: ["fulfilled_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

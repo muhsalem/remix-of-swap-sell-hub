@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import { analyzeProductImage } from "@/lib/vision.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
   ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
-  Camera, Wrench, Package, Info,
+  Camera, Wrench, Package, Info, ArrowLeft,
+  Briefcase, GraduationCap, Stethoscope, Banknote, Code2,
 } from "lucide-react";
 import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
 
@@ -202,7 +204,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               <div className="size-10 rounded-xl grid place-items-center bg-primary/10 text-primary">
                 <Package2 className="size-5" />
               </div>
-              <h4 className="font-extrabold text-lg md:text-xl">ما أريد أن أقايضه ({items.length})</h4>
+              <h4 className="font-extrabold text-lg md:text-xl">ما أريد مقايضته ({items.length})</h4>
             </div>
             {!autoCalc && (
               <button
@@ -286,8 +288,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             </div>
           </div>
 
-          {/* DI explainer */}
-          <DiExplainer />
+          {/* DI link card → /digital-currency */}
+          <DiLinkCard />
 
           {/* Breakdown */}
           {result && (
@@ -335,41 +337,31 @@ function Row({ label, v }: { label: string; v: number | string }) {
 }
 
 // ============================================================
-// DI Explainer (Digital Internal currency)
+// DI Link Card — points to /digital-currency
 // ============================================================
-function DiExplainer() {
-  const [open, setOpen] = useState(false);
+function DiLinkCard() {
   return (
-    <div className="border-t border-border bg-stone-soft/40">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full px-6 md:px-8 py-4 flex items-center justify-between text-right hover:bg-stone-soft transition-colors"
-      >
-        <span className="flex items-center gap-2 font-extrabold text-base">
-          <Coins className="size-5 text-primary" />
-          كيف تعمل العملة الرقمية الداخلية (DI)؟
-        </span>
-        <ChevronDown className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="px-6 md:px-8 pb-6 text-sm md:text-base font-bold leading-relaxed space-y-3 text-foreground/85">
-          <p>
-            <b className="text-primary">DI</b> هي وحدة حساب داخلية ثابتة لقياس عدالة المقايضة بعيداً عن تقلب العملات.
-            ربط ثابت: <span className="font-mono bg-primary/10 px-2 py-0.5 rounded">1 DI = 5 ر.س</span>.
-          </p>
-          <ul className="list-disc pr-5 space-y-1.5">
-            <li><b>تكتسبها</b> عند إتمام صفقة بنجاح (مكافأة 50 DI لكل طرف).</li>
-            <li><b>تُخصم منها</b> عمولة المنصة (3% من قيمة الصفقة) من الطرف البادئ.</li>
-            <li><b>تستخدمها</b> لموازنة الفروقات بين عرضين غير متكافئين دون نقد.</li>
-            <li><b>لا تُسحب</b> كنقد — فقط رصيد داخلي يضمن استمرارية الثقة.</li>
-          </ul>
-          <p className="text-xs text-muted-foreground">
-            * النموذج الاقتصادي: عملة مرجعية (URV) داخلية، مدعومة بسلة الصفقات المُتمّة، لا تخضع لتداول خارجي.
-          </p>
+    <Link
+      to="/digital-currency"
+      className="block border-t border-border bg-gradient-to-l from-primary/5 via-stone-soft/40 to-transparent hover:from-primary/10 transition-colors"
+    >
+      <div className="px-6 md:px-8 py-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="size-11 rounded-2xl grid place-items-center bg-primary/10 text-primary shrink-0">
+            <Coins className="size-6" />
+          </div>
+          <div>
+            <div className="font-extrabold text-base md:text-lg">كيف تعمل العملة الرقمية الداخلية (DI)؟</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-bold mt-0.5">
+              اكتسابها، استخدامها، وقيمتها بعملتك المحلية حسب بلدك.
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        <span className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-extrabold whitespace-nowrap">
+          افتح الصفحة <ArrowLeft className="size-4" />
+        </span>
+      </div>
+    </Link>
   );
 }
 
@@ -482,8 +474,12 @@ function ItemCard({
           />
         )}
 
-        {/* AI photo or manual */}
-        <AiPhotoOrManual product={product} onApply={(patch) => onUpdate({ ...product, ...patch })} />
+        {/* Service icon OR AI photo (good only) */}
+        {product.baseType === "service" ? (
+          <ServiceIconPanel familyId={product.familyId} family={family} />
+        ) : (
+          <AiPhotoOrManual product={product} onApply={(patch) => onUpdate({ ...product, ...patch })} />
+        )}
 
         {/* Qty + price */}
         <div className="grid grid-cols-2 gap-2">
@@ -617,42 +613,66 @@ function AiPhotoOrManual({
 
   return (
     <div className="rounded-xl border border-dashed border-border bg-gradient-to-br from-accent/5 to-transparent p-3">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-sm font-extrabold flex items-center gap-1.5">
-          <Sparkles className="size-4 text-accent" />
-          صوّر السلعة — الذكاء الاصطناعي يستخرج الخصائص تلقائياً
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={m.isPending}
-          className="px-4 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
-        >
-          {m.isPending ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
-          {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
-        </button>
-        <span className="text-xs text-muted-foreground font-bold flex items-center gap-1">
-          <Info className="size-3" /> أو اكتب الخصائص يدوياً أسفل
-        </span>
-        <input
-          ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
-        />
-      </div>
-
-      {preview && (
-        <div className="mt-3 flex items-center gap-3">
-          <img src={preview} alt="" className="size-16 rounded-lg object-cover ring-1 ring-border" />
-          {m.isSuccess && (
-            <div className="text-xs font-bold text-foreground/80 leading-snug">
-              <div className="text-accent">✓ تم التحليل — راجع الحقول وعدّلها إن لزم</div>
-              {m.data?.notes && <div className="text-muted-foreground mt-0.5">{m.data.notes}</div>}
-            </div>
-          )}
+      <div className="flex gap-3 items-stretch">
+        {/* LEFT: preview thumbnail / placeholder */}
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={m.isPending}
+            className="relative size-24 md:size-28 rounded-xl overflow-hidden ring-1 ring-border bg-stone-soft grid place-items-center hover:ring-accent transition disabled:opacity-50"
+          >
+            {preview ? (
+              <img src={preview} alt="معاينة" className="absolute inset-0 size-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                <Camera className="size-6" />
+                <span className="text-[10px] font-extrabold">إضافة صورة</span>
+              </div>
+            )}
+            {m.isPending && (
+              <div className="absolute inset-0 grid place-items-center bg-black/40 text-white">
+                <Loader2 className="size-5 animate-spin" />
+              </div>
+            )}
+          </button>
         </div>
+
+        {/* RIGHT: text + actions */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+          <div>
+            <div className="text-sm font-extrabold flex items-center gap-1.5">
+              <Sparkles className="size-4 text-accent" />
+              صوّر السلعة — الذكاء الاصطناعي يستخرج الخصائص تلقائياً
+            </div>
+            <div className="text-xs text-muted-foreground font-bold mt-1 flex items-center gap-1">
+              <Info className="size-3" /> أو اكتب الخصائص يدوياً أسفل
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={m.isPending}
+              className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+            >
+              {m.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+              {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
+            </button>
+            {m.isSuccess && (
+              <span className="text-[11px] font-extrabold text-accent">✓ تم التحليل</span>
+            )}
+          </div>
+          <input
+            ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
+          />
+        </div>
+      </div>
+
+      {m.isSuccess && m.data?.notes && (
+        <div className="mt-2 text-xs text-muted-foreground font-bold leading-snug">{m.data.notes}</div>
       )}
 
       {error && (
@@ -660,6 +680,43 @@ function AiPhotoOrManual({
           <AlertTriangle className="size-3" /> {error}
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// Service icon panel — symbolic representation when baseType=service
+// ============================================================
+const SERVICE_ICONS: Record<string, { Icon: React.ComponentType<{ className?: string }>; tone: string }> = {
+  s1: { Icon: Briefcase,     tone: "from-sky-500/15 to-sky-500/5 text-sky-600" },
+  s2: { Icon: GraduationCap, tone: "from-violet-500/15 to-violet-500/5 text-violet-600" },
+  s3: { Icon: Stethoscope,   tone: "from-rose-500/15 to-rose-500/5 text-rose-600" },
+  s4: { Icon: Banknote,      tone: "from-emerald-500/15 to-emerald-500/5 text-emerald-600" },
+  s5: { Icon: Code2,         tone: "from-amber-500/15 to-amber-500/5 text-amber-600" },
+};
+
+function ServiceIconPanel({ familyId, family }: { familyId: string; family: FamilyEntry }) {
+  const meta = SERVICE_ICONS[familyId] ?? { Icon: Wrench, tone: "from-primary/10 to-primary/5 text-primary" };
+  const Icon = meta.Icon;
+  return (
+    <div className={`rounded-xl border border-border bg-gradient-to-l ${meta.tone} p-3`}>
+      <div className="flex gap-3 items-center">
+        <div className="shrink-0 size-24 md:size-28 rounded-xl bg-card ring-1 ring-border grid place-items-center">
+          <Icon className="size-12" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-extrabold flex items-center gap-1.5">
+            <Wrench className="size-4" />
+            خدمة — {family.n}
+          </div>
+          <div className="text-xs text-muted-foreground font-bold mt-1 leading-snug">
+            الخدمات لا تتطلب صورة سلعة. الرمز أعلاه تمثيل مرئي لفئة الخدمة لتسهيل اكتشافها.
+          </div>
+          <div className="text-[11px] text-muted-foreground font-bold mt-1">
+            وحدة افتراضية: <span className="font-mono text-foreground">{family.defaultUnit}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

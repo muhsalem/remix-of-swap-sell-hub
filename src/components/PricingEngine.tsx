@@ -265,8 +265,17 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)",
               backgroundSize: "40px 40px",
             }} />
-            <div className="relative">
-              <div className="text-sm uppercase tracking-[0.2em] opacity-90 font-extrabold mb-2">القيمة الإجمالية المقدّرة</div>
+            <div className="relative" aria-live="polite" aria-atomic="true">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="text-sm uppercase tracking-[0.2em] opacity-90 font-extrabold">القيمة الإجمالية المقدّرة</div>
+                <span
+                  className={`shrink-0 text-[11px] font-extrabold px-2.5 py-1 rounded-full ring-1 backdrop-blur ${confTone.cls}`}
+                  title={`نسبة اكتمال البيانات: ${confidence}%`}
+                  aria-label={`درجة الثقة في التقييم ${confidence} بالمئة، ${confTone.label}`}
+                >
+                  ثقة {confidence}% · {confTone.label}
+                </span>
+              </div>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="font-display text-5xl md:text-6xl font-black tabular-nums leading-none">
                   {result ? valueSAR.toLocaleString() : "—"}

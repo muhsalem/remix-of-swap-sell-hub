@@ -286,9 +286,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </span>
                 <span className="text-lg opacity-90 font-extrabold">ر.س</span>
               </div>
-              <div className="flex items-center gap-2 mt-3 font-mono font-extrabold text-xl">
-                <Coins className="size-5" />
-                {result ? valueDI.toLocaleString() : "0"} <span className="text-sm opacity-80">DI (عملة بادل الرقمية)</span>
+              {/* DI framed card inside the value panel */}
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
+                <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
+                  <Coins className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-mono font-black text-2xl tabular-nums">
+                      {result ? valueDI.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}
+                    </span>
+                    <span className="text-sm font-extrabold opacity-90">DI</span>
+                    <span className="text-[10px] opacity-75 font-bold">عملة بادل الرقمية</span>
+                  </div>
+                  <div className="text-[11px] font-bold opacity-80 mt-0.5">
+                    سعر مرجعي: 1 DI = {DI_TO_SAR} ر.س · ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                  </div>
+                </div>
               </div>
 
               {/* ===== Inline live currency converter ===== */}

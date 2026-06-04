@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip: string | null
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+        }
+        Relationships: []
+      }
       disputes: {
         Row: {
           created_at: string
@@ -291,6 +324,33 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      reserve_snapshots: {
+        Row: {
+          id: string
+          note: string | null
+          recorded_at: string
+          reserve_ratio: number | null
+          reserve_sar: number
+          total_di_outstanding: number
+        }
+        Insert: {
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          reserve_ratio?: number | null
+          reserve_sar?: number
+          total_di_outstanding?: number
+        }
+        Update: {
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          reserve_ratio?: number | null
+          reserve_sar?: number
+          total_di_outstanding?: number
         }
         Relationships: []
       }

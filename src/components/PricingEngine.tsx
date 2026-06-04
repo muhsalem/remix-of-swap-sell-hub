@@ -288,8 +288,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             </div>
           </div>
 
-          {/* DI explainer */}
-          <DiExplainer />
+          {/* DI link card → /digital-currency */}
+          <DiLinkCard />
 
           {/* Breakdown */}
           {result && (

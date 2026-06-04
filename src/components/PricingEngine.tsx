@@ -146,6 +146,28 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const valueDI = result?.diA ?? 0;
   const shariah = result?.shariah;
 
+  // Confidence Score — data completeness signal
+  const confidence = useMemo(() => {
+    if (items.length === 0) return 0;
+    const scores = items.map((p) => {
+      let s = 0;
+      if (p.name.trim()) s += 20;
+      if (p.marketPricePerUnit > 0) s += 25;
+      if (p.quantity > 0) s += 10;
+      if (p.ageMonths >= 0 && p.condition) s += 15;
+      if (p.quality >= 5) s += 10;
+      if (p.locationTier && p.scarcity) s += 10;
+      if (p.deliveryDays > 0 || p.baseType === "service") s += 10;
+      return Math.min(100, s);
+    });
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [items]);
+  const confTone =
+    confidence >= 80 ? { label: "عالية", cls: "bg-emerald-500/20 ring-emerald-300/40 text-emerald-50" }
+    : confidence >= 50 ? { label: "متوسطة", cls: "bg-amber-500/20 ring-amber-300/40 text-amber-50" }
+    : { label: "منخفضة", cls: "bg-rose-500/20 ring-rose-300/40 text-rose-50" };
+
+
   return (
     <section
       className={

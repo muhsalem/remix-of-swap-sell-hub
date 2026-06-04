@@ -35,6 +35,8 @@ type Product = {
   riskLevel: "low" | "medium" | "high";
   deliveryDays: number;
   distanceKm: number;
+  brandTier: "premium" | "standard" | "generic" | "unknown";
+  seasonality: "peak" | "normal" | "off";
   // catalog wiring
   baseType: "good" | "service";
   familyId: string;

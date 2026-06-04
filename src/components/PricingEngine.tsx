@@ -5,10 +5,11 @@ import { Link } from "@tanstack/react-router";
 import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
 import { analyzeProductImage } from "@/lib/vision.functions";
+import { searchPlatformItems, addWishlistAlert } from "@/lib/wishlist.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
   ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
-  Camera, Wrench, Package, Info, ArrowLeft,
+  Camera, Wrench, Package, Info, ArrowLeft, Bell, Check,
   Briefcase, GraduationCap, Stethoscope, Banknote, Code2,
 } from "lucide-react";
 import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
@@ -135,13 +136,13 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
   const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
 
-  const [wantsByIdx, setWantsByIdx] = useState<Record<number, string>>({});
-  const setWant = (idx: number, v: string) => setWantsByIdx({ ...wantsByIdx, [idx]: v });
+  const [wantValue, setWantValue] = useState("");
+  const primaryItem = items[0];
   const triggerBarter = (have: string, want: string) => {
     if (!have.trim() || !want.trim()) return;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("badel:match", { detail: { have, want } }));
-      const el = document.getElementById("match-finder-search");
+      const el = document.getElementById("market-search");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
@@ -244,9 +245,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 key={i}
                 index={i}
                 product={p}
-                wantValue={wantsByIdx[i] || ""}
-                onWantChange={(v) => setWant(i, v)}
-                onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
                 onUpdate={(np) => updateItem(i, np)}
                 onRemove={items.length > 1 ? () => removeItem(i) : undefined}
               />
@@ -345,6 +343,22 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               </div>
             </div>
           </div>
+
+          {/* Barter bar (global, below value) */}
+          <div className="px-6 md:px-8 pt-5 pb-2">
+            <BarterBar
+              product={primaryItem}
+              wantValue={wantValue}
+              onWantChange={setWantValue}
+              onBarter={() => triggerBarter(primaryItem.name, wantValue)}
+            />
+          </div>
+
+          {/* DI link (compact, below barter) */}
+          <div className="px-6 md:px-8 pb-5">
+            <DiLinkCard compact />
+          </div>
+
 
           {/* Breakdown */}
           {result && (
@@ -446,15 +460,12 @@ function DiLinkCard({ compact = false }: { compact?: boolean }) {
 // Item Card — type tabs, catalog-driven category, AI photo
 // ============================================================
 function ItemCard({
-  index, product, onUpdate, onRemove, wantValue, onWantChange, onBarter,
+  index, product, onUpdate, onRemove,
 }: {
   index: number;
   product: Product;
   onUpdate: (p: Product) => void;
   onRemove?: () => void;
-  wantValue: string;
-  onWantChange: (v: string) => void;
-  onBarter: () => void;
 }) {
   const [advOpen, setAdvOpen] = useState(false);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);
@@ -636,20 +647,12 @@ function ItemCard({
           </div>
         )}
 
-        {/* Barter bar + DI link side by side */}
-        <div className="grid md:grid-cols-[1fr_auto] gap-3 items-stretch">
-          <BarterBar
-            product={product}
-            wantValue={wantValue}
-            onWantChange={onWantChange}
-            onBarter={onBarter}
-          />
-          <DiLinkCard compact />
-        </div>
       </div>
     </div>
   );
 }
+
+// (footer wrapper closed)
 
 // ============================================================
 // AI Photo / Manual entry
@@ -917,25 +920,67 @@ function BarterBar({
   const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
 
-  // Full catalog autocomplete pool — everything the user could want in exchange
   const allCatalog = useMemo(() => {
     const all = Object.values(CATALOG_ITEMS).flat();
     return Array.from(new Set(all)).sort();
   }, []);
   const listId = `barter-want-list-${product.familyId}`;
 
+  // ── Platform-listing suggestions (debounced) ──
+  const searchFn = useServerFn(searchPlatformItems);
+  const alertFn = useServerFn(addWishlistAlert);
+  const [platformItems, setPlatformItems] = useState<Array<{ id: string; title: string; category: string; market_price: number }>>([]);
+  const [searching, setSearching] = useState(false);
+  const [alertState, setAlertState] = useState<"idle" | "saving" | "saved" | "auth" | "error">("idle");
+
+  useEffect(() => {
+    const q = wantValue.trim();
+    if (q.length < 2) { setPlatformItems([]); return; }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await searchFn({ data: { q } });
+        setPlatformItems(r.items);
+      } catch { setPlatformItems([]); }
+      finally { setSearching(false); }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [wantValue, searchFn]);
+
+  const notifyMe = async () => {
+    setAlertState("saving");
+    try {
+      await alertFn({ data: { searchTerm: wantValue.trim() } });
+      setAlertState("saved");
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      setAlertState(msg.toLowerCase().includes("unauth") ? "auth" : "error");
+    }
+  };
+
+  const hasQuery = wantValue.trim().length >= 2;
+  const noMatches = hasQuery && !searching && platformItems.length === 0;
+
   return (
-    <div className="rounded-xl border border-accent/30 bg-gradient-to-l from-accent/10 to-transparent p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <ArrowLeftRight className="size-4 text-accent" aria-hidden="true" />
-        <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">قايض بـ</label>
+    <div className="rounded-2xl border-2 border-accent/40 bg-gradient-to-bl from-accent/10 via-accent/5 to-transparent p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <div className="size-8 rounded-xl grid place-items-center bg-accent/15 text-accent">
+            <ArrowLeftRight className="size-4" aria-hidden="true" />
+          </div>
+          <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">
+            قايض «{product.name || "—"}» بـ
+          </label>
+        </div>
+        {searching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
       </div>
+
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input
           id={`barter-want-${product.familyId}`}
           type="text" value={wantValue}
           onChange={(e) => onWantChange(e.target.value)}
-          placeholder="اكتب أو اختر ما تريده مقابل هذا العنصر..."
+          placeholder="اكتب أو اختر سلعة من المنصة..."
           list={listId}
           autoComplete="off"
           aria-label="ما تريد الحصول عليه بالمقايضة"
@@ -952,7 +997,60 @@ function BarterBar({
           <ArrowLeftRight className="size-4" aria-hidden="true" /> قايض
         </button>
       </div>
-      <div className="flex flex-wrap gap-1.5 mt-2.5">
+
+      {/* Platform matches */}
+      {platformItems.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          <div className="text-xs font-extrabold text-muted-foreground">عروض مطابقة من المنصة:</div>
+          <div className="space-y-1">
+            {platformItems.slice(0, 4).map((it) => (
+              <Link
+                key={it.id} to="/listings/$id" params={{ id: it.id }}
+                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-extrabold truncate">{it.title}</div>
+                  <div className="text-[11px] text-muted-foreground font-bold">{it.category}</div>
+                </div>
+                <span className="shrink-0 text-xs font-mono font-extrabold text-primary">
+                  {Number(it.market_price).toLocaleString()} ر.س
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Not found — wishlist alert */}
+      {noMatches && (
+        <div className="mt-3 px-3 py-2.5 rounded-xl bg-stone-soft/70 border border-dashed border-border">
+          <div className="text-xs font-bold text-muted-foreground mb-2">
+            لم نجد «{wantValue.trim()}» في المنصة حالياً. سجّل اهتمامك وسننبهك عند توفّره.
+          </div>
+          {alertState === "saved" ? (
+            <div className="text-xs font-extrabold text-emerald-600 flex items-center gap-1">
+              <Check className="size-3.5" /> تم — ستصلك إشعار عند توفّره
+            </div>
+          ) : alertState === "auth" ? (
+            <Link to="/auth" className="text-xs font-extrabold text-primary underline">
+              سجّل الدخول لتفعيل التنبيه
+            </Link>
+          ) : (
+            <button
+              type="button" onClick={notifyMe} disabled={alertState === "saving"}
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-extrabold inline-flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+            >
+              {alertState === "saving" ? <Loader2 className="size-3.5 animate-spin" /> : <Bell className="size-3.5" />}
+              نبّهني عند توفّره
+            </button>
+          )}
+          {alertState === "error" && (
+            <div className="mt-1 text-[11px] font-bold text-destructive">تعذّر الحفظ، حاول لاحقاً.</div>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1.5 mt-3">
         <span className="text-xs text-muted-foreground font-bold pt-1">اقتراحات:</span>
         {suggestions.map((s) => (
           <button
@@ -966,3 +1064,4 @@ function BarterBar({
     </div>
   );
 }
+

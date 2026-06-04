@@ -3,6 +3,7 @@ import badelLogo from "@/assets/badel-logo.png";
 import { useAuth, signOut } from "@/lib/auth";
 import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/admin.functions";
@@ -117,6 +118,7 @@ export function Nav() {
                   <ShieldAlert className="size-4" />
                 </Link>
               )}
+              <ThemeToggle />
               <NotificationBell />
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}
@@ -127,12 +129,15 @@ export function Nav() {
               </button>
             </>
           ) : (
-            <Link
-              to="/auth"
-              className="px-5 py-2 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all"
-            >
-              ابدأ الآن
-            </Link>
+            <>
+              <ThemeToggle />
+              <Link
+                to="/auth"
+                className="px-5 py-2 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all"
+              >
+                ابدأ الآن
+              </Link>
+            </>
           )}
         </div>
       </div>

@@ -188,18 +188,6 @@ function Index() {
   );
 }
 
-function ModeBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2.5 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${
-        active ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {icon} {label}
-    </button>
-  );
-}
 
 function CatChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

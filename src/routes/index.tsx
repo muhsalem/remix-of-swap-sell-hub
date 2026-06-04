@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star } from "lucide-react";
+import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizontal } from "lucide-react";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
+import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({
@@ -37,6 +38,11 @@ function Index() {
   const [query, setQuery] = useState("");
   const [have, setHave] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [condFilter, setCondFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Match mode — when user provides both "have" and "want"
   const matchFn = useServerFn(matchListings);
@@ -48,6 +54,8 @@ function Index() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
     const list = listings.map((l) => {
       const text = `${l.title} ${l.category} ${l.wants ?? ""}`.toLowerCase();
       let score = 0;
@@ -59,11 +67,21 @@ function Index() {
       if (activeCat && l.category === activeCat) score += 4;
       return { l, score };
     });
-    const hasFilter = !!q || !!activeCat;
-    return hasFilter
-      ? list.filter((x) => x.score > 0).sort((a, b) => b.score - a.score)
-      : list;
-  }, [listings, query, activeCat]);
+    const hasTextOrCat = !!q || !!activeCat;
+    let out = hasTextOrCat ? list.filter((x) => x.score > 0) : list;
+    if (min !== null) out = out.filter((x) => Number(x.l.market_price) >= min);
+    if (max !== null) out = out.filter((x) => Number(x.l.market_price) <= max);
+    if (condFilter) out = out.filter((x) => x.l.condition === condFilter);
+    if (sortBy === "price-asc") out = [...out].sort((a, b) => Number(a.l.market_price) - Number(b.l.market_price));
+    else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
+    else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
+    return out;
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy]);
+
+  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter);
+  const resetFilters = () => {
+    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setSortBy("newest");
+  };
 
   const sectionTitle = matchMode
     ? "مطابقات المقايضة"

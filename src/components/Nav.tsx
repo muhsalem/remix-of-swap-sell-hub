@@ -129,12 +129,15 @@ export function Nav() {
               </button>
             </>
           ) : (
-            <Link
-              to="/auth"
-              className="px-5 py-2 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all"
-            >
-              ابدأ الآن
-            </Link>
+            <>
+              <ThemeToggle />
+              <Link
+                to="/auth"
+                className="px-5 py-2 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all"
+              >
+                ابدأ الآن
+              </Link>
+            </>
           )}
         </div>
       </div>

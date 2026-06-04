@@ -8,6 +8,7 @@ import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
+import { LocalPrice } from "@/components/LocalPrice";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({
@@ -279,7 +280,7 @@ function Index() {
                     <h3 className="font-bold mb-1 truncate">{l.title}</h3>
                     <p className="text-xs text-muted-foreground mb-4 line-clamp-1">يريد مقابله: {l.wants}</p>
                     <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <span className="text-sm font-bold">{Number(l.market_price).toLocaleString()} ر.س</span>
+                      <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                         <Star className="size-3 fill-accent text-accent" />
                         {Number(l.profiles?.rating ?? 0).toFixed(1)}
@@ -321,7 +322,7 @@ function Index() {
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
                   <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب مقابله: {l.wants}</p>
                   <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-sm font-bold">{Number(l.market_price).toLocaleString()} ر.س</span>
+                    <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
                     <span className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">قيّم ←</span>
                   </div>
                 </Link>

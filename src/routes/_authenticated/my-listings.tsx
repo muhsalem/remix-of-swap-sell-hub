@@ -6,6 +6,7 @@ import { Nav } from "@/components/Nav";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ListingImage } from "@/components/ListingImage";
+import { LocalPrice } from "@/components/LocalPrice";
 
 export const Route = createFileRoute("/_authenticated/my-listings")({
   head: () => ({ meta: [{ title: "عروضي — بادل بادل" }] }),
@@ -56,7 +57,7 @@ function MyListings() {
                     <ListingImage path={l.images?.[0]} alt={l.title} />
                   </div>
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
-                  <p className="text-xs text-muted-foreground">{Number(l.market_price).toLocaleString()} ر.س · {l.status}</p>
+                  <p className="text-xs text-muted-foreground"><LocalPrice sar={l.market_price} /> · {l.status}</p>
                 </Link>
                 <div className="flex gap-2 mt-3 pt-3 border-t border-border">
                   <button

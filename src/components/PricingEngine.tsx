@@ -74,6 +74,7 @@ function defaultItem(currency = "SAR"): Product {
     quantity: 1,
     condition: "like-new",
     ageMonths: 6,
+    ageUnit: "months",
     marketPricePerUnit: 0,
     currency,
     quality: 9,

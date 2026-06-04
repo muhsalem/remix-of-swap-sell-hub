@@ -204,7 +204,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               <div className="size-10 rounded-xl grid place-items-center bg-primary/10 text-primary">
                 <Package2 className="size-5" />
               </div>
-              <h4 className="font-extrabold text-lg md:text-xl">ما أريد أن أقايضه ({items.length})</h4>
+              <h4 className="font-extrabold text-lg md:text-xl">ما أريد مقايضته ({items.length})</h4>
             </div>
             {!autoCalc && (
               <button

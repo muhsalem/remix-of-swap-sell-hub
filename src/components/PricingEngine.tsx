@@ -26,6 +26,7 @@ type Product = {
   quantity: number;
   condition: "new" | "like-new" | "excellent" | "good" | "fair";
   ageMonths: number;
+  ageUnit: "days" | "months";
   marketPricePerUnit: number;
   currency: string;
   quality: number;

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Search, ShoppingBag, Tag, Sparkles, ArrowLeftRight } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
@@ -28,13 +28,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Mode = "buy" | "sell" | "barter";
 
 function Index() {
   const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
 
-  const [mode, setMode] = useState<Mode>("buy");
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
 
@@ -57,10 +55,7 @@ function Index() {
       : list;
   }, [listings, query, activeCat]);
 
-  const sectionTitle =
-    mode === "buy" ? "ابحث عمّا تريد شراءه" :
-    mode === "sell" ? "أحدث المنتجات في السوق" :
-    "عروض متاحة للمقايضة";
+  const sectionTitle = query || activeCat ? "نتائج البحث" : "أحدث العروض في السوق";
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">
@@ -70,81 +65,46 @@ function Index() {
       <Hero />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* شريط النية: بيع / شراء / مقايضة */}
+        {/* Discover bar */}
         <section className="mb-10">
-          <div className="bg-card rounded-3xl ring-1 ring-black/5 p-6 md:p-8 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-              <div>
-                <h2 className="font-display text-xl md:text-2xl font-extrabold">ماذا تريد أن تفعل اليوم؟</h2>
-                <p className="text-xs text-muted-foreground mt-1">اختر هدفك وسنُكيّف لك التجربة.</p>
-              </div>
-              <div className="flex gap-2 p-1 bg-stone-soft rounded-full">
-                <ModeBtn active={mode === "buy"} onClick={() => setMode("buy")} icon={<ShoppingBag className="size-4" />} label="أريد أن أشتري" />
-                <ModeBtn active={mode === "sell"} onClick={() => setMode("sell")} icon={<Tag className="size-4" />} label="أريد أن أبيع" />
-                <ModeBtn active={mode === "barter"} onClick={() => setMode("barter")} icon={<ArrowLeftRight className="size-4" />} label="أريد أن أقايض" />
-              </div>
+          <div className="bg-card rounded-3xl ring-1 ring-black/5 p-6 md:p-8 shadow-sm space-y-4">
+            <div>
+              <h2 className="font-display text-xl md:text-2xl font-extrabold">ابحث في السوق</h2>
+              <p className="text-sm text-muted-foreground mt-1">اعثر على ما تريد مقايضته أو شراءه — أو انزل لمحرك التسعير لتقدير قيمة ممتلكاتك.</p>
             </div>
-
-            {mode === "buy" && (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="مثال: آيفون 14، ساعة سمارت، استشارة قانونية..."
-                    className="w-full pr-12 pl-4 py-4 bg-stone-soft rounded-2xl border border-border outline-none focus:ring-2 ring-primary/30 text-sm"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <CatChip active={!activeCat} onClick={() => setActiveCat(null)}>كل الفئات</CatChip>
-                  {POPULAR.map((c) => (
-                    <CatChip key={c} active={activeCat === c} onClick={() => setActiveCat(activeCat === c ? null : c)}>
-                      {c}
-                    </CatChip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {mode === "sell" && (
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-stone-soft rounded-2xl">
-                <div>
-                  <p className="text-sm font-bold">انشر منتجك خلال دقيقة — مجاناً.</p>
-                  <p className="text-xs text-muted-foreground mt-1">محرك التقييم يحدد لك السعر العادل تلقائياً.</p>
-                </div>
-                <Link to="/new-listing" className="px-6 py-3 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
-                  أضف منتجك الآن
-                </Link>
-              </div>
-            )}
-
-            {mode === "barter" && (
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
-                <div>
-                  <p className="text-sm font-bold">جرّب محرك التسعير الذكي.</p>
-                  <p className="text-xs text-muted-foreground mt-1">قارن أي عرضين واحصل على توصية AI فورية بعدالة الصفقة.</p>
-                </div>
-                <a href="#engine" className="px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:opacity-90 transition-all">
-                  افتح المحرك
-                </a>
-              </div>
-            )}
+            <div className="relative">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="مثال: آيفون 14، ساعة سمارت، استشارة قانونية..."
+                className="w-full pr-12 pl-4 py-4 bg-stone-soft rounded-2xl border border-border outline-none focus:ring-2 ring-primary/30 text-sm"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <CatChip active={!activeCat} onClick={() => setActiveCat(null)}>كل الفئات</CatChip>
+              {POPULAR.map((c) => (
+                <CatChip key={c} active={activeCat === c} onClick={() => setActiveCat(activeCat === c ? null : c)}>
+                  {c}
+                </CatChip>
+              ))}
+            </div>
           </div>
         </section>
+
 
         {/* السوق */}
         <section id="market" className="mb-16">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-display text-2xl md:text-3xl font-extrabold flex items-center gap-3">
-                {mode === "buy" && <Sparkles className="size-5 text-primary" />}
+                {(query || activeCat) && <Sparkles className="size-5 text-primary" />}
                 {sectionTitle}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {mode === "buy" && (query || activeCat)
-                  ? `${filtered.length} نتيجة مطابقة لاهتمامك`
+                {(query || activeCat)
+                  ? `${filtered.length} نتيجة مطابقة`
                   : `${listings.length} عرض نشط`}
               </p>
             </div>
@@ -171,7 +131,7 @@ function Index() {
                   params={{ id: l.id }}
                   className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative"
                 >
-                  {mode === "buy" && score >= 5 && (
+                  {(query || activeCat) && score >= 5 && (
                     <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center gap-1 shadow-lg">
                       <Sparkles className="size-3" /> مطابق لاهتمامك
                     </div>
@@ -228,18 +188,6 @@ function Index() {
   );
 }
 
-function ModeBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2.5 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 transition-all ${
-        active ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {icon} {label}
-    </button>
-  );
-}
 
 function CatChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

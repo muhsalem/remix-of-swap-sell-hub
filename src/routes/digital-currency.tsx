@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Coins, ArrowLeftRight, ShieldCheck, TrendingUp, Wallet, Gift, Info, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Coins, ArrowLeftRight, ShieldCheck, TrendingUp, Wallet, Gift, Info, ArrowRight, Check } from "lucide-react";
 import { Nav } from "@/components/Nav";
+import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 
 export const Route = createFileRoute("/digital-currency")({
   head: () => ({
@@ -13,46 +14,20 @@ export const Route = createFileRoute("/digital-currency")({
   component: DigitalCurrencyPage,
 });
 
-// 1 DI = 5 SAR baseline. FX rates approx (relative to SAR).
-// SAR is the anchor; rates show how many local units equal 1 SAR.
-const FX_VS_SAR: Record<string, { label: string; symbol: string; perSAR: number; flag: string }> = {
-  SAR: { label: "السعودية",  symbol: "ر.س",  perSAR: 1.00,   flag: "🇸🇦" },
-  AED: { label: "الإمارات",  symbol: "د.إ",  perSAR: 0.98,   flag: "🇦🇪" },
-  KWD: { label: "الكويت",    symbol: "د.ك",  perSAR: 0.082,  flag: "🇰🇼" },
-  QAR: { label: "قطر",       symbol: "ر.ق",  perSAR: 0.97,   flag: "🇶🇦" },
-  BHD: { label: "البحرين",   symbol: "د.ب",  perSAR: 0.100,  flag: "🇧🇭" },
-  OMR: { label: "عُمان",      symbol: "ر.ع",  perSAR: 0.103,  flag: "🇴🇲" },
-  EGP: { label: "مصر",       symbol: "ج.م",  perSAR: 13.20,  flag: "🇪🇬" },
-  JOD: { label: "الأردن",    symbol: "د.أ",  perSAR: 0.189,  flag: "🇯🇴" },
-  MAD: { label: "المغرب",    symbol: "د.م",  perSAR: 2.65,   flag: "🇲🇦" },
-  TND: { label: "تونس",      symbol: "د.ت",  perSAR: 0.84,   flag: "🇹🇳" },
-  USD: { label: "الولايات المتحدة", symbol: "$", perSAR: 0.267, flag: "🇺🇸" },
-  EUR: { label: "أوروبا",    symbol: "€",    perSAR: 0.247,  flag: "🇪🇺" },
-  GBP: { label: "بريطانيا",  symbol: "£",    perSAR: 0.211,  flag: "🇬🇧" },
-};
-const DI_TO_SAR = 5;
-
-function detectCountry(): string {
-  if (typeof navigator === "undefined") return "SAR";
-  const lang = (navigator.language || "ar-SA").toLowerCase();
-  if (lang.includes("-eg")) return "EGP";
-  if (lang.includes("-ae")) return "AED";
-  if (lang.includes("-kw")) return "KWD";
-  if (lang.includes("-qa")) return "QAR";
-  if (lang.includes("-bh")) return "BHD";
-  if (lang.includes("-om")) return "OMR";
-  if (lang.includes("-jo")) return "JOD";
-  if (lang.includes("-ma")) return "MAD";
-  if (lang.includes("-tn")) return "TND";
-  if (lang.includes("-gb")) return "GBP";
-  if (lang.includes("-us")) return "USD";
-  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
-  return "SAR";
-}
-
 function DigitalCurrencyPage() {
-  const [country, setCountry] = useState<string>(() => (typeof window !== "undefined" ? detectCountry() : "SAR"));
+  const [country, setCountry] = useState<string>("SAR");
   const [di, setDi] = useState<number>(10);
+  const [saved, setSaved] = useState(false);
+
+  // Hydrate from localStorage on mount (avoids SSR hydration mismatch)
+  useEffect(() => { setCountry(loadCountry()); }, []);
+
+  const changeCountry = (c: string) => {
+    setCountry(c);
+    saveCountry(c);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1600);
+  };
 
   const fx = FX_VS_SAR[country] ?? FX_VS_SAR.SAR;
   const localValue = useMemo(() => di * DI_TO_SAR * fx.perSAR, [di, fx.perSAR]);

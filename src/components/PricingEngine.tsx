@@ -136,13 +136,13 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
   const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
 
-  const [wantsByIdx, setWantsByIdx] = useState<Record<number, string>>({});
-  const setWant = (idx: number, v: string) => setWantsByIdx({ ...wantsByIdx, [idx]: v });
+  const [wantValue, setWantValue] = useState("");
+  const primaryItem = items[0];
   const triggerBarter = (have: string, want: string) => {
     if (!have.trim() || !want.trim()) return;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("badel:match", { detail: { have, want } }));
-      const el = document.getElementById("match-finder-search");
+      const el = document.getElementById("market-search");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };

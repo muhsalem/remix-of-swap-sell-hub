@@ -121,7 +121,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   useEffect(() => {
     if (!autoCalc) return;
     const allValid = items.every(
-      (p) => p.name.trim().length > 0 && p.marketPricePerUnit > 0 && p.quantity > 0,
+      (p) => p.name.trim().length > 0 && p.marketPricePerUnit >= 0.01 && p.quantity > 0,
     );
     if (!allValid) return;
     const delay = firstRun.current ? 100 : 600;

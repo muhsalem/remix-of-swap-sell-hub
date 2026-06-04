@@ -3,7 +3,9 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { getListing } from "@/lib/listings.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
+import { ShareListing } from "@/components/ShareListing";
 import { ArrowLeftRight, Calendar, Tag, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const listingQuery = (id: string) => queryOptions({
   queryKey: ["listing", id],
@@ -16,16 +18,32 @@ export const Route = createFileRoute("/listings/$id")({
     if (!data.listing) throw notFound();
     return data;
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData?.listing
-      ? [
-          { title: `${loaderData.listing.title} — بادل بادل` },
-          { name: "description", content: `للمقايضة: ${loaderData.listing.title}. مطلوب: ${loaderData.listing.wants}` },
-          { property: "og:title", content: loaderData.listing.title },
-          { property: "og:description", content: `للمقايضة بـ ${loaderData.listing.wants}` },
-        ]
-      : [{ title: "عرض غير موجود" }],
-  }),
+  head: ({ loaderData, params }) => {
+    const l = loaderData?.listing;
+    if (!l) return { meta: [{ title: "عرض غير موجود — بادل" }] };
+    const desc = `للمقايضة: ${l.title} — مطلوب: ${l.wants} — السعر السوقي ${Number(l.market_price).toLocaleString()} ر.س.`;
+    const ogImagePath = l.images?.[0];
+    const ogImage = ogImagePath
+      ? supabase.storage.from("listing-images").getPublicUrl(ogImagePath).data.publicUrl
+      : undefined;
+    const url = `/listings/${params.id}`;
+    return {
+      meta: [
+        { title: `${l.title} — بادل` },
+        { name: "description", content: desc },
+        { property: "og:title", content: l.title },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        ...(ogImage ? [
+          { property: "og:image", content: ogImage },
+          { name: "twitter:image", content: ogImage },
+          { name: "twitter:card", content: "summary_large_image" },
+        ] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,
   notFoundComponent: () => <div className="p-12 text-center">العرض غير موجود</div>,
   component: ListingPage,
@@ -106,8 +124,10 @@ function ListingPage() {
               params={{ listingId: l.id }}
               className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all flex items-center justify-center gap-2"
             >
-              <ArrowLeftRight className="size-4" /> اقترح مقايضة
+              <ArrowLeftRight className="size-4" aria-hidden /> اقترح مقايضة
             </Link>
+
+            <ShareListing title={l.title} wants={l.wants} />
           </div>
         </div>
       </main>

@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star } from "lucide-react";
+import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizontal } from "lucide-react";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
+import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({
@@ -37,6 +38,11 @@ function Index() {
   const [query, setQuery] = useState("");
   const [have, setHave] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [condFilter, setCondFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Match mode — when user provides both "have" and "want"
   const matchFn = useServerFn(matchListings);
@@ -48,6 +54,8 @@ function Index() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const min = minPrice ? Number(minPrice) : null;
+    const max = maxPrice ? Number(maxPrice) : null;
     const list = listings.map((l) => {
       const text = `${l.title} ${l.category} ${l.wants ?? ""}`.toLowerCase();
       let score = 0;
@@ -59,11 +67,21 @@ function Index() {
       if (activeCat && l.category === activeCat) score += 4;
       return { l, score };
     });
-    const hasFilter = !!q || !!activeCat;
-    return hasFilter
-      ? list.filter((x) => x.score > 0).sort((a, b) => b.score - a.score)
-      : list;
-  }, [listings, query, activeCat]);
+    const hasTextOrCat = !!q || !!activeCat;
+    let out = hasTextOrCat ? list.filter((x) => x.score > 0) : list;
+    if (min !== null) out = out.filter((x) => Number(x.l.market_price) >= min);
+    if (max !== null) out = out.filter((x) => Number(x.l.market_price) <= max);
+    if (condFilter) out = out.filter((x) => x.l.condition === condFilter);
+    if (sortBy === "price-asc") out = [...out].sort((a, b) => Number(a.l.market_price) - Number(b.l.market_price));
+    else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
+    else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
+    return out;
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy]);
+
+  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter);
+  const resetFilters = () => {
+    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setSortBy("newest");
+  };
 
   const sectionTitle = matchMode
     ? "مطابقات المقايضة"
@@ -137,22 +155,73 @@ function Index() {
               </div>
             </form>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <CatChip active={!activeCat} onClick={() => setActiveCat(null)}>كل الفئات</CatChip>
               {POPULAR.map((c) => (
                 <CatChip key={c} active={activeCat === c} onClick={() => setActiveCat(activeCat === c ? null : c)}>
                   {c}
                 </CatChip>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-expanded={showFilters}
+                aria-controls="market-filters"
+                className="ms-auto inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:border-primary/40 transition"
+              >
+                <SlidersHorizontal className="size-3.5" aria-hidden /> فلاتر متقدمة
+              </button>
               {matchMode && (
                 <button
                   onClick={() => matchM.reset()}
-                  className="ms-auto text-xs font-bold text-muted-foreground hover:text-foreground underline"
+                  className="text-xs font-bold text-muted-foreground hover:text-foreground underline"
                 >
                   مسح نتائج المطابقة
                 </button>
               )}
             </div>
+
+            {showFilters && (
+              <div id="market-filters" className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى (ر.س)</span>
+                  <input type="number" inputMode="numeric" min={0} value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى (ر.س)</span>
+                  <input type="number" inputMode="numeric" min={0} value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">الحالة</span>
+                  <select value={condFilter} onChange={(e) => setCondFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">الكل</option>
+                    <option value="new">جديد</option>
+                    <option value="like-new">شبه جديد</option>
+                    <option value="good">جيد</option>
+                    <option value="fair">مقبول</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="newest">الأحدث</option>
+                    <option value="price-asc">السعر: من الأقل</option>
+                    <option value="price-desc">السعر: من الأعلى</option>
+                  </select>
+                </label>
+                {hasAnyFilter && (
+                  <button onClick={resetFilters} className="col-span-2 md:col-span-4 text-xs font-bold text-muted-foreground hover:text-foreground underline justify-self-end">
+                    مسح كل الفلاتر
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
@@ -180,10 +249,7 @@ function Index() {
 
           {matchMode ? (
             matchM.isPending ? (
-              <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
-                <Loader2 className="size-8 mx-auto animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">نطابق طلبك مع إعلانات المنصة...</p>
-              </div>
+              <ListingsGridSkeleton count={4} />
             ) : matchResults.length === 0 ? (
               <div className="bg-card rounded-3xl p-12 text-center ring-1 ring-black/5">
                 <Sparkles className="size-10 mx-auto mb-3 opacity-40 text-muted-foreground" />

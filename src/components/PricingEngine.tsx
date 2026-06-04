@@ -474,8 +474,12 @@ function ItemCard({
           />
         )}
 
-        {/* AI photo or manual */}
-        <AiPhotoOrManual product={product} onApply={(patch) => onUpdate({ ...product, ...patch })} />
+        {/* Service icon OR AI photo (good only) */}
+        {product.baseType === "service" ? (
+          <ServiceIconPanel familyId={product.familyId} family={family} />
+        ) : (
+          <AiPhotoOrManual product={product} onApply={(patch) => onUpdate({ ...product, ...patch })} />
+        )}
 
         {/* Qty + price */}
         <div className="grid grid-cols-2 gap-2">

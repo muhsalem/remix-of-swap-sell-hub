@@ -359,10 +359,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           </div>
 
 
-          {/* DI link (compact, below barter) */}
-          <div className="px-6 md:px-8 pb-5">
-            <DiLinkCard compact />
-          </div>
+          {/* DI link — full framed card */}
+          <DiLinkCard />
 
 
           {/* Breakdown */}

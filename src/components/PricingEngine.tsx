@@ -310,9 +310,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             </div>
           </div>
 
-          {/* DI link card → /digital-currency */}
-          <DiLinkCard />
-
           {/* Breakdown */}
           {result && (
             <details className="border-t border-border">
@@ -345,6 +342,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           )}
         </div>
       </div>
+
+      {/* DI link card moved BELOW the engine (full width) */}
+      <DiLinkCard />
     </section>
   );
 }

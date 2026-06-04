@@ -39,7 +39,7 @@ function PremiumPage() {
   });
 
   const [cashOnly, setCashOnly] = useState(false);
-  useEffect(() => { setCashOnly(_loadCashOnly(_loadCountry())); }, []);
+  useEffect(() => { setCashOnly(loadCashOnly(loadCountry())); }, []);
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground font-body">

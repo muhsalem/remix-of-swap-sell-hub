@@ -286,9 +286,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </span>
                 <span className="text-lg opacity-90 font-extrabold">ر.س</span>
               </div>
-              <div className="flex items-center gap-2 mt-3 font-mono font-extrabold text-xl">
-                <Coins className="size-5" />
-                {result ? valueDI.toLocaleString() : "0"} <span className="text-sm opacity-80">DI (عملة بادل الرقمية)</span>
+              {/* DI framed card inside the value panel */}
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
+                <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
+                  <Coins className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-mono font-black text-2xl tabular-nums">
+                      {result ? valueDI.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}
+                    </span>
+                    <span className="text-sm font-extrabold opacity-90">DI</span>
+                    <span className="text-[10px] opacity-75 font-bold">عملة بادل الرقمية</span>
+                  </div>
+                  <div className="text-[11px] font-bold opacity-80 mt-0.5">
+                    سعر مرجعي: 1 DI = {DI_TO_SAR} ر.س · ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                  </div>
+                </div>
               </div>
 
               {/* ===== Inline live currency converter ===== */}
@@ -765,13 +779,13 @@ function AiPhotoOrManual({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={m.isPending}
-              className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-l from-primary to-primary/80 text-primary-foreground text-xs font-extrabold flex items-center gap-1.5 shadow-md hover:shadow-lg hover:from-primary/90 transition-all disabled:opacity-50 ring-1 ring-primary/30"
             >
               {m.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
               {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
             </button>
             {m.isSuccess && (
-              <span className="text-[11px] font-extrabold text-accent">✓ تم التحليل</span>
+              <span className="text-[11px] font-extrabold text-emerald-600">✓ تم التحليل</span>
             )}
           </div>
           <input
@@ -1053,29 +1067,59 @@ function BarterBar({
             />
           </div>
 
-          {/* Settlement suggestions */}
-          {priceDiff !== 0 && (
-            <div className={`mt-3 pt-3 border-t ${embedded ? "border-white/20" : "border-border"}`}>
-              <div className={`text-[11px] font-extrabold mb-1.5 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>
-                💡 خيارات تسوية الفرق:
+          {/* Smart auto-generated settlement options */}
+          {(() => {
+            const absDiff = Math.abs(priceDiff);
+            const pctDiff = bestPrice > 0 ? (absDiff / bestPrice) * 100 : 0;
+            const condFactor = CONDITION_TO_QUALITY[product.condition] / 10; // 0.4..1
+            const condBonus = Math.round(absDiff * (1 - condFactor) * 0.5); // older = larger negotiation margin
+            const fairBand = bestPrice * 0.05;
+            const inFairBand = absDiff <= fairBand;
+            const diEquiv = (absDiff / DI_TO_SAR).toFixed(2);
+
+            type Opt = { tone: "ok" | "pay" | "gain" | "swap"; text: React.ReactNode };
+            const opts: Opt[] = [];
+
+            if (inFairBand) {
+              opts.push({ tone: "ok", text: <>✅ <b>أتمم الصفقة كما هي</b> — الفرق ({absDiff.toLocaleString()} ر.س ≈ {pctDiff.toFixed(1)}%) ضمن هامش العدالة (≤5%).</> });
+            }
+            if (priceDiff > 0) {
+              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً للطرف الآخر.</> });
+              if (condBonus > 50) {
+                opts.push({ tone: "swap", text: <>📉 <b>تفاوض بسبب الحالة ({product.condition}):</b> اعرض خصماً قدره <b>{condBonus.toLocaleString()} ر.س</b> فقط بدل المبلغ الكامل.</> });
+              }
+              opts.push({ tone: "swap", text: <>➕ <b>أضف عنصراً تكميلياً</b> من جهتك بقيمة تقارب <b>{absDiff.toLocaleString()} ر.س</b> لإلغاء الفرق نقدياً.</> });
+            } else if (priceDiff < 0) {
+              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً أو كرصيد DI.</> });
+              if (condBonus > 50) {
+                opts.push({ tone: "swap", text: <>📈 <b>زيادة بسبب الحالة:</b> اطلب علاوة <b>+{condBonus.toLocaleString()} ر.س</b> أعلى من الفرق الأساسي لتعويض جودة سلعتك.</> });
+              }
+              opts.push({ tone: "swap", text: <>➕ <b>اطلب عنصراً مكمّلاً</b> من الطرف الآخر بقيمة قريبة من <b>{absDiff.toLocaleString()} ر.س</b>.</> });
+            }
+
+            if (opts.length === 0) return null;
+            const toneCls = (t: Opt["tone"]) => embedded
+              ? "bg-white/10 ring-1 ring-white/20"
+              : t === "ok" ? "bg-emerald-50 ring-1 ring-emerald-200"
+              : t === "pay" ? "bg-amber-50 ring-1 ring-amber-200"
+              : t === "gain" ? "bg-sky-50 ring-1 ring-sky-200"
+              : "bg-stone-soft ring-1 ring-border";
+
+            return (
+              <div className={`mt-3 pt-3 border-t ${embedded ? "border-white/20" : "border-border"}`}>
+                <div className={`text-[11px] font-extrabold mb-2 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>
+                  💡 خيارات تسوية مقترحة تلقائياً (بناءً على السوق والحالة):
+                </div>
+                <ul className="space-y-1.5">
+                  {opts.map((o, idx) => (
+                    <li key={idx} className={`text-xs font-bold leading-relaxed px-2.5 py-1.5 rounded-lg ${toneCls(o.tone)}`}>
+                      {o.text}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className={`text-xs font-bold space-y-1 leading-relaxed ${embedded ? "" : "text-foreground"}`}>
-                {priceDiff > 0 ? (
-                  <>
-                    <li>• ادفع <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو ما يعادلها DI) لتعادل الصفقة.</li>
-                    <li>• أضف عنصراً إضافياً من جهتك بقيمة قريبة من الفرق.</li>
-                    <li>• تفاوض على تخفيض السعر أو حالة أفضل للسلعة المطلوبة.</li>
-                  </>
-                ) : (
-                  <>
-                    <li>• اطلب <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو DI) كفرق لصالحك.</li>
-                    <li>• اطلب إضافة عنصر مكمّل من الطرف الآخر بقيمة الفرق.</li>
-                    <li>• وافق على الصفقة لو الفرق ≤ 5% (ضمن هامش العدالة).</li>
-                  </>
-                )}
-              </ul>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
@@ -1133,7 +1177,7 @@ function BarterBar({
         <button
           type="button" onClick={onBarter} disabled={!canBarter}
           aria-label="ابدأ المقايضة"
-          className="px-5 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-white text-sm font-extrabold flex items-center gap-1.5 shadow-md hover:shadow-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed ring-1 ring-amber-400/40"
         >
           <ArrowLeftRight className="size-4" aria-hidden="true" /> قايض
         </button>

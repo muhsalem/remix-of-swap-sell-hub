@@ -104,7 +104,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
   const [country, setCountry] = useState<string>(defaultCurrency);
-  const changeCountry = (c: string) => { setCountry(c); saveCountry(c); };
+  const [cashOnly, setCashOnly] = useState<boolean>(false);
+  useEffect(() => { setCashOnly(loadCashOnly(country)); }, [country]);
+  const changeCountry = (c: string) => { setCountry(c); saveCountry(c); setCashOnly(loadCashOnly(c)); };
 
   const fn = useServerFn(calculateBarter);
   const sanitized = useMemo(
@@ -291,24 +293,31 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </span>
                 <span className="text-lg opacity-90 font-extrabold">ر.س</span>
               </div>
-              {/* DI framed card inside the value panel */}
-              <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
-                <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
-                  <Coins className="size-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-mono font-black text-2xl tabular-nums">
-                      {result ? valueDI.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}
-                    </span>
-                    <span className="text-sm font-extrabold opacity-90">DI</span>
-                    <span className="text-[10px] opacity-75 font-bold">عملة بادل الرقمية</span>
+              {/* DI framed card — hidden in cash-only / restricted regions */}
+              {!cashOnly && (
+                <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
+                  <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
+                    <Coins className="size-5" />
                   </div>
-                  <div className="text-[11px] font-bold opacity-80 mt-0.5">
-                    سعر مرجعي: 1 DI = {DI_TO_SAR} ر.س · ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="font-mono font-black text-2xl tabular-nums">
+                        {result ? valueDI.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0.00"}
+                      </span>
+                      <span className="text-sm font-extrabold opacity-90">DI</span>
+                      <span className="text-[10px] opacity-75 font-bold">عملة بادل الرقمية</span>
+                    </div>
+                    <div className="text-[11px] font-bold opacity-80 mt-0.5">
+                      سعر مرجعي: 1 DI = {DI_TO_SAR} ر.س · ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              {cashOnly && (
+                <div className="mt-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25 text-[12px] font-bold opacity-95 leading-relaxed">
+                  💵 الوضع النقدي مفعّل لبلدك — التسوية بالعملة المحلية فقط، بدون عملة رقمية، للالتزام بالأنظمة.
+                </div>
+              )}
 
               {/* ===== Inline live currency converter ===== */}
               <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">

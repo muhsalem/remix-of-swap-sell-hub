@@ -296,6 +296,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                   <select
                     value={country}
                     onChange={(e) => changeCountry(e.target.value)}
+                    aria-label="اختر عملتك المحلية"
                     className="text-xs font-extrabold bg-white/15 hover:bg-white/25 transition rounded-lg px-2 py-1 outline-none ring-1 ring-white/20 text-primary-foreground [&>option]:text-foreground"
                   >
                     {Object.entries(FX_VS_SAR).map(([code, v]) => (

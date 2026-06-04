@@ -184,6 +184,9 @@ function DigitalCurrencyPage() {
           </Card>
         </section>
 
+        {/* Proof of Reserve */}
+        <ProofOfReserve />
+
         <div className="mt-10 flex items-center justify-between bg-card ring-1 ring-black/5 rounded-3xl p-5">
           <div>
             <div className="font-extrabold text-base">جاهز تجرّب؟</div>

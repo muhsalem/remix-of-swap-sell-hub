@@ -146,6 +146,28 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const valueDI = result?.diA ?? 0;
   const shariah = result?.shariah;
 
+  // Confidence Score — data completeness signal
+  const confidence = useMemo(() => {
+    if (items.length === 0) return 0;
+    const scores = items.map((p) => {
+      let s = 0;
+      if (p.name.trim()) s += 20;
+      if (p.marketPricePerUnit > 0) s += 25;
+      if (p.quantity > 0) s += 10;
+      if (p.ageMonths >= 0 && p.condition) s += 15;
+      if (p.quality >= 5) s += 10;
+      if (p.locationTier && p.scarcity) s += 10;
+      if (p.deliveryDays > 0 || p.baseType === "service") s += 10;
+      return Math.min(100, s);
+    });
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  }, [items]);
+  const confTone =
+    confidence >= 80 ? { label: "عالية", cls: "bg-emerald-500/20 ring-emerald-300/40 text-emerald-50" }
+    : confidence >= 50 ? { label: "متوسطة", cls: "bg-amber-500/20 ring-amber-300/40 text-amber-50" }
+    : { label: "منخفضة", cls: "bg-rose-500/20 ring-rose-300/40 text-rose-50" };
+
+
   return (
     <section
       className={
@@ -243,8 +265,17 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)",
               backgroundSize: "40px 40px",
             }} />
-            <div className="relative">
-              <div className="text-sm uppercase tracking-[0.2em] opacity-90 font-extrabold mb-2">القيمة الإجمالية المقدّرة</div>
+            <div className="relative" aria-live="polite" aria-atomic="true">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="text-sm uppercase tracking-[0.2em] opacity-90 font-extrabold">القيمة الإجمالية المقدّرة</div>
+                <span
+                  className={`shrink-0 text-[11px] font-extrabold px-2.5 py-1 rounded-full ring-1 backdrop-blur ${confTone.cls}`}
+                  title={`نسبة اكتمال البيانات: ${confidence}%`}
+                  aria-label={`درجة الثقة في التقييم ${confidence} بالمئة، ${confTone.label}`}
+                >
+                  ثقة {confidence}% · {confTone.label}
+                </span>
+              </div>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="font-display text-5xl md:text-6xl font-black tabular-nums leading-none">
                   {result ? valueSAR.toLocaleString() : "—"}
@@ -265,6 +296,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                   <select
                     value={country}
                     onChange={(e) => changeCountry(e.target.value)}
+                    aria-label="اختر عملتك المحلية"
                     className="text-xs font-extrabold bg-white/15 hover:bg-white/25 transition rounded-lg px-2 py-1 outline-none ring-1 ring-white/20 text-primary-foreground [&>option]:text-foreground"
                   >
                     {Object.entries(FX_VS_SAR).map(([code, v]) => (
@@ -464,7 +496,7 @@ function ItemCard({
           عنصر للمقايضة
         </span>
         {onRemove && (
-          <button onClick={onRemove} className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive" title="حذف">
+          <button onClick={onRemove} aria-label={`حذف العنصر رقم ${index + 1}`} className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive" title="حذف">
             <X className="size-4" />
           </button>
         )}
@@ -472,7 +504,7 @@ function ItemCard({
 
       <div className="p-4 space-y-4">
         {/* BIG type tabs (سلعة / خدمة) */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-stone-soft border border-border">
+        <div role="tablist" aria-label="نوع العنصر" className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-stone-soft border border-border">
           <TypeTab
             active={product.baseType === "good"}
             onClick={() => switchType("good")}
@@ -774,7 +806,10 @@ function TypeTab({
   return (
     <button
       type="button" onClick={onClick}
-      className={`flex flex-col items-center gap-1 py-4 px-3 rounded-xl transition-all ${
+      role="tab"
+      aria-selected={active}
+      aria-label={`${label} — ${desc}`}
+      className={`flex flex-col items-center gap-1 py-4 px-3 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
         active
           ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]"
           : "bg-card text-foreground hover:bg-stone-soft border border-border"
@@ -878,24 +913,39 @@ function BarterBar({
   const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
 
+  // Full catalog autocomplete pool — everything the user could want in exchange
+  const allCatalog = useMemo(() => {
+    const all = Object.values(CATALOG_ITEMS).flat();
+    return Array.from(new Set(all)).sort();
+  }, []);
+  const listId = `barter-want-list-${product.familyId}`;
+
   return (
     <div className="rounded-xl border border-accent/30 bg-gradient-to-l from-accent/10 to-transparent p-3">
       <div className="flex items-center gap-2 mb-2">
-        <ArrowLeftRight className="size-4 text-accent" />
-        <span className="text-sm font-extrabold text-foreground">قايض بـ</span>
+        <ArrowLeftRight className="size-4 text-accent" aria-hidden="true" />
+        <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">قايض بـ</label>
       </div>
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input
+          id={`barter-want-${product.familyId}`}
           type="text" value={wantValue}
           onChange={(e) => onWantChange(e.target.value)}
-          placeholder="اكتب ما تريده مقابل هذا العنصر..."
+          placeholder="اكتب أو اختر ما تريده مقابل هذا العنصر..."
+          list={listId}
+          autoComplete="off"
+          aria-label="ما تريد الحصول عليه بالمقايضة"
           className="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-base font-bold outline-none"
         />
+        <datalist id={listId}>
+          {allCatalog.map((n) => <option key={n} value={n} />)}
+        </datalist>
         <button
           type="button" onClick={onBarter} disabled={!canBarter}
+          aria-label="ابدأ المقايضة"
           className="px-5 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <ArrowLeftRight className="size-4" /> قايض
+          <ArrowLeftRight className="size-4" aria-hidden="true" /> قايض
         </button>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-2.5">

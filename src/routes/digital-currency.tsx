@@ -22,15 +22,26 @@ function DigitalCurrencyPage() {
   const [country, setCountry] = useState<string>("SAR");
   const [di, setDi] = useState<number>(10);
   const [saved, setSaved] = useState(false);
+  const [cashOnly, setCashOnly] = useState<boolean>(false);
 
   // Hydrate from localStorage on mount (avoids SSR hydration mismatch)
-  useEffect(() => { setCountry(loadCountry()); }, []);
+  useEffect(() => {
+    const c = loadCountry();
+    setCountry(c);
+    setCashOnly(loadCashOnly(c));
+  }, []);
 
   const changeCountry = (c: string) => {
     setCountry(c);
     saveCountry(c);
+    setCashOnly(loadCashOnly(c));
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1600);
+  };
+
+  const toggleCashOnly = (on: boolean) => {
+    setCashOnly(on);
+    saveCashOnly(on);
   };
 
   const fx = FX_VS_SAR[country] ?? FX_VS_SAR.SAR;

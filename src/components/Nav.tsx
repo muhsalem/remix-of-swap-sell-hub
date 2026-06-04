@@ -118,6 +118,7 @@ export function Nav() {
                   <ShieldAlert className="size-4" />
                 </Link>
               )}
+              <ThemeToggle />
               <NotificationBell />
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}

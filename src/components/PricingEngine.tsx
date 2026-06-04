@@ -1177,7 +1177,7 @@ function BarterBar({
         <button
           type="button" onClick={onBarter} disabled={!canBarter}
           aria-label="ابدأ المقايضة"
-          className="px-5 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-white text-sm font-extrabold flex items-center gap-1.5 shadow-md hover:shadow-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed ring-1 ring-amber-400/40"
         >
           <ArrowLeftRight className="size-4" aria-hidden="true" /> قايض
         </button>

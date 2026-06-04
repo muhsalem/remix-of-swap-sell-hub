@@ -132,7 +132,7 @@ function Index() {
                   params={{ id: l.id }}
                   className="group bg-card rounded-3xl p-4 ring-1 ring-black/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative"
                 >
-                  {mode === "buy" && score >= 5 && (
+                  {(query || activeCat) && score >= 5 && (
                     <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center gap-1 shadow-lg">
                       <Sparkles className="size-3" /> مطابق لاهتمامك
                     </div>

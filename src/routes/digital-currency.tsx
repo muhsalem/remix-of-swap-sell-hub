@@ -59,6 +59,30 @@ function DigitalCurrencyPage() {
           <ArrowRight className="size-3 rotate-180" />
           <span className="text-foreground">العملة الرقمية الداخلية</span>
         </div>
+        {/* Regional / cash-only banner */}
+        {(cashOnly || isRestrictedCountry(country)) && (
+          <div className="mb-4 rounded-2xl ring-1 ring-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+            <div className="size-9 rounded-xl grid place-items-center bg-amber-100 text-amber-700 shrink-0">
+              <Ban className="size-5" />
+            </div>
+            <div className="flex-1 text-sm">
+              <div className="font-extrabold text-amber-900 mb-0.5">
+                {isRestrictedCountry(country) ? "العملة الرقمية مقيدة في بلدك" : "الوضع النقدي مفعّل يدوياً"}
+              </div>
+              <p className="font-bold text-amber-800/90 leading-relaxed">
+                نقوم بإخفاء ميزات الـ DI تلقائياً للالتزام بالأنظمة المحلية. يمكنك المقايضة بشكل كامل
+                بالعملة المحلية، والوصول لكل المزايا الإضافية عبر <Link to="/premium" className="underline font-black inline-flex items-center gap-1"><Crown className="size-3.5" /> اشتراك Premium</Link>.
+              </p>
+            </div>
+            <button
+              onClick={() => toggleCashOnly(!cashOnly)}
+              className="text-xs font-extrabold px-3 py-1.5 rounded-full bg-white ring-1 ring-amber-300 text-amber-900 hover:bg-amber-100 shrink-0"
+            >
+              {cashOnly ? "تعطيل الوضع النقدي" : "تفعيل الوضع النقدي"}
+            </button>
+          </div>
+        )}
+
 
         {/* Hero */}
         <section className="rounded-3xl overflow-hidden ring-1 ring-black/5 bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground p-8 md:p-12 relative">

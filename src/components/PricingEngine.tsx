@@ -1052,8 +1052,64 @@ function BarterBar({
               style={{ width: `${matchPct}%` }}
             />
           </div>
+
+          {/* Settlement suggestions */}
+          {priceDiff !== 0 && (
+            <div className={`mt-3 pt-3 border-t ${embedded ? "border-white/20" : "border-border"}`}>
+              <div className={`text-[11px] font-extrabold mb-1.5 ${embedded ? "opacity-90" : "text-muted-foreground"}`}>
+                💡 خيارات تسوية الفرق:
+              </div>
+              <ul className={`text-xs font-bold space-y-1 leading-relaxed ${embedded ? "" : "text-foreground"}`}>
+                {priceDiff > 0 ? (
+                  <>
+                    <li>• ادفع <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو ما يعادلها DI) لتعادل الصفقة.</li>
+                    <li>• أضف عنصراً إضافياً من جهتك بقيمة قريبة من الفرق.</li>
+                    <li>• تفاوض على تخفيض السعر أو حالة أفضل للسلعة المطلوبة.</li>
+                  </>
+                ) : (
+                  <>
+                    <li>• اطلب <b>{Math.abs(priceDiff).toLocaleString()} ر.س</b> نقداً (أو DI) كفرق لصالحك.</li>
+                    <li>• اطلب إضافة عنصر مكمّل من الطرف الآخر بقيمة الفرق.</li>
+                    <li>• وافق على الصفقة لو الفرق ≤ 5% (ضمن هامش العدالة).</li>
+                  </>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Closest market equivalents (within ±15% of your value) */}
+      {valueSAR > 0 && platformItems.length > 0 && (() => {
+        const close = platformItems
+          .map((it) => ({ ...it, diff: Math.abs((Number(it.market_price) || 0) - valueSAR) }))
+          .filter((it) => valueSAR > 0 && it.diff / valueSAR <= 0.15)
+          .sort((a, b) => a.diff - b.diff)
+          .slice(0, 3);
+        if (close.length === 0) return null;
+        return (
+          <div className={`mb-3 p-3 rounded-xl ${embedded ? "bg-white/10 ring-1 ring-white/20" : "bg-emerald-50 border border-emerald-200"}`}>
+            <div className={`text-[11px] font-extrabold mb-2 ${embedded ? "opacity-90" : "text-emerald-700"}`}>
+              🎯 أقرب ما يعادل قيمتك ({valueSAR.toLocaleString()} ر.س) في السوق:
+            </div>
+            <div className="space-y-1">
+              {close.map((it) => (
+                <Link
+                  key={it.id} to="/listings/$id" params={{ id: it.id }}
+                  className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg transition ${
+                    embedded ? "bg-white/15 hover:bg-white/25" : "bg-white hover:bg-emerald-100/50"
+                  }`}
+                >
+                  <span className="text-xs font-extrabold truncate flex-1">{it.title}</span>
+                  <span className={`text-[11px] font-mono font-extrabold shrink-0 ${embedded ? "" : "text-emerald-700"}`}>
+                    {Number(it.market_price).toLocaleString()} ر.س
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
 
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">

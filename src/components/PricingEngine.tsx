@@ -84,16 +84,7 @@ function defaultItem(currency = "SAR"): Product {
 }
 
 function detectCurrency(): string {
-  if (typeof navigator === "undefined") return "SAR";
-  const lang = (navigator.language || "ar-SA").toLowerCase();
-  if (lang.includes("-eg")) return "EGP";
-  if (lang.includes("-ae")) return "AED";
-  if (lang.includes("-kw")) return "KWD";
-  if (lang.includes("-qa")) return "QAR";
-  if (lang.includes("-gb")) return "GBP";
-  if (lang.includes("-us")) return "USD";
-  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
-  return "SAR";
+  return loadCountry();
 }
 
 // ============================================================

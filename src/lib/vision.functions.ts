@@ -1,8 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const DAILY_LIMIT = 30;
 
 const InputSchema = z.object({
-  imageBase64: z.string().min(50).max(8_000_000), // data URL or base64
+  imageBase64: z.string().min(50).max(8_000_000),
   hint: z.string().max(200).optional(),
 });
 
@@ -23,10 +26,25 @@ const ALLOWED_CATS = [
 ];
 
 export const analyzeProductImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => InputSchema.parse(data))
-  .handler(async ({ data }): Promise<VisionAttrs> => {
+  .handler(async ({ data, context }): Promise<VisionAttrs> => {
+    const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI غير مهيأ — اتصل بالدعم");
+
+    // ===== Per-user daily quota (rate limit) =====
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("vision_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", todayStart.toISOString());
+
+    if ((count ?? 0) >= DAILY_LIMIT) {
+      throw new Error(`تجاوزت الحد اليومي (${DAILY_LIMIT} صورة/يوم). جرّب غداً أو أدخل البيانات يدوياً.`);
+    }
 
     const dataUrl = data.imageBase64.startsWith("data:")
       ? data.imageBase64
@@ -65,6 +83,9 @@ ${data.hint ? `\nتلميح من المستخدم: ${data.hint}` : ""}
     if (res.status === 429) throw new Error("تم تجاوز الحد — حاول لاحقاً");
     if (res.status === 402) throw new Error("الرصيد منتهي — أضف رصيد للذكاء الاصطناعي");
     if (!res.ok) throw new Error(`فشل التحليل (${res.status})`);
+
+    // Log usage (only after a successful AI call so failures don't burn quota)
+    await supabase.from("vision_usage").insert({ user_id: userId });
 
     const j = await res.json();
     const txt = j?.choices?.[0]?.message?.content ?? "{}";

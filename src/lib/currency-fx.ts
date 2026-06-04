@@ -1,0 +1,65 @@
+// Shared between PricingEngine and digital-currency page
+// 1 DI = 5 SAR baseline. FX values are units of local currency per 1 SAR.
+export const DI_TO_SAR = 5;
+
+export type FxEntry = { label: string; symbol: string; perSAR: number; flag: string };
+
+export const FX_VS_SAR: Record<string, FxEntry> = {
+  SAR: { label: "السعودية",  symbol: "ر.س",  perSAR: 1.00,   flag: "🇸🇦" },
+  AED: { label: "الإمارات",  symbol: "د.إ",  perSAR: 0.98,   flag: "🇦🇪" },
+  KWD: { label: "الكويت",    symbol: "د.ك",  perSAR: 0.082,  flag: "🇰🇼" },
+  QAR: { label: "قطر",       symbol: "ر.ق",  perSAR: 0.97,   flag: "🇶🇦" },
+  BHD: { label: "البحرين",   symbol: "د.ب",  perSAR: 0.100,  flag: "🇧🇭" },
+  OMR: { label: "عُمان",      symbol: "ر.ع",  perSAR: 0.103,  flag: "🇴🇲" },
+  EGP: { label: "مصر",       symbol: "ج.م",  perSAR: 13.20,  flag: "🇪🇬" },
+  JOD: { label: "الأردن",    symbol: "د.أ",  perSAR: 0.189,  flag: "🇯🇴" },
+  MAD: { label: "المغرب",    symbol: "د.م",  perSAR: 2.65,   flag: "🇲🇦" },
+  TND: { label: "تونس",      symbol: "د.ت",  perSAR: 0.84,   flag: "🇹🇳" },
+  USD: { label: "الولايات المتحدة", symbol: "$", perSAR: 0.267, flag: "🇺🇸" },
+  EUR: { label: "أوروبا",    symbol: "€",    perSAR: 0.247,  flag: "🇪🇺" },
+  GBP: { label: "بريطانيا",  symbol: "£",    perSAR: 0.211,  flag: "🇬🇧" },
+};
+
+export const COUNTRY_STORAGE_KEY = "badel:country";
+
+export function detectCountry(): string {
+  if (typeof navigator === "undefined") return "SAR";
+  const lang = (navigator.language || "ar-SA").toLowerCase();
+  if (lang.includes("-eg")) return "EGP";
+  if (lang.includes("-ae")) return "AED";
+  if (lang.includes("-kw")) return "KWD";
+  if (lang.includes("-qa")) return "QAR";
+  if (lang.includes("-bh")) return "BHD";
+  if (lang.includes("-om")) return "OMR";
+  if (lang.includes("-jo")) return "JOD";
+  if (lang.includes("-ma")) return "MAD";
+  if (lang.includes("-tn")) return "TND";
+  if (lang.includes("-gb")) return "GBP";
+  if (lang.includes("-us")) return "USD";
+  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
+  return "SAR";
+}
+
+export function loadCountry(): string {
+  if (typeof window === "undefined") return "SAR";
+  try {
+    const saved = localStorage.getItem(COUNTRY_STORAGE_KEY);
+    if (saved && FX_VS_SAR[saved]) return saved;
+  } catch { /* ignore */ }
+  return detectCountry();
+}
+
+export function saveCountry(code: string) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(COUNTRY_STORAGE_KEY, code); } catch { /* ignore */ }
+}
+
+export function diToLocal(di: number, code: string): number {
+  const fx = FX_VS_SAR[code] ?? FX_VS_SAR.SAR;
+  return di * DI_TO_SAR * fx.perSAR;
+}
+
+export function sarToLocal(sar: number, code: string): number {
+  const fx = FX_VS_SAR[code] ?? FX_VS_SAR.SAR;
+  return sar * fx.perSAR;
+}

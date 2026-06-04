@@ -448,6 +448,27 @@ export type Database = {
         }
         Relationships: []
       }
+      vision_usage: {
+        Row: {
+          created_at: string
+          day: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallet_ledger: {
         Row: {
           amount_di: number

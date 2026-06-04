@@ -12,6 +12,7 @@ import {
   Briefcase, GraduationCap, Stethoscope, Banknote, Code2,
 } from "lucide-react";
 import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
+import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry, sarToLocal } from "@/lib/currency-fx";
 
 // ============================================================
 // Types
@@ -83,16 +84,7 @@ function defaultItem(currency = "SAR"): Product {
 }
 
 function detectCurrency(): string {
-  if (typeof navigator === "undefined") return "SAR";
-  const lang = (navigator.language || "ar-SA").toLowerCase();
-  if (lang.includes("-eg")) return "EGP";
-  if (lang.includes("-ae")) return "AED";
-  if (lang.includes("-kw")) return "KWD";
-  if (lang.includes("-qa")) return "QAR";
-  if (lang.includes("-gb")) return "GBP";
-  if (lang.includes("-us")) return "USD";
-  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
-  return "SAR";
+  return loadCountry();
 }
 
 // ============================================================
@@ -103,6 +95,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [items, setItems] = useState<Product[]>([defaultItem(defaultCurrency)]);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
+  const [country, setCountry] = useState<string>(defaultCurrency);
+  const changeCountry = (c: string) => { setCountry(c); saveCountry(c); };
 
   const fn = useServerFn(calculateBarter);
   const mutation = useMutation({
@@ -261,6 +255,34 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 <Coins className="size-5" />
                 {result ? valueDI.toLocaleString() : "0"} <span className="text-sm opacity-80">DI (عملة بادل الرقمية)</span>
               </div>
+
+              {/* ===== Inline live currency converter ===== */}
+              <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90">
+                    بعملتك المحلية
+                  </div>
+                  <select
+                    value={country}
+                    onChange={(e) => changeCountry(e.target.value)}
+                    className="text-xs font-extrabold bg-white/15 hover:bg-white/25 transition rounded-lg px-2 py-1 outline-none ring-1 ring-white/20 text-primary-foreground [&>option]:text-foreground"
+                  >
+                    {Object.entries(FX_VS_SAR).map(([code, v]) => (
+                      <option key={code} value={code}>{v.flag} {code}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
+                  <span className="font-display text-2xl md:text-3xl font-black tabular-nums">
+                    {result ? sarToLocal(valueSAR, country).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+                  </span>
+                  <span className="text-sm font-extrabold opacity-90">{FX_VS_SAR[country]?.symbol}</span>
+                  <span className="text-[11px] opacity-75 font-bold">
+                    · 1 DI ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                  </span>
+                </div>
+              </div>
+
               {result && items.length > 1 && (
                 <p className="text-sm opacity-90 mt-3 font-bold">
                   مجموع <b>{items.length}</b> عناصر — متوسط {Math.round(valueSAR / items.length).toLocaleString()} ر.س/عنصر
@@ -287,9 +309,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               </div>
             </div>
           </div>
-
-          {/* DI link card → /digital-currency */}
-          <DiLinkCard />
 
           {/* Breakdown */}
           {result && (
@@ -323,6 +342,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           )}
         </div>
       </div>
+
+      {/* DI link card moved BELOW the engine (full width) */}
+      <DiLinkCard />
     </section>
   );
 }

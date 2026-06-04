@@ -936,12 +936,14 @@ function suggestFor(product: Product): string[] {
 }
 
 function BarterBar({
-  product, wantValue, onWantChange, onBarter,
+  product, wantValue, onWantChange, onBarter, valueSAR = 0, embedded = false,
 }: {
   product: Product;
   wantValue: string;
   onWantChange: (v: string) => void;
   onBarter: () => void;
+  valueSAR?: number;
+  embedded?: boolean;
 }) {
   const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;

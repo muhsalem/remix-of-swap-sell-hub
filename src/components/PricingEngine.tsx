@@ -343,8 +343,6 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
         </div>
       </div>
 
-      {/* DI link card moved BELOW the engine (full width) */}
-      <DiLinkCard />
     </section>
   );
 }
@@ -361,7 +359,28 @@ function Row({ label, v }: { label: string; v: number | string }) {
 // ============================================================
 // DI Link Card — points to /digital-currency
 // ============================================================
-function DiLinkCard() {
+function DiLinkCard({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <Link
+        to="/digital-currency"
+        className="flex flex-col justify-between rounded-xl border border-primary/30 bg-gradient-to-bl from-primary/10 via-primary/5 to-transparent p-3 hover:from-primary/15 transition-colors min-w-[180px] md:max-w-[220px]"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div className="size-8 rounded-xl grid place-items-center bg-primary/15 text-primary shrink-0">
+            <Coins className="size-4" />
+          </div>
+          <span className="text-sm font-extrabold leading-tight">العملة الرقمية (DI)</span>
+        </div>
+        <div className="text-[11px] text-muted-foreground font-bold leading-snug mb-2">
+          كيف تكتسبها وقيمتها بعملتك المحلية
+        </div>
+        <span className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-extrabold">
+          افتح الصفحة <ArrowLeft className="size-3.5" />
+        </span>
+      </Link>
+    );
+  }
   return (
     <Link
       to="/digital-currency"

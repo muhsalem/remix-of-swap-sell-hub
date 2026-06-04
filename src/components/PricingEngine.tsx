@@ -444,15 +444,12 @@ function DiLinkCard({ compact = false }: { compact?: boolean }) {
 // Item Card — type tabs, catalog-driven category, AI photo
 // ============================================================
 function ItemCard({
-  index, product, onUpdate, onRemove, wantValue, onWantChange, onBarter,
+  index, product, onUpdate, onRemove,
 }: {
   index: number;
   product: Product;
   onUpdate: (p: Product) => void;
   onRemove?: () => void;
-  wantValue: string;
-  onWantChange: (v: string) => void;
-  onBarter: () => void;
 }) {
   const [advOpen, setAdvOpen] = useState(false);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);

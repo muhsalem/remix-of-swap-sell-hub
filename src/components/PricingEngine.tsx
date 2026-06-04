@@ -26,6 +26,7 @@ type Product = {
   quantity: number;
   condition: "new" | "like-new" | "excellent" | "good" | "fair";
   ageMonths: number;
+  ageUnit: "days" | "months";
   marketPricePerUnit: number;
   currency: string;
   quality: number;
@@ -73,6 +74,7 @@ function defaultItem(currency = "SAR"): Product {
     quantity: 1,
     condition: "like-new",
     ageMonths: 6,
+    ageUnit: "months",
     marketPricePerUnit: 0,
     currency,
     quality: 9,
@@ -341,18 +343,21 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                   </div>
                 )}
               </div>
+
+              {/* ===== Embedded Barter bar (inside value tab) ===== */}
+              <div className="mt-4">
+                <BarterBar
+                  embedded
+                  product={primaryItem}
+                  wantValue={wantValue}
+                  onWantChange={setWantValue}
+                  onBarter={() => triggerBarter(primaryItem.name, wantValue)}
+                  valueSAR={valueSAR}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Barter bar (global, below value) */}
-          <div className="px-6 md:px-8 pt-5 pb-2">
-            <BarterBar
-              product={primaryItem}
-              wantValue={wantValue}
-              onWantChange={setWantValue}
-              onBarter={() => triggerBarter(primaryItem.name, wantValue)}
-            />
-          </div>
 
           {/* DI link (compact, below barter) */}
           <div className="px-6 md:px-8 pb-5">
@@ -608,8 +613,32 @@ function ItemCard({
                 onChange={(v) => onUpdate({ ...product, condition: v as Product["condition"], quality: CONDITION_TO_QUALITY[v as Product["condition"]] })}>
                 {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </LabeledSelect>
-              <LabeledInput label="العمر (شهر)" type="number" min={0} value={product.ageMonths}
-                onChange={(v) => onUpdate({ ...product, ageMonths: Number(v) || 0 })} />
+              <div>
+                <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1 font-extrabold">
+                  العمر
+                </label>
+                <div className="flex gap-1">
+                  <input
+                    type="number" min={0}
+                    value={product.ageUnit === "days" ? Math.round(product.ageMonths * 30) : product.ageMonths}
+                    onChange={(v) => {
+                      const n = Number(v.target.value) || 0;
+                      const months = product.ageUnit === "days" ? n / 30 : n;
+                      onUpdate({ ...product, ageMonths: months });
+                    }}
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-card border border-border text-sm font-bold outline-none focus:border-primary"
+                  />
+                  <select
+                    value={product.ageUnit}
+                    onChange={(e) => onUpdate({ ...product, ageUnit: e.target.value as "days" | "months" })}
+                    aria-label="وحدة العمر"
+                    className="px-2 py-2 rounded-lg bg-card border border-border text-xs font-extrabold outline-none focus:border-primary"
+                  >
+                    <option value="days">يوم</option>
+                    <option value="months">شهر</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <LabeledSelect label="العملة" value={product.currency} onChange={(v) => onUpdate({ ...product, currency: v })}>
@@ -910,12 +939,14 @@ function suggestFor(product: Product): string[] {
 }
 
 function BarterBar({
-  product, wantValue, onWantChange, onBarter,
+  product, wantValue, onWantChange, onBarter, valueSAR = 0, embedded = false,
 }: {
   product: Product;
   wantValue: string;
   onWantChange: (v: string) => void;
   onBarter: () => void;
+  valueSAR?: number;
+  embedded?: boolean;
 }) {
   const suggestions = useMemo(() => suggestFor(product), [product.itemType, product.category]);
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
@@ -961,19 +992,71 @@ function BarterBar({
   const hasQuery = wantValue.trim().length >= 2;
   const noMatches = hasQuery && !searching && platformItems.length === 0;
 
+  // ── Compatibility score vs best platform match ──
+  const bestMatch = platformItems[0];
+  const bestPrice = bestMatch ? Number(bestMatch.market_price) || 0 : 0;
+  const priceDiff = bestPrice - valueSAR; // + = you owe, − = you gain
+  const matchPct = (valueSAR > 0 && bestPrice > 0)
+    ? Math.round(Math.max(0, 100 - (Math.abs(priceDiff) / Math.max(valueSAR, bestPrice)) * 100))
+    : 0;
+  const matchTone = matchPct >= 85 ? "emerald" : matchPct >= 65 ? "amber" : "rose";
+
   return (
-    <div className="rounded-2xl border-2 border-accent/40 bg-gradient-to-bl from-accent/10 via-accent/5 to-transparent p-4 shadow-sm">
+    <div className={
+      embedded
+        ? "rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20 p-4 text-primary-foreground"
+        : "rounded-2xl border-2 border-accent/40 bg-gradient-to-bl from-accent/10 via-accent/5 to-transparent p-4 shadow-sm"
+    }>
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="size-8 rounded-xl grid place-items-center bg-accent/15 text-accent">
+          <div className={`size-8 rounded-xl grid place-items-center ${embedded ? "bg-white/15" : "bg-accent/15 text-accent"}`}>
             <ArrowLeftRight className="size-4" aria-hidden="true" />
           </div>
-          <label htmlFor={`barter-want-${product.familyId}`} className="text-sm font-extrabold text-foreground">
+          <label htmlFor={`barter-want-${product.familyId}`} className={`text-sm font-extrabold ${embedded ? "" : "text-foreground"}`}>
             قايض «{product.name || "—"}» بـ
           </label>
         </div>
-        {searching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {searching && <Loader2 className={`size-4 animate-spin ${embedded ? "opacity-80" : "text-muted-foreground"}`} />}
       </div>
+
+      {/* ===== Compatibility panel ===== */}
+      {bestMatch && valueSAR > 0 && (
+        <div className={`mb-3 p-3 rounded-xl ${embedded ? "bg-white/10 ring-1 ring-white/20" : "bg-card border border-border"}`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex flex-col">
+              <span className={`text-[10px] uppercase tracking-wider font-extrabold ${embedded ? "opacity-80" : "text-muted-foreground"}`}>نسبة التوافق</span>
+              <span className={`font-display text-2xl font-black tabular-nums ${
+                embedded ? "" :
+                matchTone === "emerald" ? "text-emerald-600" :
+                matchTone === "amber" ? "text-amber-600" : "text-rose-600"
+              }`}>
+                {matchPct}%
+              </span>
+            </div>
+            <div className="flex flex-col text-end">
+              <span className={`text-[10px] uppercase tracking-wider font-extrabold ${embedded ? "opacity-80" : "text-muted-foreground"}`}>فرق السعر</span>
+              <span className="font-mono text-base font-extrabold tabular-nums">
+                {priceDiff === 0 ? "متعادل" : (priceDiff > 0 ? `+${priceDiff.toLocaleString()}` : priceDiff.toLocaleString())}
+                <span className={`text-[10px] mr-1 ${embedded ? "opacity-80" : "text-muted-foreground"}`}>ر.س</span>
+              </span>
+              <span className={`text-[10px] font-bold mt-0.5 ${embedded ? "opacity-80" : "text-muted-foreground"}`}>
+                {priceDiff > 0 ? "تدفع فرقاً نقدياً" : priceDiff < 0 ? "تستلم فرقاً" : "مقايضة عادلة"}
+              </span>
+            </div>
+          </div>
+          <div className={`mt-2 h-2 rounded-full overflow-hidden ${embedded ? "bg-white/20" : "bg-muted"}`}>
+            <div
+              className={`h-full transition-all ${
+                embedded ? "bg-white" :
+                matchTone === "emerald" ? "bg-emerald-500" :
+                matchTone === "amber" ? "bg-amber-500" : "bg-rose-500"
+              }`}
+              style={{ width: `${matchPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
 
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input

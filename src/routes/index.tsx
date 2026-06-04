@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star } from "lucide-react";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { ListingImage } from "@/components/ListingImage";
-import { listActiveListings } from "@/lib/listings.functions";
+import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({
   queryKey: ["active-listings"],

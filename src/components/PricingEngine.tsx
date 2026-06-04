@@ -684,6 +684,21 @@ function ItemCard({
               </LabeledSelect>
             </div>
             <div className="grid grid-cols-2 gap-2">
+              <LabeledSelect label="العلامة التجارية" value={product.brandTier}
+                onChange={(v) => onUpdate({ ...product, brandTier: v as Product["brandTier"] })}>
+                <option value="unknown">غير محدّد</option>
+                <option value="premium">فاخرة (+20%)</option>
+                <option value="standard">قياسية</option>
+                <option value="generic">عامة (−10%)</option>
+              </LabeledSelect>
+              <LabeledSelect label="الموسمية" value={product.seasonality}
+                onChange={(v) => onUpdate({ ...product, seasonality: v as Product["seasonality"] })}>
+                <option value="peak">ذروة الطلب (+15%)</option>
+                <option value="normal">طبيعي</option>
+                <option value="off">خارج الموسم (−10%)</option>
+              </LabeledSelect>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               <LabeledInput label="التسليم (يوم)" type="number" min={0} max={365} value={product.deliveryDays}
                 onChange={(v) => onUpdate({ ...product, deliveryDays: Number(v) || 0 })} />
               <LabeledInput label={`المسافة (كم)${product.distanceKm > 50 ? " — شحن" : ""}`} type="number" min={0} max={5000} step={10} value={product.distanceKm}

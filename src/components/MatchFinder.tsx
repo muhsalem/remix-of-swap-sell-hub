@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Sparkles, Star, Repeat2 } from "lucide-react";
 import { matchListings } from "@/lib/listings.functions";
 import { ListingImage } from "@/components/ListingImage";
+import { LocalPrice } from "@/components/LocalPrice";
 import { PricingEngine } from "@/components/PricingEngine";
 
 export function MatchFinder() {
@@ -87,7 +88,7 @@ export function MatchFinder() {
                           <span className="opacity-70">يريد:</span> {l.wants}
                         </p>
                         <div className="flex items-center justify-between pt-2 border-t border-border">
-                          <span className="text-xs font-bold text-primary">{Number(l.market_price).toLocaleString()} ر.س</span>
+                          <span className="text-xs font-bold text-primary"><LocalPrice sar={l.market_price} /></span>
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                             <Star className="size-3 fill-accent text-accent" />
                             {Number(l.profiles?.rating ?? 0).toFixed(1)}

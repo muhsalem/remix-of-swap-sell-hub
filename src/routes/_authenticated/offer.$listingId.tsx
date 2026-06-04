@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/offers.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
+import { LocalPrice } from "@/components/LocalPrice";
 import { ArrowLeftRight, Plus } from "lucide-react";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });
@@ -83,7 +84,7 @@ function NewOfferPage() {
                     <ListingImage path={l.images?.[0]} alt={l.title} />
                   </div>
                   <div className="font-bold text-xs truncate">{l.title}</div>
-                  <div className="text-[10px] text-muted-foreground">{Number(l.market_price).toLocaleString()} ر.س</div>
+                  <div className="text-[10px] text-muted-foreground"><LocalPrice sar={l.market_price} /></div>
                 </button>
               ))}
             </div>
@@ -149,7 +150,7 @@ function Preview({ listing }: { listing: any }) {
         <ListingImage path={listing.images?.[0]} alt={listing.title} />
       </div>
       <div className="text-xs font-bold truncate">{listing.title}</div>
-      <div className="text-[10px] text-muted-foreground">{Number(listing.market_price).toLocaleString()} ر.س</div>
+      <div className="text-[10px] text-muted-foreground"><LocalPrice sar={listing.market_price} /></div>
     </div>
   );
 }

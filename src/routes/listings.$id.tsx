@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ShareListing } from "@/components/ShareListing";
 import { ArrowLeftRight, Calendar, Tag, Star } from "lucide-react";
+import { LocalPrice } from "@/components/LocalPrice";
 import { supabase } from "@/integrations/supabase/client";
 
 const listingQuery = (id: string) => queryOptions({
@@ -92,7 +93,7 @@ function ListingPage() {
 
             <div className="bg-card rounded-2xl p-5 ring-1 ring-black/5">
               <div className="text-xs text-muted-foreground mb-1">السعر السوقي</div>
-              <div className="font-display text-3xl font-extrabold text-primary">{Number(l.market_price).toLocaleString()} ر.س</div>
+              <div className="font-display text-3xl font-extrabold text-primary"><LocalPrice sar={l.market_price} /></div>
             </div>
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">

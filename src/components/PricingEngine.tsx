@@ -3,12 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { calculateBarter, type PricingResult, ITEM_TYPES } from "@/lib/pricing.functions";
 import { getReferencePrice } from "@/lib/price-oracle.functions";
+import { analyzeProductImage } from "@/lib/vision.functions";
 import {
   Loader2, Sparkles, ShieldCheck, AlertTriangle, Ban,
   ChevronDown, Plus, X, TrendingUp, Zap, Coins, Package2, ArrowLeftRight,
+  Camera, Wrench, Package, Info,
 } from "lucide-react";
-import { CatalogPicker, type CatalogPick } from "@/components/CatalogPicker";
-import { ITEMS as CATALOG_ITEMS } from "@/lib/badel-catalog";
+import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
 
 // ============================================================
 // Types
@@ -29,6 +30,9 @@ type Product = {
   riskLevel: "low" | "medium" | "high";
   deliveryDays: number;
   distanceKm: number;
+  // catalog wiring
+  baseType: "good" | "service";
+  familyId: string;
 };
 
 const CONDITION_TO_QUALITY: Record<Product["condition"], number> = {
@@ -39,11 +43,6 @@ const CONDITIONS = [
   { value: "new", label: "جديد" }, { value: "like-new", label: "كالجديد" },
   { value: "excellent", label: "ممتاز" }, { value: "good", label: "جيد" }, { value: "fair", label: "مقبول" },
 ] as const;
-const CATEGORIES = [
-  "إلكترونيات","هواتف","أجهزة لوحية","حواسيب","صوتيات","كاميرات","ساعات","مجوهرات",
-  "وسائل تنقل","أثاث","كتب","ملابس","خدمات مهنية","خدمات يدوية","عقارات سكنية",
-  "عقارات تجارية","أراضي","ذهب","فضة","عملات","حبوب وأغذية","أخرى",
-];
 const CURRENCIES = ["SAR","USD","EUR","AED","EGP","GBP","KWD","QAR"];
 const SCARCITY = [
   { value: "abundant", label: "وفرة" }, { value: "normal", label: "طبيعي" },
@@ -57,12 +56,29 @@ const RISKS = [
   { value: "low", label: "منخفض" }, { value: "medium", label: "متوسط" }, { value: "high", label: "مرتفع" },
 ] as const;
 
-const DEFAULT_ITEM: Product = {
-  name: "", category: "إلكترونيات", itemType: "good",
-  unit: "قطعة", quantity: 1, condition: "like-new", ageMonths: 6,
-  marketPricePerUnit: 0, currency: "SAR", quality: 9,
-  scarcity: "normal", locationTier: "tier1", riskLevel: "low", deliveryDays: 1, distanceKm: 0,
-};
+function defaultItem(currency = "SAR"): Product {
+  const f = FAMILIES["g7"]; // إلكترونيات
+  const firstItem = CATALOG_ITEMS["g7"]?.[0] || "";
+  return {
+    name: firstItem,
+    category: f.category,
+    itemType: "good",
+    baseType: "good",
+    familyId: "g7",
+    unit: f.defaultUnit,
+    quantity: 1,
+    condition: "like-new",
+    ageMonths: 6,
+    marketPricePerUnit: 0,
+    currency,
+    quality: 9,
+    scarcity: "normal",
+    locationTier: "tier1",
+    riskLevel: "low",
+    deliveryDays: 1,
+    distanceKm: 0,
+  };
+}
 
 function detectCurrency(): string {
   if (typeof navigator === "undefined") return "SAR";
@@ -78,17 +94,15 @@ function detectCurrency(): string {
 }
 
 // ============================================================
-// Main component — single-side valuation (the user's own items)
+// Main component
 // ============================================================
 export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
-  const [items, setItems] = useState<Product[]>([{ ...DEFAULT_ITEM, currency: defaultCurrency }]);
+  const [items, setItems] = useState<Product[]>([defaultItem(defaultCurrency)]);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
 
   const fn = useServerFn(calculateBarter);
-  // We reuse calculateBarter by mirroring items as sideB to satisfy the schema,
-  // and we only surface side A's valuation in the UI.
   const mutation = useMutation({
     mutationFn: () => fn({ data: { sideA: items, sideB: items, shariahMode: true, serviceBarter: false } }),
     onSuccess: (r) => {
@@ -117,35 +131,9 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateKey, autoCalc]);
 
-  const addItem = () => setItems([...items, { ...DEFAULT_ITEM, name: "", currency: defaultCurrency }]);
+  const addItem = () => setItems([...items, defaultItem(defaultCurrency)]);
   const removeItem = (idx: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); };
   const updateItem = (idx: number, p: Product) => setItems(items.map((x, i) => i === idx ? p : x));
-
-  const onCatalogPick = (pick: CatalogPick) => {
-    const f = pick.family;
-    const product: Product = {
-      name: pick.itemName,
-      category: f.category,
-      itemType: (f.itemType === "real-estate" ? "good" : f.itemType) as Product["itemType"],
-      unit: f.defaultUnit,
-      quantity: 1,
-      condition: f.dep ? "good" : "new",
-      ageMonths: f.dep ? 12 : 0,
-      marketPricePerUnit: 0,
-      currency: defaultCurrency,
-      quality: 8,
-      scarcity: f.mkt === "spec" ? "high" : f.mkt === "uns" ? "abundant" : "normal",
-      locationTier: "tier1",
-      riskLevel: f.dep ? "medium" : "low",
-      deliveryDays: f.type === "service" ? 1 : 3,
-      distanceKm: 0,
-    };
-    if (items.length === 1 && !items[0].name.trim() && items[0].marketPricePerUnit === 0) {
-      setItems([product]);
-    } else {
-      setItems([...items, product]);
-    }
-  };
 
   const [wantsByIdx, setWantsByIdx] = useState<Record<number, string>>({});
   const setWant = (idx: number, v: string) => setWantsByIdx({ ...wantsByIdx, [idx]: v });
@@ -171,163 +159,168 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       }
     >
       {/* ============ Hero header ============ */}
-      <div className="relative px-5 md:px-8 pt-6 pb-5 border-b border-border bg-gradient-to-br from-primary/8 via-card to-accent/5 overflow-hidden">
+      <div className="relative px-6 md:px-8 pt-7 pb-6 border-b border-border bg-gradient-to-br from-primary/8 via-card to-accent/5 overflow-hidden">
         <div className="absolute -top-12 -left-12 size-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -right-16 size-48 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="size-3" /> قيّم ممتلكاتك
+              <span className="px-3 py-1.5 bg-primary/10 text-primary text-sm font-mono rounded-full uppercase tracking-wider flex items-center gap-1.5 font-extrabold">
+                <Sparkles className="size-4" /> قيّم ما تريد مقايضته
               </span>
               {mutation.isPending && (
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="size-3 animate-spin" /> يحسب القيمة...
+                <span className="text-sm text-muted-foreground flex items-center gap-1 font-bold">
+                  <Loader2 className="size-4 animate-spin" /> يحسب القيمة...
                 </span>
               )}
             </div>
-            <h3 className="font-display text-2xl md:text-3xl font-black tracking-tight leading-tight">
+            <h3 className="font-display text-3xl md:text-4xl font-black tracking-tight leading-tight">
               محرّك التسعير العادل
             </h3>
-            <p className="text-foreground/70 mt-1 text-sm md:text-base font-bold">
-              اختر من الكتالوج، اضبط القيمة، واعرض ما تريده بالمقابل.
+            <p className="text-foreground/80 mt-2 text-base md:text-lg font-bold">
+              اختر النوع والفئة، أضف الصورة أو الخصائص، واحصل على قيمة شفافة بالعملة الرقمية الداخلية (DI).
             </p>
           </div>
-          <label className="flex items-center gap-2 text-xs font-extrabold bg-card/70 backdrop-blur px-3 py-2 rounded-xl border border-border cursor-pointer shadow-sm">
+          <label className="flex items-center gap-2 text-sm font-extrabold bg-card/70 backdrop-blur px-4 py-2.5 rounded-xl border border-border cursor-pointer shadow-sm">
             <input
               type="checkbox" checked={autoCalc}
               onChange={(e) => setAutoCalc(e.target.checked)}
-              className="accent-primary"
+              className="accent-primary size-4"
             />
-            <Zap className="size-3.5 text-primary" />
+            <Zap className="size-4 text-primary" />
             حساب تلقائي
           </label>
         </div>
       </div>
 
-      {/* ============ Hero value display ============ */}
-      <div className="relative px-5 md:px-8 py-6 bg-gradient-to-br from-primary/95 via-primary to-primary/85 text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }} />
-        <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          <div className="md:col-span-7">
-            <div className="text-[11px] uppercase tracking-[0.2em] opacity-80 font-extrabold mb-1">القيمة الإجمالية المقدّرة</div>
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="font-display text-4xl md:text-5xl font-extrabold tabular-nums leading-none">
-                {result ? valueSAR.toLocaleString() : "—"}
-              </span>
-              <span className="text-sm opacity-80 font-bold">ر.س</span>
-              <span className="text-xs opacity-60 mx-2">•</span>
-              <span className="flex items-center gap-1.5 font-mono font-bold text-base opacity-95">
-                <Coins className="size-4" />
-                {result ? valueDI.toLocaleString() : "0"} <span className="text-xs opacity-70">DI</span>
-              </span>
+      {/* ============ TWO COLUMNS side-by-side ============ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+        {/* ===== LEFT: Inputs ===== */}
+        <div className="p-5 md:p-7 bg-card space-y-5 lg:border-l border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="size-10 rounded-xl grid place-items-center bg-primary/10 text-primary">
+                <Package2 className="size-5" />
+              </div>
+              <h4 className="font-extrabold text-lg md:text-xl">ما أريد أن أقايضه ({items.length})</h4>
             </div>
-            {result && items.length > 1 && (
-              <p className="text-xs opacity-80 mt-2">
-                مجموع <b>{items.length}</b> عناصر — متوسط {Math.round(valueSAR / items.length).toLocaleString()} ر.س/عنصر
-              </p>
+            {!autoCalc && (
+              <button
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+                className="px-4 py-2.5 rounded-xl text-sm font-extrabold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
+              >
+                {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                احسب القيمة
+              </button>
             )}
           </div>
-          <div className="md:col-span-5 flex items-center gap-2">
-            {shariah ? (
-              <div className={`flex-1 px-3 py-2.5 rounded-2xl text-xs font-bold flex items-start gap-2 backdrop-blur ${
-                shariah.level === "forbidden" ? "bg-destructive/30 ring-1 ring-destructive/50" :
-                shariah.level === "warning" ? "bg-accent/30 ring-1 ring-accent/50" :
-                "bg-white/15 ring-1 ring-white/20"
-              }`}>
-                {shariah.level === "forbidden" ? <Ban className="size-3.5 shrink-0 mt-0.5" />
-                  : shariah.level === "warning" ? <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                  : <ShieldCheck className="size-3.5 shrink-0 mt-0.5" />}
-                <span className="leading-snug line-clamp-2">{shariah.rule}</span>
-              </div>
-            ) : (
-              <div className="flex-1 px-3 py-2.5 rounded-2xl text-xs bg-white/10 backdrop-blur opacity-70">
-                أكمل البيانات لرؤية التقييم الشرعي
-              </div>
-            )}
+
+          <div className="space-y-3">
+            {items.map((p, i) => (
+              <ItemCard
+                key={i}
+                index={i}
+                product={p}
+                wantValue={wantsByIdx[i] || ""}
+                onWantChange={(v) => setWant(i, v)}
+                onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
+                onUpdate={(np) => updateItem(i, np)}
+                onRemove={items.length > 1 ? () => removeItem(i) : undefined}
+              />
+            ))}
+
+            <button
+              type="button" onClick={addItem} disabled={items.length >= 5}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 text-base font-extrabold transition-all disabled:opacity-50"
+            >
+              <Plus className="size-5" /> أضف عنصراً ({items.length}/5)
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* ============ Items list + Catalog ============ */}
-      <div className="p-5 md:p-7 bg-card space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="size-9 rounded-xl grid place-items-center bg-primary/10 text-primary">
-              <Package2 className="size-4" />
+        {/* ===== RIGHT: Value + Breakdown + DI Info ===== */}
+        <div className="bg-gradient-to-br from-stone-soft/30 via-card to-stone-soft/20">
+          {/* Value display */}
+          <div className="relative px-6 md:px-8 py-7 bg-gradient-to-br from-primary/95 via-primary to-primary/85 text-primary-foreground overflow-hidden">
+            <div className="absolute inset-0 opacity-10" style={{
+              backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }} />
+            <div className="relative">
+              <div className="text-sm uppercase tracking-[0.2em] opacity-90 font-extrabold mb-2">القيمة الإجمالية المقدّرة</div>
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="font-display text-5xl md:text-6xl font-black tabular-nums leading-none">
+                  {result ? valueSAR.toLocaleString() : "—"}
+                </span>
+                <span className="text-lg opacity-90 font-extrabold">ر.س</span>
+              </div>
+              <div className="flex items-center gap-2 mt-3 font-mono font-extrabold text-xl">
+                <Coins className="size-5" />
+                {result ? valueDI.toLocaleString() : "0"} <span className="text-sm opacity-80">DI (عملة بادل الرقمية)</span>
+              </div>
+              {result && items.length > 1 && (
+                <p className="text-sm opacity-90 mt-3 font-bold">
+                  مجموع <b>{items.length}</b> عناصر — متوسط {Math.round(valueSAR / items.length).toLocaleString()} ر.س/عنصر
+                </p>
+              )}
+
+              <div className="mt-4">
+                {shariah ? (
+                  <div className={`px-4 py-3 rounded-2xl text-sm font-extrabold flex items-start gap-2 backdrop-blur ${
+                    shariah.level === "forbidden" ? "bg-destructive/30 ring-1 ring-destructive/50" :
+                    shariah.level === "warning" ? "bg-accent/30 ring-1 ring-accent/50" :
+                    "bg-white/15 ring-1 ring-white/20"
+                  }`}>
+                    {shariah.level === "forbidden" ? <Ban className="size-4 shrink-0 mt-0.5" />
+                      : shariah.level === "warning" ? <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                      : <ShieldCheck className="size-4 shrink-0 mt-0.5" />}
+                    <span className="leading-snug">{shariah.rule}</span>
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 rounded-2xl text-sm bg-white/10 backdrop-blur opacity-80 font-bold">
+                    أكمل البيانات لرؤية التقييم الشرعي
+                  </div>
+                )}
+              </div>
             </div>
-            <h4 className="font-extrabold text-base">ممتلكاتي ({items.length})</h4>
           </div>
-          {!autoCalc && (
-            <button
-              onClick={() => mutation.mutate()}
-              disabled={mutation.isPending}
-              className="px-4 py-2 rounded-xl text-xs font-extrabold text-primary-foreground bg-primary hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-60"
-            >
-              {mutation.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-              احسب القيمة
-            </button>
+
+          {/* DI explainer */}
+          <DiExplainer />
+
+          {/* Breakdown */}
+          {result && (
+            <details className="border-t border-border">
+              <summary className="px-6 md:px-8 py-4 cursor-pointer font-extrabold text-base flex items-center gap-2 hover:bg-stone-soft transition-colors">
+                <ChevronDown className="size-5" />
+                تفصيل العوامل الاقتصادية المؤثرة
+              </summary>
+              <div className="px-6 md:px-8 pb-6 overflow-x-auto">
+                <table className="w-full text-sm text-right border-collapse">
+                  <tbody className="font-mono">
+                    <Row label="القيمة السوقية الأولية" v={`${result.breakdownA.baseSAR.toLocaleString()} ر.س`} />
+                    <Row label="معامل الحالة" v={result.breakdownA.conditionFactor} />
+                    <Row label="معامل العمر/الإهلاك" v={result.breakdownA.ageFactor} />
+                    <Row label="معامل الجودة" v={result.breakdownA.qualityFactor} />
+                    <Row label="معامل الندرة" v={result.breakdownA.scarcityFactor} />
+                    <Row label="معامل الموقع" v={result.breakdownA.locationFactor} />
+                    <Row label="معامل المخاطرة" v={result.breakdownA.riskFactor} />
+                    <Row label="معامل زمن التسليم" v={result.breakdownA.timeFactor} />
+                    <Row label="معامل الفئة/الطلب" v={result.breakdownA.categoryFactor} />
+                    <tr className="border-t-2 border-primary/30 font-extrabold">
+                      <td className="py-3 px-3 text-base">القيمة النهائية</td>
+                      <td className="py-3 px-3 text-primary text-left text-base">
+                        {result.diA.toLocaleString()} DI · {result.valueA.toLocaleString()} ر.س
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
           )}
         </div>
-
-        <CatalogPicker defaultCurrency={defaultCurrency} onPick={onCatalogPick} compact />
-
-        <div className="space-y-2">
-          {items.map((p, i) => (
-            <ItemRow
-              key={i}
-              index={i}
-              product={p}
-              wantValue={wantsByIdx[i] || ""}
-              onWantChange={(v) => setWant(i, v)}
-              onBarter={() => triggerBarter(p.name, wantsByIdx[i] || "")}
-              onUpdate={(np) => updateItem(i, np)}
-              onRemove={items.length > 1 ? () => removeItem(i) : undefined}
-            />
-          ))}
-
-          <button
-            type="button" onClick={addItem} disabled={items.length >= 5}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 text-sm font-extrabold transition-all disabled:opacity-50"
-          >
-            <Plus className="size-4" /> أضف عنصر يدوياً ({items.length}/5)
-          </button>
-        </div>
       </div>
-
-      {/* ============ Breakdown ============ */}
-      {result && (
-        <details className="border-t border-border bg-stone-soft/40">
-          <summary className="px-6 md:px-10 py-4 cursor-pointer font-bold text-sm flex items-center gap-2 hover:bg-stone-soft transition-colors">
-            <ChevronDown className="size-4" />
-            تفصيل العوامل الاقتصادية المؤثرة في التقييم
-          </summary>
-          <div className="px-6 md:px-10 pb-6 overflow-x-auto">
-            <table className="w-full text-xs text-right border-collapse">
-              <tbody className="font-mono">
-                <Row label="القيمة السوقية الأولية" v={`${result.breakdownA.baseSAR.toLocaleString()} ر.س`} />
-                <Row label="معامل الحالة" v={result.breakdownA.conditionFactor} />
-                <Row label="معامل العمر/الإهلاك" v={result.breakdownA.ageFactor} />
-                <Row label="معامل الجودة" v={result.breakdownA.qualityFactor} />
-                <Row label="معامل الندرة" v={result.breakdownA.scarcityFactor} />
-                <Row label="معامل الموقع" v={result.breakdownA.locationFactor} />
-                <Row label="معامل المخاطرة" v={result.breakdownA.riskFactor} />
-                <Row label="معامل زمن التسليم" v={result.breakdownA.timeFactor} />
-                <Row label="معامل الفئة/الطلب" v={result.breakdownA.categoryFactor} />
-                <tr className="border-t-2 border-primary/30 font-bold">
-                  <td className="py-3 px-3">القيمة النهائية</td>
-                  <td className="py-3 px-3 text-primary text-left">
-                    {result.diA.toLocaleString()} DI · {result.valueA.toLocaleString()} ر.س
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-      )}
     </section>
   );
 }
@@ -335,16 +328,55 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
 function Row({ label, v }: { label: string; v: number | string }) {
   return (
     <tr className="border-b border-border/50">
-      <td className="py-2 px-3 text-muted-foreground font-sans">{label}</td>
-      <td className="py-2 px-3 text-left">{v}</td>
+      <td className="py-2.5 px-3 text-muted-foreground font-sans font-bold">{label}</td>
+      <td className="py-2.5 px-3 text-left font-extrabold">{v}</td>
     </tr>
   );
 }
 
 // ============================================================
-// Item row — compact inline, expands details
+// DI Explainer (Digital Internal currency)
 // ============================================================
-function ItemRow({
+function DiExplainer() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-border bg-stone-soft/40">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full px-6 md:px-8 py-4 flex items-center justify-between text-right hover:bg-stone-soft transition-colors"
+      >
+        <span className="flex items-center gap-2 font-extrabold text-base">
+          <Coins className="size-5 text-primary" />
+          كيف تعمل العملة الرقمية الداخلية (DI)؟
+        </span>
+        <ChevronDown className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="px-6 md:px-8 pb-6 text-sm md:text-base font-bold leading-relaxed space-y-3 text-foreground/85">
+          <p>
+            <b className="text-primary">DI</b> هي وحدة حساب داخلية ثابتة لقياس عدالة المقايضة بعيداً عن تقلب العملات.
+            ربط ثابت: <span className="font-mono bg-primary/10 px-2 py-0.5 rounded">1 DI = 5 ر.س</span>.
+          </p>
+          <ul className="list-disc pr-5 space-y-1.5">
+            <li><b>تكتسبها</b> عند إتمام صفقة بنجاح (مكافأة 50 DI لكل طرف).</li>
+            <li><b>تُخصم منها</b> عمولة المنصة (3% من قيمة الصفقة) من الطرف البادئ.</li>
+            <li><b>تستخدمها</b> لموازنة الفروقات بين عرضين غير متكافئين دون نقد.</li>
+            <li><b>لا تُسحب</b> كنقد — فقط رصيد داخلي يضمن استمرارية الثقة.</li>
+          </ul>
+          <p className="text-xs text-muted-foreground">
+            * النموذج الاقتصادي: عملة مرجعية (URV) داخلية، مدعومة بسلة الصفقات المُتمّة، لا تخضع لتداول خارجي.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Item Card — type tabs, catalog-driven category, AI photo
+// ============================================================
+function ItemCard({
   index, product, onUpdate, onRemove, wantValue, onWantChange, onBarter,
 }: {
   index: number;
@@ -355,199 +387,336 @@ function ItemRow({
   onWantChange: (v: string) => void;
   onBarter: () => void;
 }) {
-  const [isOpen, setIsOpen] = useState(index === 0);
+  const [advOpen, setAdvOpen] = useState(false);
   const subtotal = (product.marketPricePerUnit || 0) * (product.quantity || 0);
 
+  const groupedFamilies = useMemo(() => familiesByType(product.baseType), [product.baseType]);
+  const family: FamilyEntry = FAMILIES[product.familyId] ?? FAMILIES["g7"];
+  const itemNames = CATALOG_ITEMS[product.familyId] || [];
+
+  const switchType = (t: "good" | "service") => {
+    const firstFamId = Object.values(familiesByType(t))[0]?.[0]?.id || (t === "good" ? "g7" : "s1");
+    const f = FAMILIES[firstFamId];
+    const first = CATALOG_ITEMS[firstFamId]?.[0] || f.n;
+    onUpdate({
+      ...product,
+      baseType: t,
+      familyId: firstFamId,
+      itemType: (f.itemType === "real-estate" ? "good" : f.itemType) as Product["itemType"],
+      category: f.category,
+      unit: f.defaultUnit,
+      name: first,
+    });
+  };
+
+  const switchFamily = (id: string) => {
+    const f = FAMILIES[id];
+    const first = CATALOG_ITEMS[id]?.[0] || f.n;
+    onUpdate({
+      ...product,
+      familyId: id,
+      itemType: (f.itemType === "real-estate" ? "good" : f.itemType) as Product["itemType"],
+      category: f.category,
+      unit: f.defaultUnit,
+      name: first,
+    });
+  };
+
   return (
-    <div className={`rounded-2xl border transition-all ${isOpen ? "border-primary/40 shadow-sm bg-card" : "border-border hover:border-primary/20 bg-card"}`}>
-      {/* Compact row */}
-      <div className="p-3 flex items-center gap-2 flex-wrap md:flex-nowrap">
-        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-          #{index + 1}
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Header strip */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-stone-soft/60 border-b border-border">
+        <span className="text-sm font-extrabold text-foreground flex items-center gap-2">
+          <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">#{index + 1}</span>
+          عنصر للمقايضة
         </span>
-
-        <input
-          type="text" value={product.name}
-          onChange={(e) => onUpdate({ ...product, name: e.target.value })}
-          placeholder="اسم العنصر"
-          className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm outline-none"
-        />
-
-        <input
-          type="number" min={0.01} step={0.01} value={product.quantity}
-          onChange={(e) => onUpdate({ ...product, quantity: Number(e.target.value) || 0 })}
-          className="w-14 px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm text-center outline-none"
-          title="الكمية"
-        />
-        <span className="text-[10px] text-muted-foreground w-10 truncate" title={product.unit}>{product.unit}</span>
-
-        <input
-          type="number" min={0.01} step={0.01} value={product.marketPricePerUnit}
-          onChange={(e) => onUpdate({ ...product, marketPricePerUnit: Number(e.target.value) || 0 })}
-          className="w-20 px-2 py-1.5 rounded-lg bg-stone-soft border border-transparent focus:border-primary text-sm text-center outline-none"
-          placeholder="السعر"
-          title="السعر/وحدة"
-        />
-        <span className="text-[10px] text-muted-foreground">{product.currency}</span>
-
-        <button
-          type="button" onClick={() => setIsOpen(!isOpen)}
-          className="size-7 grid place-items-center rounded-lg hover:bg-primary/10 transition-colors"
-          title="تفاصيل متقدمة"
-        >
-          <ChevronDown className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-        </button>
-
         {onRemove && (
-          <button
-            type="button" onClick={onRemove}
-            className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive"
-            title="حذف"
-          >
-            <X className="size-3.5" />
+          <button onClick={onRemove} className="size-7 grid place-items-center rounded-lg hover:bg-destructive/10 text-destructive" title="حذف">
+            <X className="size-4" />
           </button>
         )}
       </div>
 
-      {/* Subtotal + condition pill */}
-      <div className="px-3 pb-2 flex items-center justify-between text-[10px] text-muted-foreground">
-        <span>
-          إجمالي: <span className="font-mono font-bold text-foreground">{subtotal.toLocaleString()} {product.currency}</span>
+      <div className="p-4 space-y-4">
+        {/* BIG type tabs (سلعة / خدمة) */}
+        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-stone-soft border border-border">
+          <TypeTab
+            active={product.baseType === "good"}
+            onClick={() => switchType("good")}
+            icon={<Package className="size-6" />}
+            label="سلعة"
+            desc="منتج مادي يتم تسليمه"
+          />
+          <TypeTab
+            active={product.baseType === "service"}
+            onClick={() => switchType("service")}
+            icon={<Wrench className="size-6" />}
+            label="خدمة"
+            desc="مهارة أو وقت تقدّمه"
+          />
+        </div>
+
+        {/* Category (catalog family) + specific item */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <LabeledSelect label="الفئة" value={product.familyId} onChange={switchFamily}>
+            {Object.entries(groupedFamilies).map(([sub, arr]) => (
+              <optgroup key={sub} label={sub}>
+                {arr.map((f) => <option key={f.id} value={f.id}>{f.entry.n}</option>)}
+              </optgroup>
+            ))}
+          </LabeledSelect>
+
+          <LabeledSelect label="الصنف" value={product.name} onChange={(v) => onUpdate({ ...product, name: v })}>
+            {itemNames.length === 0 && <option value="">— لا يوجد —</option>}
+            {itemNames.map((n) => <option key={n} value={n}>{n}</option>)}
+            <option value="__custom__">+ اسم آخر…</option>
+          </LabeledSelect>
+        </div>
+
+        {product.name === "__custom__" && (
+          <input
+            autoFocus type="text" defaultValue=""
+            onBlur={(e) => onUpdate({ ...product, name: e.target.value || itemNames[0] || "عنصر" })}
+            placeholder="اكتب اسم الصنف..."
+            className="w-full px-3 py-2.5 rounded-xl bg-stone-soft border border-border text-base font-bold outline-none focus:ring-2 ring-primary/30"
+          />
+        )}
+
+        {/* AI photo or manual */}
+        <AiPhotoOrManual product={product} onApply={(patch) => onUpdate({ ...product, ...patch })} />
+
+        {/* Qty + price */}
+        <div className="grid grid-cols-2 gap-2">
+          <LabeledInput
+            label={`الكمية (${product.unit})`}
+            type="number" min={0.01} step={0.01} value={product.quantity}
+            onChange={(v) => onUpdate({ ...product, quantity: Number(v) || 0 })}
+          />
+          <LabeledInput
+            label={`السعر/الوحدة (${product.currency})`}
+            type="number" min={0.01} step={0.01} value={product.marketPricePerUnit}
+            onChange={(v) => onUpdate({ ...product, marketPricePerUnit: Number(v) || 0 })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground font-bold">الإجمالي:</span>
+          <span className="font-mono font-extrabold text-foreground text-base">
+            {subtotal.toLocaleString()} {product.currency}
+          </span>
+        </div>
+
+        <PriceOracleWarning category={product.category} title={product.name} price={product.marketPricePerUnit} />
+
+        {/* Advanced toggle */}
+        <button
+          type="button" onClick={() => setAdvOpen(!advOpen)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-stone-soft/60 text-sm font-extrabold hover:bg-stone-soft"
+        >
+          <span>الخصائص المتقدمة (الحالة، الجودة، الموقع، الشحن)</span>
+          <ChevronDown className={`size-4 transition-transform ${advOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {advOpen && (
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-2">
+              <LabeledSelect label="الحالة" value={product.condition}
+                onChange={(v) => onUpdate({ ...product, condition: v as Product["condition"], quality: CONDITION_TO_QUALITY[v as Product["condition"]] })}>
+                {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </LabeledSelect>
+              <LabeledInput label="العمر (شهر)" type="number" min={0} value={product.ageMonths}
+                onChange={(v) => onUpdate({ ...product, ageMonths: Number(v) || 0 })} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <LabeledSelect label="العملة" value={product.currency} onChange={(v) => onUpdate({ ...product, currency: v })}>
+                {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+              </LabeledSelect>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1 font-extrabold">
+                  الجودة {product.quality}/10
+                </label>
+                <input type="range" min={1} max={10} value={product.quality}
+                  onChange={(e) => onUpdate({ ...product, quality: Number(e.target.value) })}
+                  className="w-full accent-primary" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <LabeledSelect label="الندرة" value={product.scarcity}
+                onChange={(v) => onUpdate({ ...product, scarcity: v as Product["scarcity"] })}>
+                {SCARCITY.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </LabeledSelect>
+              <LabeledSelect label="الموقع" value={product.locationTier}
+                onChange={(v) => onUpdate({ ...product, locationTier: v as Product["locationTier"] })}>
+                {LOCATIONS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </LabeledSelect>
+              <LabeledSelect label="المخاطرة" value={product.riskLevel}
+                onChange={(v) => onUpdate({ ...product, riskLevel: v as Product["riskLevel"] })}>
+                {RISKS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </LabeledSelect>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <LabeledInput label="التسليم (يوم)" type="number" min={0} max={365} value={product.deliveryDays}
+                onChange={(v) => onUpdate({ ...product, deliveryDays: Number(v) || 0 })} />
+              <LabeledInput label={`المسافة (كم)${product.distanceKm > 50 ? " — شحن" : ""}`} type="number" min={0} max={5000} step={10} value={product.distanceKm}
+                onChange={(v) => onUpdate({ ...product, distanceKm: Number(v) || 0 })} />
+            </div>
+          </div>
+        )}
+
+        {/* Barter bar */}
+        <BarterBar
+          product={product}
+          wantValue={wantValue}
+          onWantChange={onWantChange}
+          onBarter={onBarter}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// AI Photo / Manual entry
+// ============================================================
+function AiPhotoOrManual({
+  product, onApply,
+}: {
+  product: Product;
+  onApply: (patch: Partial<Product>) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const analyzeFn = useServerFn(analyzeProductImage);
+  const m = useMutation({
+    mutationFn: (b64: string) => analyzeFn({ data: { imageBase64: b64, hint: product.name } }),
+    onSuccess: (r) => {
+      onApply({
+        name: r.name,
+        category: r.category,
+        condition: r.condition,
+        ageMonths: r.estimatedAgeMonths,
+        marketPricePerUnit: r.marketPriceSAR || product.marketPricePerUnit,
+        quality: CONDITION_TO_QUALITY[r.condition],
+      });
+    },
+    onError: (e: any) => setError(e?.message || "فشل التحليل"),
+  });
+
+  const onPick = async (f: File) => {
+    setError(null);
+    if (f.size > 4_000_000) { setError("الحجم يجب أن يكون أقل من 4MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || "");
+      setPreview(url);
+      m.mutate(url);
+    };
+    reader.readAsDataURL(f);
+  };
+
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-gradient-to-br from-accent/5 to-transparent p-3">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-sm font-extrabold flex items-center gap-1.5">
+          <Sparkles className="size-4 text-accent" />
+          صوّر السلعة — الذكاء الاصطناعي يستخرج الخصائص تلقائياً
         </span>
-        <ConditionPill product={product} onUpdate={onUpdate} />
       </div>
 
-      {/* Barter bar */}
-      <BarterBar
-        product={product}
-        wantValue={wantValue}
-        onWantChange={onWantChange}
-        onBarter={onBarter}
-      />
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={m.isPending}
+          className="px-4 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
+        >
+          {m.isPending ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+          {m.isPending ? "يحلّل..." : preview ? "صورة أخرى" : "اختر/التقط صورة"}
+        </button>
+        <span className="text-xs text-muted-foreground font-bold flex items-center gap-1">
+          <Info className="size-3" /> أو اكتب الخصائص يدوياً أسفل
+        </span>
+        <input
+          ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
+        />
+      </div>
 
-      {/* Expanded advanced section */}
-      {isOpen && (
-        <div className="border-t border-border p-3 space-y-3 bg-stone-soft/40 rounded-b-2xl">
-          <PriceOracleWarning category={product.category} title={product.name} price={product.marketPricePerUnit} />
+      {preview && (
+        <div className="mt-3 flex items-center gap-3">
+          <img src={preview} alt="" className="size-16 rounded-lg object-cover ring-1 ring-border" />
+          {m.isSuccess && (
+            <div className="text-xs font-bold text-foreground/80 leading-snug">
+              <div className="text-accent">✓ تم التحليل — راجع الحقول وعدّلها إن لزم</div>
+              {m.data?.notes && <div className="text-muted-foreground mt-0.5">{m.data.notes}</div>}
+            </div>
+          )}
+        </div>
+      )}
 
-          <div className="grid grid-cols-3 gap-2">
-            <Field label="النوع">
-              <select value={product.itemType}
-                onChange={(e) => onUpdate({ ...product, itemType: e.target.value as Product["itemType"] })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </Field>
-            <Field label="الفئة">
-              <select value={product.category}
-                onChange={(e) => onUpdate({ ...product, category: e.target.value })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-            <Field label="العملة">
-              <select value={product.currency}
-                onChange={(e) => onUpdate({ ...product, currency: e.target.value })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <Field label="الحالة">
-              <select value={product.condition}
-                onChange={(e) => {
-                  const c = e.target.value as Product["condition"];
-                  onUpdate({ ...product, condition: c, quality: CONDITION_TO_QUALITY[c] });
-                }}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
-            </Field>
-            <Field label="العمر (شهر)">
-              <input type="number" min={0} value={product.ageMonths}
-                onChange={(e) => onUpdate({ ...product, ageMonths: Number(e.target.value) || 0 })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none" />
-            </Field>
-            <Field label={`الجودة ${product.quality}/10`}>
-              <input type="range" min={1} max={10} value={product.quality}
-                onChange={(e) => onUpdate({ ...product, quality: Number(e.target.value) })}
-                className="w-full accent-primary" />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <Field label="الندرة">
-              <select value={product.scarcity}
-                onChange={(e) => onUpdate({ ...product, scarcity: e.target.value as Product["scarcity"] })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {SCARCITY.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-            </Field>
-            <Field label="الموقع">
-              <select value={product.locationTier}
-                onChange={(e) => onUpdate({ ...product, locationTier: e.target.value as Product["locationTier"] })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {LOCATIONS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-              </select>
-            </Field>
-            <Field label="المخاطرة">
-              <select value={product.riskLevel}
-                onChange={(e) => onUpdate({ ...product, riskLevel: e.target.value as Product["riskLevel"] })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none">
-                {RISKS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="التسليم (يوم)">
-              <input type="number" min={0} max={365} value={product.deliveryDays}
-                onChange={(e) => onUpdate({ ...product, deliveryDays: Number(e.target.value) || 0 })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none" />
-            </Field>
-            <Field label={`المسافة ${product.distanceKm} كم${product.distanceKm > 50 ? " (شحن)" : ""}`}>
-              <input type="number" min={0} max={5000} step={10} value={product.distanceKm}
-                onChange={(e) => onUpdate({ ...product, distanceKm: Number(e.target.value) || 0 })}
-                className="w-full px-2 py-1.5 rounded-lg bg-card border border-border text-xs outline-none" />
-            </Field>
-          </div>
+      {error && (
+        <div className="mt-2 text-xs text-destructive font-bold flex items-center gap-1">
+          <AlertTriangle className="size-3" /> {error}
         </div>
       )}
     </div>
   );
 }
 
-function ConditionPill({ product, onUpdate }: { product: Product; onUpdate: (p: Product) => void }) {
-  const colors: Record<Product["condition"], string> = {
-    "new": "bg-primary/10 text-primary",
-    "like-new": "bg-primary/10 text-primary",
-    "excellent": "bg-accent/10 text-accent",
-    "good": "bg-muted text-muted-foreground",
-    "fair": "bg-destructive/10 text-destructive",
-  };
+// ============================================================
+// Small inputs
+// ============================================================
+function TypeTab({
+  active, onClick, icon, label, desc,
+}: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; desc: string }) {
   return (
-    <select
-      value={product.condition}
-      onChange={(e) => {
-        const v = e.target.value as Product["condition"];
-        onUpdate({ ...product, condition: v, quality: CONDITION_TO_QUALITY[v] });
-      }}
-      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border-0 outline-none cursor-pointer ${colors[product.condition]}`}
+    <button
+      type="button" onClick={onClick}
+      className={`flex flex-col items-center gap-1 py-4 px-3 rounded-xl transition-all ${
+        active
+          ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]"
+          : "bg-card text-foreground hover:bg-stone-soft border border-border"
+      }`}
     >
-      {CONDITIONS.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}
-    </select>
+      <div className={active ? "" : "text-primary"}>{icon}</div>
+      <span className="text-lg font-black">{label}</span>
+      <span className={`text-[11px] font-bold ${active ? "opacity-90" : "text-muted-foreground"}`}>{desc}</span>
+    </button>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function LabeledSelect({
+  label, value, onChange, children,
+}: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1 font-bold">
-        {label}
-      </label>
-      {children}
+      <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1 font-extrabold">{label}</label>
+      <select
+        value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2.5 rounded-xl bg-stone-soft border border-border text-base font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function LabeledInput({
+  label, value, onChange, ...rest
+}: {
+  label: string;
+  value: number | string;
+  onChange: (v: string) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  return (
+    <div>
+      <label className="text-xs uppercase tracking-wider text-muted-foreground block mb-1 font-extrabold">{label}</label>
+      <input
+        value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2.5 rounded-xl bg-stone-soft border border-border text-base font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+        {...rest}
+      />
     </div>
   );
 }
@@ -572,13 +741,13 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
   const abnormal = Math.abs(diff) > 30;
 
   return (
-    <div className={`text-[10px] p-2 rounded-lg border flex items-start gap-2 ${abnormal ? "bg-destructive/5 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20"}`}>
-      <TrendingUp className="size-3 mt-0.5 shrink-0" />
+    <div className={`text-xs p-2.5 rounded-lg border flex items-start gap-2 font-bold ${abnormal ? "bg-destructive/5 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20"}`}>
+      <TrendingUp className="size-4 mt-0.5 shrink-0" />
       <div className="flex-1">
-        <div className="font-bold">مرجع السوق ({ref.count} عرض) — المتوسط {ref.avg.toLocaleString()}</div>
+        <div>مرجع السوق ({ref.count} عرض) — المتوسط {ref.avg.toLocaleString()}</div>
         {abnormal && (
           <div className="mt-0.5">
-            ⚠ سعرك {diff > 0 ? "أعلى" : "أقل"} {Math.abs(diff).toFixed(0)}% — السعر المقترح: <b>{Math.round(ref.avg).toLocaleString()}</b>
+            ⚠ سعرك {diff > 0 ? "أعلى" : "أقل"} {Math.abs(diff).toFixed(0)}% — المقترح: <b>{Math.round(ref.avg).toLocaleString()}</b>
           </div>
         )}
       </div>
@@ -589,10 +758,10 @@ function PriceOracleWarning({ category, title, price }: { category: string; titl
 // Suggestions pool by item type
 function suggestFor(product: Product): string[] {
   const pool: string[] = [];
-  if (product.itemType === "service" || product.itemType === "labor_hours") {
+  if (product.itemType === "service") {
     pool.push(...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g12 || []), ...(CATALOG_ITEMS.g1 || []));
   } else {
-    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.g7 || []), ...(CATALOG_ITEMS.g10 || []), ...(CATALOG_ITEMS.s9 || []));
+    pool.push(...(CATALOG_ITEMS.s5 || []), ...(CATALOG_ITEMS.s1 || []), ...(CATALOG_ITEMS.g7 || []));
   }
   return Array.from(new Set(pool)).slice(0, 5);
 }
@@ -609,36 +778,31 @@ function BarterBar({
   const canBarter = product.name.trim().length > 0 && wantValue.trim().length > 0;
 
   return (
-    <div className="border-t border-dashed border-border px-3 py-2.5 bg-gradient-to-l from-accent/5 to-transparent">
-      <div className="flex items-center gap-2 mb-1.5">
-        <ArrowLeftRight className="size-3.5 text-accent" />
-        <span className="text-[11px] font-extrabold text-foreground">قايض بـ</span>
+    <div className="rounded-xl border border-accent/30 bg-gradient-to-l from-accent/10 to-transparent p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <ArrowLeftRight className="size-4 text-accent" />
+        <span className="text-sm font-extrabold text-foreground">قايض بـ</span>
       </div>
       <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
         <input
-          type="text"
-          value={wantValue}
+          type="text" value={wantValue}
           onChange={(e) => onWantChange(e.target.value)}
           placeholder="اكتب ما تريده مقابل هذا العنصر..."
-          className="flex-1 min-w-[160px] px-3 py-2 rounded-lg bg-stone-soft border border-transparent focus:border-accent text-sm font-bold outline-none"
+          className="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl bg-card border border-border focus:border-accent text-base font-bold outline-none"
         />
         <button
-          type="button"
-          onClick={onBarter}
-          disabled={!canBarter}
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          type="button" onClick={onBarter} disabled={!canBarter}
+          className="px-5 py-2.5 rounded-xl bg-accent text-accent-foreground text-sm font-extrabold flex items-center gap-1.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <ArrowLeftRight className="size-3.5" /> قايض
+          <ArrowLeftRight className="size-4" /> قايض
         </button>
       </div>
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        <span className="text-[10px] text-muted-foreground font-bold pt-1">اقتراحات:</span>
+      <div className="flex flex-wrap gap-1.5 mt-2.5">
+        <span className="text-xs text-muted-foreground font-bold pt-1">اقتراحات:</span>
         {suggestions.map((s) => (
           <button
-            key={s}
-            type="button"
-            onClick={() => onWantChange(s)}
-            className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
+            key={s} type="button" onClick={() => onWantChange(s)}
+            className="text-xs font-extrabold px-3 py-1 rounded-full bg-card border border-border hover:border-accent hover:bg-accent/5 transition"
           >
             {s}
           </button>

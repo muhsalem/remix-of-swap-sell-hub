@@ -344,6 +344,22 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
             </div>
           </div>
 
+          {/* Barter bar (global, below value) */}
+          <div className="px-6 md:px-8 pt-5 pb-2">
+            <BarterBar
+              product={primaryItem}
+              wantValue={wantValue}
+              onWantChange={setWantValue}
+              onBarter={() => triggerBarter(primaryItem.name, wantValue)}
+            />
+          </div>
+
+          {/* DI link (compact, below barter) */}
+          <div className="px-6 md:px-8 pb-5">
+            <DiLinkCard compact />
+          </div>
+
+
           {/* Breakdown */}
           {result && (
             <details className="border-t border-border">

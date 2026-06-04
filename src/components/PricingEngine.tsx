@@ -720,7 +720,6 @@ function ServiceIconPanel({ familyId, family }: { familyId: string; family: Fami
     </div>
   );
 }
-}
 
 // ============================================================
 // Small inputs

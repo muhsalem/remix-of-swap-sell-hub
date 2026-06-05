@@ -52,7 +52,7 @@ export async function logServerError(
       fn_name: ctx.fn_name,
       route: ctx.route,
       user_id: ctx.user_id ?? null,
-      context: ctx.context as Record<string, unknown> | null,
+      context: (ctx.context ?? null) as never,
     });
   } catch (e) {
     console.error("[error-log] failed to persist", e);

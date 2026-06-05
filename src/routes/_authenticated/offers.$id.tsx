@@ -94,6 +94,11 @@ function OfferDetailPage() {
                   + {Number(offer.cash_balance).toLocaleString()} ر.س
                 </span>
               )}
+              {Number(offer.cash_balance) > 0 && offer.status === "accepted" && (
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                  🔒 محجوز في الضمان
+                </span>
+              )}
               {offer.fairness_score != null && (
                 <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
                   عدالة {offer.fairness_score}%

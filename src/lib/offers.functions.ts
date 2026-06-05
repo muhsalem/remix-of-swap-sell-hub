@@ -17,6 +17,8 @@ export const createOffer = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => CreateOfferInput.parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit(userId, { action: "create_offer", limit: 10, windowSec: 600 });
 
     // التحقق من أن العرض المطلوب موجود ومن مالك آخر
     const { data: requested, error: e1 } = await supabase

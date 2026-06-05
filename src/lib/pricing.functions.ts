@@ -324,8 +324,24 @@ export const calculateBarter = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => InputSchema.parse(data))
   .handler(async ({ data }): Promise<PricingResult> => {
     const { sideA, sideB, shariahMode, serviceBarter } = data;
-    const itemsA = sideA.map((p) => ({ product: p, b: valueWithBreakdown(p) }));
-    const itemsB = sideB.map((p) => ({ product: p, b: valueWithBreakdown(p) }));
+
+    // Apply latest monthly CPI (SA) to base market prices to reflect inflation
+    let cpi = 1;
+    try {
+      const { supabase: anonClient } = await import("@/integrations/supabase/client");
+      const { data: ind } = await anonClient
+        .from("economic_indicators")
+        .select("value")
+        .eq("country_code", "SA").eq("indicator", "CPI")
+        .order("period", { ascending: false }).limit(1).maybeSingle();
+      if (ind?.value) cpi = Number(ind.value);
+    } catch { /* keep cpi=1 */ }
+    const adj = (xs: Product[]) => xs.map((p) => ({ ...p, marketPricePerUnit: p.marketPricePerUnit * cpi }));
+    const sideAAdj = adj(sideA);
+    const sideBAdj = adj(sideB);
+
+    const itemsA = sideAAdj.map((p) => ({ product: p, b: valueWithBreakdown(p) }));
+    const itemsB = sideBAdj.map((p) => ({ product: p, b: valueWithBreakdown(p) }));
     const breakdownA = aggregateBreakdown(itemsA);
     const breakdownB = aggregateBreakdown(itemsB);
     const valueA = breakdownA.finalSAR;
@@ -339,7 +355,7 @@ export const calculateBarter = createServerFn({ method: "POST" })
     const inFavorOf: "A" | "B" | "balanced" =
       Math.abs(gap) / avg < 0.03 ? "balanced" : gap > 0 ? "B" : "A";
     const cashBalance = Math.abs(gap);
-    const shariah = analyzeShariahMulti(sideA, sideB, cashBalance, serviceBarter);
+    const shariah = analyzeShariahMulti(sideAAdj, sideBAdj, cashBalance, serviceBarter);
     const equivalence = buildEquivalence(Math.min(valueA, valueB));
 
     let recommendation =
@@ -347,7 +363,7 @@ export const calculateBarter = createServerFn({ method: "POST" })
         ? "الصفقة متوازنة — يمكن إتمامها مباشرة."
         : `يُنصح بإضافة ${cashBalance.toLocaleString()} ر.س (${Math.abs(gapURV)} URV) من صاحب (${inFavorOf === "A" ? "ب" : "أ"}) لموازنة القيمة.`;
     let rationale =
-      "التقييم يأخذ السعر السوقي، الحالة، العمر، الجودة، الندرة، الموقع، المخاطرة، وزمن التسليم لكل سلعة في الطرفين.";
+      `التقييم يأخذ السعر السوقي، الحالة، العمر، الجودة، الندرة، الموقع، المخاطرة، وزمن التسليم${cpi !== 1 ? ` + معامل التضخم (CPI ${cpi.toFixed(3)})` : ""}.`;
 
     if (shariahMode && shariah.level === "forbidden") {
       recommendation = "🚫 لا تُتم هذه الصفقة بهذا الشكل — مخالفة شرعية.";

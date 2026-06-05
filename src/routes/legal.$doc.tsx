@@ -257,6 +257,10 @@ function LegalDoc() {
       <style>{`
         .prose-legal h2 { font-weight: 800; font-size: 1.25rem; margin-top: 2rem; color: hsl(var(--primary)); }
         .prose-legal ul { list-style: disc; padding-inline-start: 1.5rem; }
+        .prose-legal a { color: hsl(var(--primary)); text-decoration: underline; }
+        .prose-legal table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
+        .prose-legal th, .prose-legal td { border: 1px solid hsl(var(--border)); padding: 0.5rem 0.75rem; text-align: start; vertical-align: top; }
+        .prose-legal th { background: hsl(var(--muted)); font-weight: 700; }
         .prose-legal .meta { font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 2rem; }
       `}</style>
     </div>

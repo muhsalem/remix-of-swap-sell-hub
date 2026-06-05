@@ -83,6 +83,116 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_indicators: {
+        Row: {
+          country_code: string
+          created_at: string
+          id: string
+          indicator: string
+          period: string
+          source: string | null
+          value: number
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          id?: string
+          indicator: string
+          period: string
+          source?: string | null
+          value: number
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          id?: string
+          indicator?: string
+          period?: string
+          source?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string
+          fn_name: string | null
+          id: string
+          message: string
+          route: string | null
+          severity: string
+          stack: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          fn_name?: string | null
+          id?: string
+          message: string
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          fn_name?: string | null
+          id?: string
+          message?: string
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      escrow_holds: {
+        Row: {
+          amount_sar: number
+          held_at: string
+          id: string
+          note: string | null
+          offer_id: string
+          payee_id: string
+          payer_id: string
+          released_at: string | null
+          status: string
+        }
+        Insert: {
+          amount_sar: number
+          held_at?: string
+          id?: string
+          note?: string | null
+          offer_id: string
+          payee_id: string
+          payer_id: string
+          released_at?: string | null
+          status?: string
+        }
+        Update: {
+          amount_sar?: number
+          held_at?: string
+          id?: string
+          note?: string | null
+          offer_id?: string
+          payee_id?: string
+          payer_id?: string
+          released_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_holds_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "trade_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           age_months: number
@@ -324,6 +434,36 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action: string
+          count: number
+          created_at: string
+          id: string
+          ip_hash: string | null
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          action: string
+          count?: number
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          count?: number
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          user_id?: string | null
+          window_start?: string
         }
         Relationships: []
       }

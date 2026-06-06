@@ -184,3 +184,41 @@ export const reviewKyc = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const listErrorLogs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data, error } = await supabase
+      .from("error_logs")
+      .select("id,created_at,message,fn_name,route,severity,user_id")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return { logs: data ?? [] };
+  });
+
+export const listEscrowHolds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data, error } = await supabase
+      .from("escrow_holds")
+      .select("id,offer_id,payer_id,payee_id,amount_sar,status,held_at,released_at")
+      .order("held_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    const totals = (data ?? []).reduce(
+      (acc: { held: number; released: number; refunded: number }, h: any) => {
+        const amt = Number(h.amount_sar ?? 0);
+        if (h.status === "held") acc.held += amt;
+        else if (h.status === "released") acc.released += amt;
+        else if (h.status === "refunded") acc.refunded += amt;
+        return acc;
+      },
+      { held: 0, released: 0, refunded: 0 },
+    );
+    return { holds: data ?? [], totals };
+  });

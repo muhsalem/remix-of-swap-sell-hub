@@ -16,6 +16,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
+import { Route as ApiSitemapDotxmlRouteImport } from './routes/api/sitemap[.]xml'
+import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
@@ -25,6 +27,7 @@ import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 
 const PremiumRoute = PremiumRouteImport.update({
@@ -59,6 +62,16 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
 const LegalDocRoute = LegalDocRouteImport.update({
   id: '/legal/$doc',
   path: '/legal/$doc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSitemapDotxmlRoute = ApiSitemapDotxmlRouteImport.update({
+  id: '/api/sitemap.xml',
+  path: '/api/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRobotsDottxtRoute = ApiRobotsDottxtRouteImport.update({
+  id: '/api/robots.txt',
+  path: '/api/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTransactionsRoute =
@@ -108,6 +121,12 @@ const AuthenticatedOfferListingIdRoute =
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMonitoringRoute =
+  AuthenticatedAdminMonitoringRouteImport.update({
+    id: '/monitoring',
+    path: '/monitoring',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminDisputesRoute =
   AuthenticatedAdminDisputesRouteImport.update({
     id: '/disputes',
@@ -127,9 +146,12 @@ export interface FileRoutesByFullPath {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/robots.txt': typeof ApiRobotsDottxtRoute
+  '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -145,9 +167,12 @@ export interface FileRoutesByTo {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/robots.txt': typeof ApiRobotsDottxtRoute
+  '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -165,9 +190,12 @@ export interface FileRoutesById {
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/api/robots.txt': typeof ApiRobotsDottxtRoute
+  '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
 }
@@ -185,9 +213,12 @@ export interface FileRouteTypes {
     | '/offers'
     | '/profile'
     | '/transactions'
+    | '/api/robots.txt'
+    | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
     | '/admin/disputes'
+    | '/admin/monitoring'
     | '/offer/$listingId'
     | '/offers/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -203,9 +234,12 @@ export interface FileRouteTypes {
     | '/offers'
     | '/profile'
     | '/transactions'
+    | '/api/robots.txt'
+    | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
     | '/admin/disputes'
+    | '/admin/monitoring'
     | '/offer/$listingId'
     | '/offers/$id'
   id:
@@ -222,9 +256,12 @@ export interface FileRouteTypes {
     | '/_authenticated/offers'
     | '/_authenticated/profile'
     | '/_authenticated/transactions'
+    | '/api/robots.txt'
+    | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
     | '/_authenticated/admin/disputes'
+    | '/_authenticated/admin/monitoring'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
   fileRoutesById: FileRoutesById
@@ -235,6 +272,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
   PremiumRoute: typeof PremiumRoute
+  ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
+  ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
 }
@@ -288,6 +327,20 @@ declare module '@tanstack/react-router' {
       path: '/legal/$doc'
       fullPath: '/legal/$doc'
       preLoaderRoute: typeof LegalDocRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sitemap.xml': {
+      id: '/api/sitemap.xml'
+      path: '/api/sitemap.xml'
+      fullPath: '/api/sitemap.xml'
+      preLoaderRoute: typeof ApiSitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/robots.txt': {
+      id: '/api/robots.txt'
+      path: '/api/robots.txt'
+      fullPath: '/api/robots.txt'
+      preLoaderRoute: typeof ApiRobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/transactions': {
@@ -353,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/monitoring': {
+      id: '/_authenticated/admin/monitoring'
+      path: '/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoringRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/disputes': {
       id: '/_authenticated/admin/disputes'
       path: '/disputes'
@@ -365,10 +425,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminDisputesRoute: typeof AuthenticatedAdminDisputesRoute
+  AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminDisputesRoute: AuthenticatedAdminDisputesRoute,
+  AuthenticatedAdminMonitoringRoute: AuthenticatedAdminMonitoringRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -416,6 +478,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
   PremiumRoute: PremiumRoute,
+  ApiRobotsDottxtRoute: ApiRobotsDottxtRoute,
+  ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
 }

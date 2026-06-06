@@ -32,9 +32,12 @@ function AdminDashboard() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background font-body p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-2">
         <h1 className="font-display text-3xl font-extrabold">لوحة المشرف</h1>
-        <Link to="/_authenticated/admin/disputes" className="text-sm text-primary font-bold hover:underline">النزاعات →</Link>
+        <div className="flex gap-3 text-sm">
+          <Link to="/admin/monitoring" className="text-primary font-bold hover:underline">المراقبة والضمان →</Link>
+          <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
+        </div>
       </div>
 
       {kpis && (

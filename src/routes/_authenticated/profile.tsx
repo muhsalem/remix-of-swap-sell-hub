@@ -220,6 +220,10 @@ function ProfilePage() {
         <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
       </div>
 
+      <ContactSettings />
+
+
+
       <div className="rounded-2xl border border-border bg-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <Star className="size-4 text-amber-500" /> آخر المراجعات

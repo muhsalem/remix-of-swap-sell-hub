@@ -136,6 +136,8 @@ function ListingPage() {
             </Link>
 
             <ShareListing title={l.title} wants={l.wants} />
+
+            <PromotionPanel listingId={l.id} ownerId={l.owner_id} currentUserId={user?.id ?? null} />
           </div>
         </div>
       </main>

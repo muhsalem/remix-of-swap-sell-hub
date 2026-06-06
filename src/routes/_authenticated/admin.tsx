@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getAdminKPIs, listPendingKyc, reviewKyc } from "@/lib/admin.functions";
+import { CommissionToggle } from "@/components/CommissionToggle";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminDashboard,

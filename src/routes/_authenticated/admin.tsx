@@ -57,6 +57,12 @@ function AdminDashboard() {
         </section>
       )}
 
+      <section className="mb-10">
+        <h2 className="font-display text-xl font-extrabold mb-4">نموذج الأعمال</h2>
+        <CommissionToggle />
+      </section>
+
+
       <section>
         <h2 className="font-display text-xl font-extrabold mb-4">توثيق الشركات</h2>
         {kyc?.profiles.length === 0 && (

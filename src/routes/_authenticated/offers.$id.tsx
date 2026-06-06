@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle, Truck } from "lucide-react";
+import { PostMatchPanel } from "@/components/PostMatchPanel";
 
 const offerQuery = (id: string) =>
   queryOptions({ queryKey: ["offer", id], queryFn: () => getOffer({ data: { id } }) });
@@ -197,6 +198,8 @@ function OfferDetailPage() {
                 {data.myReview.comment && <p className="text-xs">{data.myReview.comment}</p>}
               </div>
             )}
+
+            <PostMatchPanel offer={offer} userId={data.userId} qc={qc} />
 
             {(offer.status === "accepted" || offer.status === "completed") && (
               <ShippingBlock offer={offer} userId={data.userId} qc={qc} />

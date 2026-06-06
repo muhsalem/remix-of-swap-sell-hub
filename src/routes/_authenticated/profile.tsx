@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getWalletStats } from "@/lib/wallet.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
 import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
+import { ContactSettings } from "@/components/ContactSettings";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 
@@ -218,6 +219,10 @@ function ProfilePage() {
         <Stat icon={Package} label="إعلاناتي النشطة" value={stats.activeListings} />
         <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
       </div>
+
+      <ContactSettings />
+
+
 
       <div className="rounded-2xl border border-border bg-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">

@@ -324,6 +324,8 @@ export type Database = {
           id: string
           offer_id: string
           paid_at: string | null
+          paid_cash_sar: number
+          paid_di: number
           payer_id: string
           rate: number
           status: Database["public"]["Enums"]["fee_status"]
@@ -334,6 +336,8 @@ export type Database = {
           id?: string
           offer_id: string
           paid_at?: string | null
+          paid_cash_sar?: number
+          paid_di?: number
           payer_id: string
           rate?: number
           status?: Database["public"]["Enums"]["fee_status"]
@@ -344,6 +348,8 @@ export type Database = {
           id?: string
           offer_id?: string
           paid_at?: string | null
+          paid_cash_sar?: number
+          paid_di?: number
           payer_id?: string
           rate?: number
           status?: Database["public"]["Enums"]["fee_status"]
@@ -388,6 +394,7 @@ export type Database = {
           company_kyc_status: Database["public"]["Enums"]["kyc_status"]
           company_name: string | null
           company_verified: boolean
+          contact_phone: string | null
           created_at: string
           display_name: string
           id: string
@@ -396,6 +403,7 @@ export type Database = {
           terms_version: string | null
           trades_count: number | null
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -407,6 +415,7 @@ export type Database = {
           company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
+          contact_phone?: string | null
           created_at?: string
           display_name: string
           id: string
@@ -415,6 +424,7 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
@@ -426,6 +436,7 @@ export type Database = {
           company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
+          contact_phone?: string | null
           created_at?: string
           display_name?: string
           id?: string
@@ -434,6 +445,7 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -639,10 +651,14 @@ export type Database = {
           escrow_released_at: string | null
           expected_delivery: string | null
           fairness_score: number | null
+          fee_paid_at: string | null
           from_user: string
           id: string
+          meetup_at: string | null
+          meetup_location: string | null
           message: string | null
           offered_listing: string
+          receipt_url: string | null
           requested_listing: string
           shipping_carrier: string | null
           status: Database["public"]["Enums"]["offer_status"]
@@ -660,10 +676,14 @@ export type Database = {
           escrow_released_at?: string | null
           expected_delivery?: string | null
           fairness_score?: number | null
+          fee_paid_at?: string | null
           from_user: string
           id?: string
+          meetup_at?: string | null
+          meetup_location?: string | null
           message?: string | null
           offered_listing: string
+          receipt_url?: string | null
           requested_listing: string
           shipping_carrier?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
@@ -681,10 +701,14 @@ export type Database = {
           escrow_released_at?: string | null
           expected_delivery?: string | null
           fairness_score?: number | null
+          fee_paid_at?: string | null
           from_user?: string
           id?: string
+          meetup_at?: string | null
+          meetup_location?: string | null
           message?: string | null
           offered_listing?: string
+          receipt_url?: string | null
           requested_listing?: string
           shipping_carrier?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
@@ -841,12 +865,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_peer_contact: {
+        Args: { _offer_id: string }
+        Returns: {
+          contact_phone: string
+          display_name: string
+          user_id: string
+          whatsapp: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      pay_platform_fee: {
+        Args: { _cash_amount: number; _di_amount: number; _offer_id: string }
+        Returns: Json
       }
     }
     Enums: {

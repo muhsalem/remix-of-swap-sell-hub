@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ArrowLeftRight, Check, X, Send, Star, CheckCircle2, Ban, AlertTriangle, Truck } from "lucide-react";
+import { PostMatchPanel } from "@/components/PostMatchPanel";
 
 const offerQuery = (id: string) =>
   queryOptions({ queryKey: ["offer", id], queryFn: () => getOffer({ data: { id } }) });

@@ -4,7 +4,9 @@ import { getListing } from "@/lib/listings.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ShareListing } from "@/components/ShareListing";
-import { ArrowLeftRight, Calendar, Tag, Star } from "lucide-react";
+import { PromotionPanel } from "@/components/PromotionPanel";
+import { useAuth } from "@/lib/auth";
+import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -54,7 +56,10 @@ function ListingPage() {
   const { id } = Route.useParams();
   const { data } = useSuspenseQuery(listingQuery(id));
   const l = data.listing!;
+  const { user } = useAuth();
   const profile = (l as { profiles?: { display_name: string; avatar_url: string | null; rating: number; trades_count: number; bio: string | null } }).profiles;
+  const isFeatured = (l as { is_featured?: boolean; featured_until?: string }).is_featured && new Date((l as { featured_until?: string }).featured_until ?? 0) > new Date();
+  const isPinned = (l as { is_pinned?: boolean; pinned_until?: string }).is_pinned && new Date((l as { pinned_until?: string }).pinned_until ?? 0) > new Date();
 
   return (
     <div dir="rtl" className="min-h-screen bg-background font-body">
@@ -78,9 +83,11 @@ function ListingPage() {
 
           <div className="lg:col-span-2 space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary font-mono rounded-full">{l.category}</span>
                 {l.is_ribawi && <span className="text-xs px-2 py-0.5 bg-accent/20 text-accent-foreground font-bold rounded-full">صنف ربوي</span>}
+                {isFeatured && <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 font-bold rounded-full inline-flex items-center gap-1"><Sparkles className="size-3" /> مميز</span>}
+                {isPinned && <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 font-bold rounded-full inline-flex items-center gap-1"><Pin className="size-3" /> مثبّت</span>}
               </div>
               <h1 className="font-display text-3xl font-extrabold mb-3">{l.title}</h1>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">

@@ -5,6 +5,7 @@ import { getWalletStats } from "@/lib/wallet.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
 import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
 import { ContactSettings } from "@/components/ContactSettings";
+import { VerificationCard } from "@/components/VerificationCard";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 
@@ -221,6 +222,7 @@ function ProfilePage() {
       </div>
 
       <ContactSettings />
+      <VerificationCard />
 
 
 

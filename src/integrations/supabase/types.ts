@@ -196,15 +196,21 @@ export type Database = {
       listings: {
         Row: {
           age_months: number
+          boost_count: number
           category: string
           condition: Database["public"]["Enums"]["listing_condition"]
           created_at: string
           description: string | null
+          featured_until: string | null
           id: string
           images: string[]
+          is_featured: boolean
+          is_pinned: boolean
           is_ribawi: boolean
+          last_boosted_at: string | null
           market_price: number
           owner_id: string
+          pinned_until: string | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
@@ -212,15 +218,21 @@ export type Database = {
         }
         Insert: {
           age_months?: number
+          boost_count?: number
           category: string
           condition: Database["public"]["Enums"]["listing_condition"]
           created_at?: string
           description?: string | null
+          featured_until?: string | null
           id?: string
           images?: string[]
+          is_featured?: boolean
+          is_pinned?: boolean
           is_ribawi?: boolean
+          last_boosted_at?: string | null
           market_price: number
           owner_id: string
+          pinned_until?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
@@ -228,15 +240,21 @@ export type Database = {
         }
         Update: {
           age_months?: number
+          boost_count?: number
           category?: string
           condition?: Database["public"]["Enums"]["listing_condition"]
           created_at?: string
           description?: string | null
+          featured_until?: string | null
           id?: string
           images?: string[]
+          is_featured?: boolean
+          is_pinned?: boolean
           is_ribawi?: boolean
+          last_boosted_at?: string | null
           market_price?: number
           owner_id?: string
+          pinned_until?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
@@ -314,6 +332,24 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -403,6 +439,8 @@ export type Database = {
           terms_version: string | null
           trades_count: number | null
           updated_at: string
+          verified_badge: boolean
+          verified_until: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -424,6 +462,8 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+          verified_badge?: boolean
+          verified_until?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -445,7 +485,48 @@ export type Database = {
           terms_version?: string | null
           trades_count?: number | null
           updated_at?: string
+          verified_badge?: boolean
+          verified_until?: string | null
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      promotions: {
+        Row: {
+          cost_di: number
+          created_at: string
+          duration_days: number | null
+          ends_at: string | null
+          id: string
+          kind: Database["public"]["Enums"]["promotion_kind"]
+          listing_id: string | null
+          metadata: Json
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_di: number
+          created_at?: string
+          duration_days?: number | null
+          ends_at?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["promotion_kind"]
+          listing_id?: string | null
+          metadata?: Json
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_di?: number
+          created_at?: string
+          duration_days?: number | null
+          ends_at?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["promotion_kind"]
+          listing_id?: string | null
+          metadata?: Json
+          starts_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -865,6 +946,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      di_balance: { Args: { _user_id: string }; Returns: number }
+      expire_promotions: { Args: never; Returns: undefined }
       get_peer_contact: {
         Args: { _offer_id: string }
         Returns: {
@@ -885,6 +968,16 @@ export type Database = {
         Args: { _cash_amount: number; _di_amount: number; _offer_id: string }
         Returns: Json
       }
+      purchase_listing_promotion: {
+        Args: {
+          _duration_days?: number
+          _kind: Database["public"]["Enums"]["promotion_kind"]
+          _listing_id: string
+        }
+        Returns: Json
+      }
+      purchase_subscription: { Args: { _tier: string }; Returns: Json }
+      purchase_verification: { Args: never; Returns: Json }
     }
     Enums: {
       account_type: "individual" | "company"
@@ -906,8 +999,15 @@ export type Database = {
         | "rejected"
         | "cancelled"
         | "completed"
+      promotion_kind:
+        | "featured"
+        | "pinned"
+        | "boost"
+        | "verify_individual"
+        | "sub_merchant"
+        | "sub_store"
       subscription_status: "active" | "canceled" | "past_due" | "trialing"
-      subscription_tier: "free" | "plus" | "pro"
+      subscription_tier: "free" | "plus" | "pro" | "merchant" | "store"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1056,8 +1156,16 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      promotion_kind: [
+        "featured",
+        "pinned",
+        "boost",
+        "verify_individual",
+        "sub_merchant",
+        "sub_store",
+      ],
       subscription_status: ["active", "canceled", "past_due", "trialing"],
-      subscription_tier: ["free", "plus", "pro"],
+      subscription_tier: ["free", "plus", "pro", "merchant", "store"],
     },
   },
 } as const

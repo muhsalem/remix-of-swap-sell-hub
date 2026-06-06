@@ -50,7 +50,7 @@ export const purchaseListingPromotion = createServerFn({ method: "POST" })
     const { data: res, error } = await supabase.rpc("purchase_listing_promotion", {
       _listing_id: data.listingId,
       _kind: data.kind,
-      _duration_days: data.durationDays ?? null,
+      _duration_days: (data.durationDays ?? undefined) as number | undefined,
     });
     if (error) throw new Error(error.message);
     return res as { ok: boolean; cost_di: number; ends_at: string | null };

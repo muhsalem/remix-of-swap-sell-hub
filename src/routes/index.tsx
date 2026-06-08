@@ -121,7 +121,8 @@ function Index() {
 
       <Nav />
       <Hero />
-      <CategoryQuickBar />
+      <CategoryQuickBar active={activeCat ?? undefined} />
+      <QuickSearchBar q={query} cat={activeCat ?? ""} cond={condFilter} sort={sortBy} />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Discover + match — merged */}

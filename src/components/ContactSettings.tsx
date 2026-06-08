@@ -3,29 +3,25 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Phone, MessageCircle, Save } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { updateMyContact } from "@/lib/post-match.functions";
+import { updateMyContact, getMyContact } from "@/lib/post-match.functions";
 
 export function ContactSettings() {
   const [phone, setPhone] = useState("");
   const [wa, setWa] = useState("");
   const fn = useServerFn(updateMyContact);
+  const getFn = useServerFn(getMyContact);
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("contact_phone,whatsapp")
-        .eq("id", u.user.id)
-        .maybeSingle();
-      if (data) {
-        setPhone((data as any).contact_phone ?? "");
-        setWa((data as any).whatsapp ?? "");
+      try {
+        const data = await getFn({});
+        setPhone(data.contact_phone ?? "");
+        setWa(data.whatsapp ?? "");
+      } catch {
+        /* not signed in */
       }
     })();
-  }, []);
+  }, [getFn]);
 
   const m = useMutation({
     mutationFn: () => fn({ data: { contact_phone: phone || null, whatsapp: wa || null } }),

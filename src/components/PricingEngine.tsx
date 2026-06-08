@@ -433,7 +433,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                     <tr className="border-t-2 border-primary/30 font-extrabold">
                       <td className="py-3 px-3 text-base">القيمة النهائية</td>
                       <td className="py-3 px-3 text-primary text-left text-base">
-                        {result.diA.toLocaleString()} DI · {result.valueA.toLocaleString()} ر.س
+                        {result.valueA.toLocaleString()} ر.س
                       </td>
                     </tr>
                   </tbody>

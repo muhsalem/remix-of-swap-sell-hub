@@ -828,6 +828,21 @@ function AiPhotoOrManual({
         <div className="mt-2 text-xs text-muted-foreground font-bold leading-snug">{m.data.notes}</div>
       )}
 
+      {m.isSuccess && (m.data?.tags?.length ?? 0) > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {m.data!.mainCategory && (
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+              {m.data!.mainCategory}
+            </span>
+          )}
+          {m.data!.tags.map((t) => (
+            <span key={t} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-foreground/80 ring-1 ring-accent/30">
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
       {error && (
         <div className="mt-2 text-xs text-destructive font-bold flex items-center gap-1">
           <AlertTriangle className="size-3" /> {error}

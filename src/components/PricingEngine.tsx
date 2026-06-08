@@ -1148,7 +1148,7 @@ function BarterBar({
               opts.push({ tone: "ok", text: <>✅ <b>أتمم الصفقة كما هي</b> — الفرق ({absDiff.toLocaleString()} ر.س ≈ {pctDiff.toFixed(1)}%) ضمن هامش العدالة (≤5%).</> });
             }
             if (priceDiff > 0) {
-              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً للطرف الآخر.</> });
+              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> نقداً للطرف الآخر.</> });
               if (condBonus > 50) {
                 opts.push({ tone: "swap", text: <>📉 <b>تفاوض بسبب الحالة ({product.condition}):</b> اعرض خصماً قدره <b>{condBonus.toLocaleString()} ر.س</b> فقط بدل المبلغ الكامل.</> });
               }

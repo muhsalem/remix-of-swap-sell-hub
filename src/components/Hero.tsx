@@ -1,7 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeftRight, Shield, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowLeftRight, Shield, Sparkles, TrendingUp, BadgeCheck } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 export function Hero() {
+  const { user, loading } = useAuth();
+  const isGuest = !loading && !user;
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ||
+    (user?.email ? user.email.split("@")[0] : "");
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-stone-soft via-background to-background py-20 md:py-28">
       <div className="absolute inset-0 -z-10 opacity-40">
@@ -12,41 +19,72 @@ export function Hero() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-mono rounded-full uppercase tracking-wider mb-6">
-              <Sparkles className="size-3" /> أول منصة مقايضة ذكية في العالم العربي
+              <Sparkles className="size-3" />
+              {isGuest ? "أول منصة مقايضة ذكية في العالم العربي" : `مرحباً بعودتك${firstName ? `، ${firstName}` : ""}`}
             </div>
             <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
-              بدّل ما تملك
-              <br />
-              بما تحتاج{" "}
-              <span className="relative inline-block text-primary">
-                بسهولة
-                <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
-              </span>
-              .
+              {isGuest ? (
+                <>
+                  بدّل ما تملك
+                  <br />
+                  بما تحتاج{" "}
+                  <span className="relative inline-block text-primary">
+                    بسهولة
+                    <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
+                  </span>
+                  .
+                </>
+              ) : (
+                <>
+                  جاهز لصفقتك
+                  <br />
+                  <span className="relative inline-block text-primary">
+                    التالية
+                    <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
+                  </span>
+                  ؟
+                </>
+              )}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
-              منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير ذكي يقيس قيمة كل سلعة وعدالة كل مقايضة بأربعة مستويات تصنيف دولية.
+              {isGuest ? (
+                <>
+                  منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير ذكي يقيس قيمة كل سلعة وعدالة كل مقايضة.
+                </>
+              ) : (
+                <>انشر عرضاً جديداً، تابع صفقاتك، أو ابحث عن مطابقات ذكية في السوق.</>
+              )}
             </p>
             <div className="flex flex-wrap gap-3 mb-10">
               <Link
                 to="/new-listing"
                 className="px-6 py-3.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all inline-flex items-center gap-2"
               >
-                اعرض منتجك مجاناً <ArrowLeftRight className="size-4" />
+                {isGuest ? "اعرض منتجك مجاناً" : "أضف عرضاً جديداً"} <ArrowLeftRight className="size-4" />
               </Link>
               <Link
-                to="/"
-                hash="engine"
+                to={isGuest ? "/" : "/offers"}
+                hash={isGuest ? "engine" : undefined}
                 className="px-6 py-3.5 bg-card border border-border rounded-full text-sm font-bold hover:bg-stone-soft transition-all"
               >
-                جرّب محرك التسعير
+                {isGuest ? "جرّب محرك التسعير" : "صفقاتي"}
               </Link>
             </div>
 
             <div className="grid grid-cols-3 gap-6 max-w-lg pt-8 border-t border-border">
-              <Stat n="80%" t="من المستعمل يُباع بأقل من قيمته" />
-              <Stat n="100%" t="تقييم مدعوم بالذكاء الاصطناعي" />
-              <Stat n="0 ر.س" t="رسوم نشر العروض" />
+              {isGuest ? (
+                <>
+                  <Stat n="80%" t="من المستعمل يُباع بأقل من قيمته" />
+                  <Stat n="100%" t="تقييم مدعوم بالذكاء الاصطناعي" />
+                  <StatHighlight n="0 ر.س" t="رسوم نشر العروض" />
+                </>
+              ) : (
+                <>
+                  <Stat n="∞" t="إعلانات بدون رسوم" />
+                  <Stat n="AI" t="مطابقة ذكية للراغبين" />
+                  <StatHighlight n="0%" t="عمولة في مرحلة النمو" />
+                </>
+              )}
             </div>
           </div>
 
@@ -65,7 +103,11 @@ export function Hero() {
               </div>
             </div>
             <Badge icon={<Shield className="size-4" />} label="مقايضات موثّقة" cls="-top-3 -right-3 bg-accent" />
-            <Badge icon={<TrendingUp className="size-4" />} label="قيم متطورة" cls="-bottom-3 -left-3 bg-primary text-primary-foreground" />
+            <Badge
+              icon={isGuest ? <TrendingUp className="size-4" /> : <BadgeCheck className="size-4" />}
+              label={isGuest ? "قيم متطورة" : "حسابك جاهز"}
+              cls="-bottom-3 -left-3 bg-primary text-primary-foreground"
+            />
           </div>
         </div>
       </div>
@@ -78,6 +120,15 @@ function Stat({ n, t }: { n: string; t: string }) {
     <div>
       <div className="font-display text-2xl font-extrabold text-primary">{n}</div>
       <div className="text-[11px] text-muted-foreground mt-1 leading-snug">{t}</div>
+    </div>
+  );
+}
+
+function StatHighlight({ n, t }: { n: string; t: string }) {
+  return (
+    <div className="relative -mt-2 -mb-2 px-3 py-2 rounded-2xl bg-primary/5 ring-1 ring-primary/20">
+      <div className="font-display text-3xl font-extrabold text-primary leading-none">{n}</div>
+      <div className="text-[11px] text-foreground/80 mt-1 leading-snug font-bold">{t}</div>
     </div>
   );
 }

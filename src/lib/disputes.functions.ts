@@ -13,8 +13,10 @@ export const openDispute = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Lock escrow on the offer when a dispute opens
-    await supabase.from("trade_offers").update({ escrow_locked: true }).eq("id", data.offer_id);
+    // Lock escrow on the offer when a dispute opens — uses admin client because
+    // RLS trigger blocks parties from touching escrow fields directly.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("trade_offers").update({ escrow_locked: true }).eq("id", data.offer_id);
     const { error } = await supabase.from("disputes").insert({
       offer_id: data.offer_id,
       opened_by: userId,

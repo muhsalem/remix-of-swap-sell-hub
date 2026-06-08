@@ -59,7 +59,8 @@ export const confirmDelivery = createServerFn({ method: "POST" })
       updates.status = "completed";
     }
 
-    const { error } = await supabase.from("trade_offers").update(updates as never).eq("id", data.offer_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("trade_offers").update(updates as never).eq("id", data.offer_id);
     if (error) throw new Error(error.message);
     return { ok: true, completed: bothConfirmed };
   });

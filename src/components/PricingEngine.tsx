@@ -99,14 +99,30 @@ function detectCurrency(): string {
 // Main component
 // ============================================================
 export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
-  const defaultCurrency = typeof window !== "undefined" ? detectCurrency() : "SAR";
+  // Initialize with SAR to keep SSR and first client render identical (avoids hydration mismatch);
+  // sync to the user's saved country in a post-mount effect.
+  const defaultCurrency = "SAR";
   const [items, setItems] = useState<Product[]>([defaultItem(defaultCurrency)]);
   const [result, setResult] = useState<PricingResult | null>(null);
   const [autoCalc, setAutoCalc] = useState(true);
   const [country, setCountry] = useState<string>(defaultCurrency);
   const [cashOnly, setCashOnly] = useState<boolean>(false);
+  useEffect(() => {
+    const c = detectCurrency();
+    if (c !== country) {
+      setCountry(c);
+      setItems((prev) => prev.map((p) => ({ ...p, currency: c })));
+    }
+    setCashOnly(loadCashOnly(c));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => { setCashOnly(loadCashOnly(country)); }, [country]);
-  const changeCountry = (c: string) => { setCountry(c); saveCountry(c); setCashOnly(loadCashOnly(c)); };
+  const changeCountry = (c: string) => {
+    setCountry(c);
+    saveCountry(c);
+    setCashOnly(loadCashOnly(c));
+    setItems((prev) => prev.map((p) => ({ ...p, currency: c })));
+  };
 
   const fn = useServerFn(calculateBarter);
   const sanitized = useMemo(

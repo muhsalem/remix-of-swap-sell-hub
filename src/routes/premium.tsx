@@ -34,7 +34,12 @@ function PremiumPage() {
   const current = (subData?.tier ?? "free") as Tier;
 
   const m = useMutation({
-    mutationFn: (tier: Tier) => upgrade({ data: { tier } }),
+    mutationFn: (tier: Tier) => {
+      if (tier !== "free") {
+        return Promise.reject(new Error("الباقات المدفوعة تتطلّب الدفع — قريباً عبر بوابة الدفع."));
+      }
+      return upgrade({ data: { tier: "free" } });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-subscription"] }),
   });
 
@@ -116,7 +121,7 @@ function PremiumPage() {
                   >
                     {m.isPending && m.variables === t ? (
                       <span className="inline-flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> جاري...</span>
-                    ) : isCurrent ? "خطتك الحالية" : t === "free" ? "إلغاء الاشتراك" : "اشترك الآن"}
+                    ) : isCurrent ? "خطتك الحالية" : t === "free" ? "إلغاء الاشتراك" : "اشترك — قريباً عبر بوابة الدفع"}
                   </button>
                 ) : (
                   <Link to="/auth" className="block text-center w-full py-2.5 rounded-full bg-foreground text-background text-sm font-extrabold">

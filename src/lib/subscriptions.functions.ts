@@ -51,34 +51,33 @@ export const getMySubscription = createServerFn({ method: "GET" })
     return { subscription: data, tier: (data?.tier ?? "free") as Tier };
   });
 
+/**
+ * Client-callable subscription change.
+ * Only the free tier (downgrade/cancel) is allowed from the client.
+ * Paid tier upgrades MUST be granted by a verified payment webhook
+ * using the service-role client — never by the user themselves.
+ */
 export const upgradeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ tier: z.enum(["free", "plus", "pro"]) }).parse(d))
+  .inputValidator((d) => z.object({ tier: z.enum(["free"]) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const tier = data.tier as Tier;
-    const price = TIERS[tier].priceSAR;
-    const renews = new Date();
-    renews.setMonth(renews.getMonth() + 1);
-    const { error } = await supabase
+    // Service role is required because client RLS no longer permits subscription writes.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
       .from("subscriptions")
       .upsert(
         {
           user_id: userId,
           tier,
           status: "active",
-          price_sar: price,
-          renews_at: tier === "free" ? null : renews.toISOString(),
+          price_sar: 0,
+          renews_at: null,
         },
         { onConflict: "user_id" },
       );
     if (error) throw new Error(error.message);
-    // Audit
-    await supabase.from("audit_log").insert({
-      entity_type: "subscription",
-      action: tier === "free" ? "cancel" : "upgrade",
-      actor_id: userId,
-      metadata: { tier, price_sar: price },
-    });
     return { ok: true, tier };
   });
+

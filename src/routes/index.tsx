@@ -11,7 +11,7 @@ import { CategoryQuickBar } from "@/components/CategoryQuickBar";
 import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
-import { LocalPrice } from "@/components/LocalPrice";
+import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({

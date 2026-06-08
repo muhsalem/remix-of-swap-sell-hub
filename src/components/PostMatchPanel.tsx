@@ -187,7 +187,7 @@ function ReceiptBlock({ offer, userId, qc }: { offer: any; userId: string; qc: a
 function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const fn = useServerFn(getFeeStatus);
   const payFn = useServerFn(payPlatformFee);
-  const pricingFn = useServerFn((require("@/lib/promotions.functions") as typeof import("@/lib/promotions.functions")).getPricing);
+  const pricingFn = useServerFn(getPricing);
   const { data, isLoading } = useQuery({
     queryKey: ["fee-status", offer.id],
     queryFn: () => fn({ data: { offer_id: offer.id } }),

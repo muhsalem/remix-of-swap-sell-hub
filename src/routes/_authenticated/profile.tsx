@@ -62,6 +62,8 @@ function ScoreBar({ label, value, color }: { label: string; value: number; color
 
 function ProfilePage() {
   const { data } = useSuspenseQuery(walletQO);
+  const { data: pricing } = useQuery(pricingQO);
+  const diOn = pricing?.diEnabled ?? false;
   const { profile, diBalance, reputationScore, impactScore, trustLevel, stats, recentReviews } = data;
 
   const [lastAnalysis, setLastAnalysis] = useState<LastAnalysis | null>(null);

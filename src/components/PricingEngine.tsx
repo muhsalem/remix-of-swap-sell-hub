@@ -312,7 +312,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 <span className="text-lg opacity-90 font-extrabold">ر.س</span>
               </div>
               {/* DI framed card — hidden in cash-only / restricted regions */}
-              {!cashOnly && (
+              {!cashOnly && showDi && (
                 <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
                   <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
                     <Coins className="size-5" />

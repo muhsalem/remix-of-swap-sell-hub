@@ -118,21 +118,33 @@ function ProfilePage() {
         </Link>
       </div>
 
-      <div className="rounded-3xl p-6 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.5)]">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-sm opacity-90">
-            <Wallet className="size-5" /> محفظة DI Credit
+      {diOn ? (
+        <div className="rounded-3xl p-6 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.5)]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-sm opacity-90">
+              <Wallet className="size-5" /> محفظة DI Credit
+            </div>
+            <Sparkles className="size-5 opacity-80" />
           </div>
-          <Sparkles className="size-5 opacity-80" />
+          <div className="flex items-baseline gap-3">
+            <div className="text-5xl font-extrabold tracking-tight">{diBalance.toFixed(2)}</div>
+            <div className="text-lg opacity-90">DI</div>
+          </div>
+          <div className="text-sm opacity-80 mt-2">
+            ≈ {(diBalance * SAR_PER_DI).toFixed(2)} ر.س &middot; 1 DI = {SAR_PER_DI} ر.س
+          </div>
         </div>
-        <div className="flex items-baseline gap-3">
-          <div className="text-5xl font-extrabold tracking-tight">{diBalance.toFixed(2)}</div>
-          <div className="text-lg opacity-90">DI</div>
+      ) : (
+        <div className="rounded-3xl p-6 border border-dashed border-border bg-card">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Wallet className="size-5" /> محفظة العملة الداخلية (DI)
+          </div>
+          <div className="text-lg font-bold">قريباً — المرحلة الثانية</div>
+          <p className="text-sm text-muted-foreground mt-1">
+            خلال المرحلة الأولى المنصة مجانية بالكامل. سيتم تفعيل العملة الداخلية (DI) ومكافآت الصفقات لاحقاً.
+          </p>
         </div>
-        <div className="text-sm opacity-80 mt-2">
-          ≈ {(diBalance * SAR_PER_DI).toFixed(2)} ر.س &middot; 1 DI = {SAR_PER_DI} ر.س
-        </div>
-      </div>
+      )}
 
       {/* آخر تحليل توافق مقايضة — مربوط بـ PricingEngine */}
       {lastAnalysis && (

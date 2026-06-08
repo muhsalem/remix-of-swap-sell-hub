@@ -73,10 +73,12 @@ function Index() {
   const matchResults = matchM.data?.matches ?? [];
   const matchMode = matchM.isSuccess || matchM.isPending || matchM.isError;
 
+  const { fx } = useUserCurrency();
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
+    // Inputs are in user's local currency; convert back to SAR for filtering
+    const min = minPrice ? Number(minPrice) / (fx.perSAR || 1) : null;
+    const max = maxPrice ? Number(maxPrice) / (fx.perSAR || 1) : null;
     const list = listings.map((l) => {
       const text = `${l.title} ${l.category} ${l.wants ?? ""}`.toLowerCase();
       let score = 0;

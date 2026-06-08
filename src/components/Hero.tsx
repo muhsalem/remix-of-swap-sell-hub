@@ -71,11 +71,10 @@ export function Hero() {
                 {isGuest ? "اعرض منتجك مجاناً" : "أضف عرضاً جديداً"} <ArrowLeftRight className="size-4" />
               </Link>
               <Link
-                to={isGuest ? "/" : "/offers"}
-                hash={isGuest ? "engine" : undefined}
-                className="px-6 py-3.5 bg-card border border-border rounded-full text-sm font-bold hover:bg-stone-soft transition-all"
+                to={isGuest ? "/pricing-engine" : "/pricing-engine"}
+                className="px-6 py-3.5 bg-card border border-border rounded-full text-sm font-bold hover:bg-stone-soft transition-all inline-flex items-center gap-2"
               >
-                {isGuest ? "جرّب محرك التسعير" : "صفقاتي"}
+                🧮 {isGuest ? "احسب ما يعادل منتجك" : "محرك التسعير العادل"}
               </Link>
             </div>
 

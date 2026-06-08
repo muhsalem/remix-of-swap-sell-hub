@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizontal } from "lucide-react";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
 import { CategoryQuickBar } from "@/components/CategoryQuickBar";
+import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice } from "@/components/LocalPrice";
@@ -19,7 +21,15 @@ const listingsQuery = queryOptions({
 
 const POPULAR = ["هواتف", "حواسيب", "ساعات", "مجوهرات", "ذهب", "أثاث", "كتب", "خدمات مهنية"];
 
+const searchSchema = z.object({
+  q: z.string().optional().default(""),
+  cat: z.string().optional().default(""),
+  cond: z.string().optional().default(""),
+  sort: z.enum(["newest", "price-asc", "price-desc"]).optional().default("newest"),
+});
+
 export const Route = createFileRoute("/")({
+  validateSearch: (input) => searchSchema.parse(input),
   loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   head: () => ({
     meta: [
@@ -36,15 +46,24 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
+  const urlSearch = Route.useSearch();
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(urlSearch.q || "");
   const [have, setHave] = useState("");
-  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [activeCat, setActiveCat] = useState<string | null>(urlSearch.cat || null);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
-  const [condFilter, setCondFilter] = useState<string>("");
-  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
+  const [condFilter, setCondFilter] = useState<string>(urlSearch.cond || "");
+  const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(urlSearch.sort || "newest");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync URL → local filter state (CategoryQuickBar / QuickSearchBar drive URL)
+  useEffect(() => {
+    setQuery(urlSearch.q || "");
+    setActiveCat(urlSearch.cat || null);
+    setCondFilter(urlSearch.cond || "");
+    setSortBy(urlSearch.sort || "newest");
+  }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.sort]);
 
   // Match mode — when user provides both "have" and "want"
   const matchFn = useServerFn(matchListings);

@@ -6,6 +6,7 @@ import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizo
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
+import { CategoryQuickBar } from "@/components/CategoryQuickBar";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice } from "@/components/LocalPrice";
@@ -101,6 +102,7 @@ function Index() {
 
       <Nav />
       <Hero />
+      <CategoryQuickBar />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Discover + match — merged */}

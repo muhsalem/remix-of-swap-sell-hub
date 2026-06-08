@@ -118,7 +118,7 @@ ${data.hint ? `\nتلميح من المستخدم: ${data.hint}` : ""}
     try { parsed = JSON.parse(txt); } catch { parsed = {}; }
 
     const category = ALLOWED_CATS.includes(parsed.category) ? parsed.category : "أخرى";
-    const mainCategory = MAIN_CATS.includes(parsed.mainCategory) ? parsed.mainCategory : mapToMain(category);
+    const mainCategory = (MAIN_CATS as readonly string[]).includes(parsed.mainCategory) ? parsed.mainCategory : mapToMain(category);
     const tags = Array.isArray(parsed.tags)
       ? parsed.tags
           .filter((t: unknown) => typeof t === "string")

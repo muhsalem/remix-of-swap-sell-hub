@@ -107,6 +107,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [autoCalc, setAutoCalc] = useState(true);
   const [country, setCountry] = useState<string>(defaultCurrency);
   const [cashOnly, setCashOnly] = useState<boolean>(false);
+  // العملة الرقمية الداخلية (DI) مؤجَّلة حالياً — تُخفى من واجهة المستخدم بالكامل.
+  const showDi = false;
   useEffect(() => {
     const c = detectCurrency();
     if (c !== country) {

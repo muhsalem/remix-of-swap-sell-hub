@@ -6,6 +6,7 @@ import { Phone, MessageCircle, MapPin, Calendar, Upload, Wallet, CheckCircle2, L
 import {
   getPeerContact, setMeetup, saveReceiptUrl, getFeeStatus, payPlatformFee,
 } from "@/lib/post-match.functions";
+import { getPricing } from "@/lib/promotions.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 type Props = { offer: any; userId: string; qc: ReturnType<typeof useQueryClient> };

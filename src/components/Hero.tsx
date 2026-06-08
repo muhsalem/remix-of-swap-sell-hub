@@ -1,6 +1,15 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery, queryOptions } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeftRight, Shield, Sparkles, TrendingUp, BadgeCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { getPublicStats, getMyStats } from "@/lib/stats.functions";
+
+const publicStatsQ = queryOptions({
+  queryKey: ["public-stats"],
+  queryFn: () => getPublicStats(),
+  staleTime: 60_000,
+});
 
 export function Hero() {
   const { user, loading } = useAuth();
@@ -8,6 +17,15 @@ export function Hero() {
   const firstName =
     (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ||
     (user?.email ? user.email.split("@")[0] : "");
+
+  const fetchPublic = useServerFn(getPublicStats);
+  const { data: pub } = useQuery({ ...publicStatsQ, queryFn: () => fetchPublic() });
+  const fetchMine = useServerFn(getMyStats);
+  const { data: mine } = useQuery({
+    queryKey: ["my-stats"],
+    queryFn: () => fetchMine(),
+    enabled: !!user,
+  });
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-stone-soft via-background to-background py-20 md:py-28">
@@ -25,41 +43,31 @@ export function Hero() {
             <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
               {isGuest ? (
                 <>
-                  بدّل ما تملك
-                  <br />
-                  بما تحتاج{" "}
+                  بدّل ما تملك<br />بما تحتاج{" "}
                   <span className="relative inline-block text-primary">
                     بسهولة
                     <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
-                  </span>
-                  .
+                  </span>.
                 </>
               ) : (
                 <>
-                  جاهز لصفقتك
-                  <br />
+                  جاهز لصفقتك<br />
                   <span className="relative inline-block text-primary">
                     التالية
                     <span className="absolute -bottom-1 left-0 right-0 h-2.5 bg-accent/40 -z-10 rounded-full" />
-                  </span>
-                  ؟
+                  </span>؟
                 </>
               )}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
               {isGuest ? (
-                <>
-                  منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير ذكي يقيس قيمة كل سلعة وعدالة كل مقايضة.
-                </>
+                <>منصة <strong className="text-foreground">بادل</strong> تحوّل ممتلكاتك الراكدة إلى صفقات عادلة عبر محرك تسعير ذكي يقيس قيمة كل سلعة وعدالة كل مقايضة.</>
               ) : (
                 <>انشر عرضاً جديداً، تابع صفقاتك، أو ابحث عن مطابقات ذكية في السوق.</>
               )}
             </p>
             <div className="flex flex-wrap gap-3 mb-10">
-              <Link
-                to="/new-listing"
-                className="px-6 py-3.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all inline-flex items-center gap-2"
-              >
+              <Link to="/new-listing" className="px-6 py-3.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all inline-flex items-center gap-2">
                 {isGuest ? "اعرض منتجك مجاناً" : "أضف عرضاً جديداً"} <ArrowLeftRight className="size-4" />
               </Link>
               <Link
@@ -74,15 +82,18 @@ export function Hero() {
             <div className="grid grid-cols-3 gap-6 max-w-lg pt-8 border-t border-border">
               {isGuest ? (
                 <>
-                  <Stat n="80%" t="من المستعمل يُباع بأقل من قيمته" />
-                  <Stat n="100%" t="تقييم مدعوم بالذكاء الاصطناعي" />
+                  <Stat n={fmt(pub?.count)} t="عرض نشط الآن" />
+                  <Stat n={pub?.avgPriceSAR ? `${fmt(pub.avgPriceSAR)} ر.س` : "—"} t="متوسط قيمة العروض" />
                   <StatHighlight n="0 ر.س" t="رسوم نشر العروض" />
                 </>
               ) : (
                 <>
-                  <Stat n="∞" t="إعلانات بدون رسوم" />
-                  <Stat n="AI" t="مطابقة ذكية للراغبين" />
-                  <StatHighlight n="0%" t="عمولة في مرحلة النمو" />
+                  <Stat n={fmt(mine?.activeListings)} t="إعلاناتي النشطة" />
+                  <Stat n={fmt(mine?.completedDeals)} t="صفقات مكتملة" />
+                  <StatHighlight
+                    n={mine?.savedSAR ? `${fmt(mine.savedSAR)} ر.س` : "0 ر.س"}
+                    t="توفيرك التقديري"
+                  />
                 </>
               )}
             </div>
@@ -115,10 +126,15 @@ export function Hero() {
   );
 }
 
+function fmt(n: number | undefined | null) {
+  if (n === undefined || n === null) return "—";
+  return Number(n).toLocaleString();
+}
+
 function Stat({ n, t }: { n: string; t: string }) {
   return (
     <div>
-      <div className="font-display text-2xl font-extrabold text-primary">{n}</div>
+      <div className="font-display text-2xl font-extrabold text-primary tabular-nums">{n}</div>
       <div className="text-[11px] text-muted-foreground mt-1 leading-snug">{t}</div>
     </div>
   );
@@ -127,7 +143,7 @@ function Stat({ n, t }: { n: string; t: string }) {
 function StatHighlight({ n, t }: { n: string; t: string }) {
   return (
     <div className="relative -mt-2 -mb-2 px-3 py-2 rounded-2xl bg-primary/5 ring-1 ring-primary/20">
-      <div className="font-display text-3xl font-extrabold text-primary leading-none">{n}</div>
+      <div className="font-display text-2xl font-extrabold text-primary leading-none tabular-nums">{n}</div>
       <div className="text-[11px] text-foreground/80 mt-1 leading-snug font-bold">{t}</div>
     </div>
   );

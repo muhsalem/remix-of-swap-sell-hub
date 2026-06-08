@@ -99,7 +99,7 @@ function Index() {
     else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
     else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
     return out;
-  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy]);
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy, fx.perSAR]);
 
   const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter);
   const resetFilters = () => {

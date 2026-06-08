@@ -8,15 +8,44 @@ import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry } from "@/lib/currency-f
 import { getLatestReserveSnapshot } from "@/lib/reserve.functions";
 import { loadCashOnly, saveCashOnly, isRestrictedCountry } from "@/lib/region-mode";
 
+import { getPricing } from "@/lib/promotions.functions";
+
 export const Route = createFileRoute("/digital-currency")({
   head: () => ({
     meta: [
-      { title: "العملة الرقمية الداخلية DI — بادل" },
-      { name: "description", content: "تعرّف على كيفية عمل عملة بادل الرقمية الداخلية (DI)، ربطها بعملتك المحلية، ومصادر اكتسابها واستخدامها." },
+      { title: "العملة الرقمية الداخلية DI — قريباً | بادل" },
+      { name: "description", content: "العملة الداخلية (DI) ستُطلق في المرحلة الثانية من بادل. حالياً جميع المقايضات مجانية." },
     ],
   }),
-  component: DigitalCurrencyPage,
+  component: DigitalCurrencyGate,
 });
+
+function DigitalCurrencyGate() {
+  const fn = useServerFn(getPricing);
+  const { data, isLoading } = useQuery({ queryKey: ["pricing"], queryFn: () => fn() });
+  if (isLoading) return null;
+  if (!data?.diEnabled) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Nav />
+        <div className="max-w-2xl mx-auto p-8 text-center space-y-4 pt-20">
+          <div className="size-20 mx-auto rounded-full bg-primary/10 grid place-items-center">
+            <Coins className="size-10 text-primary" />
+          </div>
+          <h1 className="text-3xl font-extrabold">العملة الداخلية (DI) — قريباً</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            نحن في <b>المرحلة الأولى</b>: جميع المقايضات والإعلانات مجانية بالكامل لبناء مجتمع نشط.
+            سيتم إطلاق العملة الداخلية <b>DI</b> ومكافآت الصفقات وباقات الترقية في <b>المرحلة الثانية</b>.
+          </p>
+          <Link to="/" className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold">
+            <ArrowRight className="size-4 rotate-180" /> العودة للرئيسية
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  return <DigitalCurrencyPage />;
+}
 
 function DigitalCurrencyPage() {
   const [country, setCountry] = useState<string>("SAR");

@@ -53,8 +53,20 @@ export function VerificationCard() {
   });
 
   const p = pricing?.pricing ?? {};
+  const diOn = pricing?.diEnabled ?? false;
   const bal = balance?.balance ?? 0;
   const isVerified = profile?.verified_badge && profile?.verified_until && new Date(profile.verified_until) > new Date();
+
+  if (!diOn) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center space-y-2">
+        <h3 className="font-bold text-lg flex items-center gap-2 justify-center"><BadgeCheck className="size-5 text-primary" /> التوثيق وباقات التجار</h3>
+        <p className="text-sm text-muted-foreground">
+          التوثيق المدفوع وباقات التجار ستُفعَّل في <b>المرحلة الثانية</b> مع إطلاق العملة الداخلية (DI).
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 space-y-4">

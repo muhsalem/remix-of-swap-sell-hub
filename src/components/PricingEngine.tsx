@@ -228,7 +228,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               محرّك التسعير العادل
             </h3>
             <p className="text-foreground/80 mt-2 text-base md:text-lg font-bold">
-              اختر النوع والفئة، أضف الصورة أو الخصائص، واحصل على قيمة شفافة بالعملة الرقمية الداخلية (DI).
+              اختر النوع والفئة، أضف الصورة أو الخصائص، واحصل على قيمة عادلة وشفافة بعملتك المحلية.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-extrabold bg-card/70 backdrop-blur px-4 py-2.5 rounded-xl border border-border cursor-pointer shadow-sm">

@@ -6,21 +6,34 @@ export type PromoKind = "featured" | "pinned" | "boost";
 
 export const getPricing = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase } = await import("@/integrations/supabase/client");
-  const { data } = await supabase
+  const { data: rows } = await supabase
     .from("platform_config")
-    .select("value")
-    .eq("key", "pricing")
-    .maybeSingle();
-  const { data: flag } = await supabase
-    .from("platform_config")
-    .select("value")
-    .eq("key", "commission_enabled")
-    .maybeSingle();
+    .select("key,value")
+    .in("key", ["pricing", "commission_enabled", "di_enabled"]);
+  const map = new Map((rows ?? []).map((r: any) => [r.key, r.value]));
   return {
-    pricing: (data?.value ?? {}) as Record<string, number>,
-    commissionEnabled: Boolean(flag?.value),
+    pricing: (map.get("pricing") ?? {}) as Record<string, number>,
+    commissionEnabled: Boolean(map.get("commission_enabled")),
+    diEnabled: Boolean(map.get("di_enabled")),
   };
 });
+
+export const setDiEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ enabled: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("unauthorized");
+    const { error } = await supabase
+      .from("platform_config")
+      .upsert({ key: "di_enabled", value: data.enabled as any, updated_at: new Date().toISOString() } as never, { onConflict: "key" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
 export const getMyDiBalance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

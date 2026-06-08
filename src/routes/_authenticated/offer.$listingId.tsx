@@ -7,6 +7,7 @@ import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/o
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { LocalPrice } from "@/components/LocalPrice";
+import { OfferPreviewPanel } from "@/components/OfferPreviewPanel";
 import { ArrowLeftRight, Plus } from "lucide-react";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });
@@ -128,12 +129,18 @@ function NewOfferPage() {
               />
             </label>
 
+            <OfferPreviewPanel
+              mine={mine.listings.find((l) => l.id === selectedId) as never}
+              target={targetListing}
+              cash={cash}
+            />
+
             <button
               onClick={() => m.mutate()}
               disabled={m.isPending}
               className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50"
             >
-              {m.isPending ? "جاري الإرسال..." : "إرسال عرض المقايضة"}
+              {m.isPending ? "جاري الإرسال..." : "تأكيد وإرسال عرض المقايضة"}
             </button>
           </div>
         )}

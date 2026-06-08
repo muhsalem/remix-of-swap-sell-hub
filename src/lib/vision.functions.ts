@@ -12,6 +12,8 @@ const InputSchema = z.object({
 export type VisionAttrs = {
   name: string;
   category: string;
+  mainCategory: string;
+  tags: string[];
   itemType: "good" | "service" | "commodity";
   condition: "new" | "like-new" | "excellent" | "good" | "fair";
   estimatedAgeMonths: number;
@@ -24,6 +26,27 @@ const ALLOWED_CATS = [
   "وسائل تنقل","أثاث","كتب","ملابس","خدمات مهنية","خدمات يدوية",
   "ذهب","فضة","حبوب وأغذية","أخرى",
 ];
+
+// 6 فئات رئيسية لتبسيط التصفّح
+const MAIN_CATS = [
+  "هواتف وأجهزة",
+  "حواسيب وألعاب",
+  "وسائل تنقل",
+  "أثاث ومنزل",
+  "ساعات ومجوهرات",
+  "خدمات وأعمال",
+  "أخرى",
+] as const;
+
+function mapToMain(cat: string): string {
+  if (["هواتف","أجهزة لوحية","إلكترونيات","صوتيات","كاميرات"].includes(cat)) return "هواتف وأجهزة";
+  if (["حواسيب"].includes(cat)) return "حواسيب وألعاب";
+  if (["وسائل تنقل"].includes(cat)) return "وسائل تنقل";
+  if (["أثاث","كتب","ملابس"].includes(cat)) return "أثاث ومنزل";
+  if (["ساعات","مجوهرات","ذهب","فضة"].includes(cat)) return "ساعات ومجوهرات";
+  if (["خدمات مهنية","خدمات يدوية"].includes(cat)) return "خدمات وأعمال";
+  return "أخرى";
+}
 
 export const analyzeProductImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -53,6 +76,8 @@ export const analyzeProductImage = createServerFn({ method: "POST" })
     const prompt = `حلّل صورة المنتج وأخرج JSON بالعربية بالحقول التالية فقط:
 - name: اسم المنتج المختصر
 - category: واحد من [${ALLOWED_CATS.join(" | ")}]
+- mainCategory: واحد من [${MAIN_CATS.join(" | ")}]
+- tags: مصفوفة من 3 إلى 6 وسوم قصيرة (كلمة أو كلمتين) تصف الماركة والموديل والميزة واللون
 - itemType: "good" أو "service" أو "commodity"
 - condition: واحد من ["new","like-new","excellent","good","fair"]
 - estimatedAgeMonths: عدد (0 إذا جديد)
@@ -92,9 +117,21 @@ ${data.hint ? `\nتلميح من المستخدم: ${data.hint}` : ""}
     let parsed: any = {};
     try { parsed = JSON.parse(txt); } catch { parsed = {}; }
 
+    const category = ALLOWED_CATS.includes(parsed.category) ? parsed.category : "أخرى";
+    const mainCategory = (MAIN_CATS as readonly string[]).includes(parsed.mainCategory) ? parsed.mainCategory : mapToMain(category);
+    const tags = Array.isArray(parsed.tags)
+      ? parsed.tags
+          .filter((t: unknown) => typeof t === "string")
+          .map((t: string) => t.trim().slice(0, 24))
+          .filter((t: string) => t.length > 0)
+          .slice(0, 6)
+      : [];
+
     return {
       name: String(parsed.name || "منتج").slice(0, 80),
-      category: ALLOWED_CATS.includes(parsed.category) ? parsed.category : "أخرى",
+      category,
+      mainCategory,
+      tags,
       itemType: ["good","service","commodity"].includes(parsed.itemType) ? parsed.itemType : "good",
       condition: ["new","like-new","excellent","good","fair"].includes(parsed.condition) ? parsed.condition : "good",
       estimatedAgeMonths: Math.max(0, Math.min(1200, Number(parsed.estimatedAgeMonths) || 0)),

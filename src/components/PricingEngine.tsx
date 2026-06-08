@@ -407,8 +407,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           </div>
 
 
-          {/* DI link — full framed card */}
-          <DiLinkCard />
+          {/* DI link — hidden while DI is deferred */}
+          {showDi && <DiLinkCard />}
 
 
           {/* Breakdown */}

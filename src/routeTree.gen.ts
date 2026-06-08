@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -30,6 +31,11 @@ import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 
+const PricingEngineRoute = PricingEngineRouteImport.update({
+  id: '/pricing-engine',
+  path: '/pricing-engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PremiumRoute = PremiumRouteImport.update({
   id: '/premium',
   path: '/premium',
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
+  '/pricing-engine': typeof PricingEngineRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
+  '/pricing-engine': typeof PricingEngineRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
+  '/pricing-engine': typeof PricingEngineRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/digital-currency'
     | '/premium'
+    | '/pricing-engine'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/digital-currency'
     | '/premium'
+    | '/pricing-engine'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/digital-currency'
     | '/premium'
+    | '/pricing-engine'
     | '/_authenticated/admin'
     | '/_authenticated/disputes'
     | '/_authenticated/my-listings'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
   PremiumRoute: typeof PremiumRoute
+  PricingEngineRoute: typeof PricingEngineRoute
   ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
   ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
@@ -280,6 +293,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing-engine': {
+      id: '/pricing-engine'
+      path: '/pricing-engine'
+      fullPath: '/pricing-engine'
+      preLoaderRoute: typeof PricingEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/premium': {
       id: '/premium'
       path: '/premium'
@@ -478,6 +498,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
   PremiumRoute: PremiumRoute,
+  PricingEngineRoute: PricingEngineRoute,
   ApiRobotsDottxtRoute: ApiRobotsDottxtRoute,
   ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,

@@ -209,13 +209,13 @@ function Index() {
             {showFilters && (
               <div id="market-filters" className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى (ر.س)</span>
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى ({fx.symbol})</span>
                   <input type="number" inputMode="numeric" min={0} value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى (ر.س)</span>
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى ({fx.symbol})</span>
                   <input type="number" inputMode="numeric" min={0} value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />

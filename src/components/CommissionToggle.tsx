@@ -1,8 +1,8 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Power } from "lucide-react";
-import { getPricing, setCommissionEnabled } from "@/lib/promotions.functions";
+import { Power, Coins } from "lucide-react";
+import { getPricing, setCommissionEnabled, setDiEnabled } from "@/lib/promotions.functions";
 
 export function CommissionToggle() {
   const qc = useQueryClient();

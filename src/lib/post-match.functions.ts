@@ -12,6 +12,19 @@ export const getPeerContact = createServerFn({ method: "GET" })
     return { peer: rows?.[0] ?? null };
   });
 
+export const getMyContact = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("contact_phone,whatsapp")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return { contact_phone: (data as { contact_phone?: string } | null)?.contact_phone ?? null, whatsapp: (data as { whatsapp?: string } | null)?.whatsapp ?? null };
+  });
+
 export const updateMyContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>

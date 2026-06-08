@@ -51,9 +51,7 @@ export function Nav() {
             <Link to="/pricing-engine" className="hover:text-primary transition-colors inline-flex items-center gap-1">🧮 محرك التسعير</Link>
             <Link to="/" hash="market" className="hover:text-primary transition-colors">السوق</Link>
             <Link to="/" hash="how" className="hover:text-primary transition-colors">كيف يعمل؟</Link>
-            <Link to="/premium" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-l from-amber-500 to-orange-500 text-white text-xs font-extrabold hover:opacity-90">
-              ✨ Premium
-            </Link>
+            {/* Premium/DI link مؤجَّل حالياً */}
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -359,9 +359,11 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                     {result ? sarToLocal(valueSAR, country).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                   </span>
                   <span className="text-sm font-extrabold opacity-90">{FX_VS_SAR[country]?.symbol}</span>
-                  <span className="text-[11px] opacity-75 font-bold">
-                    · 1 DI ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
-                  </span>
+                  {showDi && (
+                    <span className="text-[11px] opacity-75 font-bold">
+                      · 1 DI ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                    </span>
+                  )}
                 </div>
               </div>
 

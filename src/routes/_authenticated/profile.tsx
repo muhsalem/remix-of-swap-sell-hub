@@ -6,8 +6,11 @@ import { SAR_PER_DI } from "@/lib/pricing.functions";
 import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
 import { ContactSettings } from "@/components/ContactSettings";
 import { VerificationCard } from "@/components/VerificationCard";
+import { getPricing } from "@/lib/promotions.functions";
+import { useQuery } from "@tanstack/react-query";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
+const pricingQO = queryOptions({ queryKey: ["pricing"], queryFn: () => getPricing() });
 
 export const Route = createFileRoute("/_authenticated/profile")({
   loader: ({ context }) => context.queryClient.ensureQueryData(walletQO),

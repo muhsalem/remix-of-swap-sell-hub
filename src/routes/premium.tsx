@@ -34,7 +34,12 @@ function PremiumPage() {
   const current = (subData?.tier ?? "free") as Tier;
 
   const m = useMutation({
-    mutationFn: (tier: Tier) => upgrade({ data: { tier } }),
+    mutationFn: (tier: Tier) => {
+      if (tier !== "free") {
+        return Promise.reject(new Error("الباقات المدفوعة تتطلّب الدفع — قريباً عبر بوابة الدفع."));
+      }
+      return upgrade({ data: { tier: "free" } });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-subscription"] }),
   });
 

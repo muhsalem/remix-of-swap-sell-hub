@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/sitemap.xml")({
     handlers: {
       GET: async ({ request }) => {
         const origin = new URL(request.url).origin;
-        const staticPaths = ["", "/auth", "/premium", "/digital-currency", "/legal/terms", "/legal/privacy"];
+        const staticPaths = ["", "/auth", "/premium", "/pricing-engine", "/digital-currency", "/legal/terms", "/legal/privacy"];
 
         let listings: { id: string; updated_at: string }[] = [];
         try {

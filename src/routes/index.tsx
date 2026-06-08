@@ -11,7 +11,7 @@ import { CategoryQuickBar } from "@/components/CategoryQuickBar";
 import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
-import { LocalPrice } from "@/components/LocalPrice";
+import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 
 const listingsQuery = queryOptions({
@@ -73,10 +73,12 @@ function Index() {
   const matchResults = matchM.data?.matches ?? [];
   const matchMode = matchM.isSuccess || matchM.isPending || matchM.isError;
 
+  const { fx } = useUserCurrency();
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
+    // Inputs are in user's local currency; convert back to SAR for filtering
+    const min = minPrice ? Number(minPrice) / (fx.perSAR || 1) : null;
+    const max = maxPrice ? Number(maxPrice) / (fx.perSAR || 1) : null;
     const list = listings.map((l) => {
       const text = `${l.title} ${l.category} ${l.wants ?? ""}`.toLowerCase();
       let score = 0;
@@ -97,7 +99,7 @@ function Index() {
     else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
     else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
     return out;
-  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy]);
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy, fx.perSAR]);
 
   const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter);
   const resetFilters = () => {
@@ -207,13 +209,13 @@ function Index() {
             {showFilters && (
               <div id="market-filters" className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى (ر.س)</span>
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أدنى ({fx.symbol})</span>
                   <input type="number" inputMode="numeric" min={0} value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى (ر.س)</span>
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">سعر أعلى ({fx.symbol})</span>
                   <input type="number" inputMode="numeric" min={0} value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30" />

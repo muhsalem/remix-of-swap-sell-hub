@@ -39,7 +39,20 @@ export function PromotionPanel({ listingId, ownerId, currentUserId }: {
 
   if (!isOwner) return null;
   const p = pricingData?.pricing ?? {};
+  const diOn = pricingData?.diEnabled ?? false;
   const balance = balanceData?.balance ?? 0;
+
+  if (!diOn) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center space-y-2">
+        <h3 className="font-bold text-lg">ترقية الإعلان</h3>
+        <p className="text-sm text-muted-foreground">
+          ترقية الإعلانات بالعملة الداخلية (DI) ستتاح في <b>المرحلة الثانية</b>.
+          خلال المرحلة الأولى كل الإعلانات والصفقات مجانية بالكامل.
+        </p>
+      </div>
+    );
+  }
 
   const items = [
     { key: "featured" as const, icon: Sparkles, title: "إعلان مميز (7 أيام)", cost: p.featured_7d_di, dur: 7 },

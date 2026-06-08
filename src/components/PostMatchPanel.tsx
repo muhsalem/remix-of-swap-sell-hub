@@ -186,15 +186,18 @@ function ReceiptBlock({ offer, userId, qc }: { offer: any; userId: string; qc: a
 function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const fn = useServerFn(getFeeStatus);
   const payFn = useServerFn(payPlatformFee);
+  const pricingFn = useServerFn((require("@/lib/promotions.functions") as typeof import("@/lib/promotions.functions")).getPricing);
   const { data, isLoading } = useQuery({
     queryKey: ["fee-status", offer.id],
     queryFn: () => fn({ data: { offer_id: offer.id } }),
   });
+  const { data: pricing } = useQuery({ queryKey: ["pricing"], queryFn: () => pricingFn() });
+  const diOn = pricing?.diEnabled ?? false;
   const [diAmt, setDiAmt] = useState(0);
   const [cashAmt, setCashAmt] = useState(0);
 
   const pay = useMutation({
-    mutationFn: () => payFn({ data: { offer_id: offer.id, di_amount: diAmt, cash_amount: cashAmt } }),
+    mutationFn: () => payFn({ data: { offer_id: offer.id, di_amount: diOn ? diAmt : 0, cash_amount: cashAmt } }),
     onSuccess: () => {
       toast.success("تم دفع العمولة ✅");
       qc.invalidateQueries({ queryKey: ["fee-status", offer.id] });
@@ -204,7 +207,8 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   });
 
   if (isLoading || !data) return null;
-  const totalSar = diAmt * 5 + cashAmt;
+  const effDi = diOn ? diAmt : 0;
+  const totalSar = effDi * 5 + cashAmt;
   const enough = totalSar >= data.feeSar;
 
   return (
@@ -214,7 +218,9 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
       </h3>
       <div className="text-xs space-y-1 mb-3 p-2 bg-stone-soft rounded-lg">
         <div className="flex justify-between"><span>المبلغ المطلوب:</span><b>{data.feeSar.toLocaleString()} ر.س</b></div>
-        <div className="flex justify-between"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI (≈ {data.diValueSar.toFixed(0)} ر.س)</b></div>
+        {diOn && (
+          <div className="flex justify-between"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI (≈ {data.diValueSar.toFixed(0)} ر.س)</b></div>
+        )}
       </div>
 
       {data.paid ? (
@@ -234,14 +240,16 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
         </div>
       ) : (
         <div className="space-y-2">
-          <div>
-            <label className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
-              <Coins className="size-3" /> DI (1 DI = 5 ر.س)
-            </label>
-            <input type="number" min={0} max={data.diBalance} step={0.1} value={diAmt}
-              onChange={(e) => setDiAmt(Math.max(0, Number(e.target.value)))}
-              className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
-          </div>
+          {diOn && (
+            <div>
+              <label className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
+                <Coins className="size-3" /> DI (1 DI = 5 ر.س)
+              </label>
+              <input type="number" min={0} max={data.diBalance} step={0.1} value={diAmt}
+                onChange={(e) => setDiAmt(Math.max(0, Number(e.target.value)))}
+                className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
+            </div>
+          )}
           <div>
             <label className="text-[11px] text-muted-foreground mb-1 block">نقدي (ر.س)</label>
             <input type="number" min={0} step={0.5} value={cashAmt}
@@ -255,9 +263,11 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
             className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50">
             دفع العمولة الآن
           </button>
-          <p className="text-[10px] text-muted-foreground text-center">
-            * الجزء النقدي يُحجز افتراضياً من رصيد الضمان عند الاكتمال.
-          </p>
+          {!diOn && (
+            <p className="text-[10px] text-muted-foreground text-center">
+              الدفع نقدي فقط في المرحلة الأولى. العملة الداخلية (DI) ستُتاح لاحقاً.
+            </p>
+          )}
         </div>
       )}
     </div>

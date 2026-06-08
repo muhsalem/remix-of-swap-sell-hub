@@ -1154,7 +1154,7 @@ function BarterBar({
               }
               opts.push({ tone: "swap", text: <>➕ <b>أضف عنصراً تكميلياً</b> من جهتك بقيمة تقارب <b>{absDiff.toLocaleString()} ر.س</b> لإلغاء الفرق نقدياً.</> });
             } else if (priceDiff < 0) {
-              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً أو كرصيد DI.</> });
+              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> نقداً.</> });
               if (condBonus > 50) {
                 opts.push({ tone: "swap", text: <>📈 <b>زيادة بسبب الحالة:</b> اطلب علاوة <b>+{condBonus.toLocaleString()} ر.س</b> أعلى من الفرق الأساسي لتعويض جودة سلعتك.</> });
               }

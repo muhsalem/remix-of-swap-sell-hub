@@ -1139,7 +1139,7 @@ function BarterBar({
             const condBonus = Math.round(absDiff * (1 - condFactor) * 0.5); // older = larger negotiation margin
             const fairBand = bestPrice * 0.05;
             const inFairBand = absDiff <= fairBand;
-            const diEquiv = (absDiff / DI_TO_SAR).toFixed(2);
+            void DI_TO_SAR;
 
             type Opt = { tone: "ok" | "pay" | "gain" | "swap"; text: React.ReactNode };
             const opts: Opt[] = [];

@@ -107,6 +107,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [autoCalc, setAutoCalc] = useState(true);
   const [country, setCountry] = useState<string>(defaultCurrency);
   const [cashOnly, setCashOnly] = useState<boolean>(false);
+  // العملة الرقمية الداخلية (DI) مؤجَّلة حالياً — تُخفى من واجهة المستخدم بالكامل.
+  const showDi = false;
   useEffect(() => {
     const c = detectCurrency();
     if (c !== country) {
@@ -226,7 +228,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               محرّك التسعير العادل
             </h3>
             <p className="text-foreground/80 mt-2 text-base md:text-lg font-bold">
-              اختر النوع والفئة، أضف الصورة أو الخصائص، واحصل على قيمة شفافة بالعملة الرقمية الداخلية (DI).
+              اختر النوع والفئة، أضف الصورة أو الخصائص، واحصل على قيمة عادلة وشفافة بعملتك المحلية.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-extrabold bg-card/70 backdrop-blur px-4 py-2.5 rounded-xl border border-border cursor-pointer shadow-sm">
@@ -310,7 +312,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 <span className="text-lg opacity-90 font-extrabold">ر.س</span>
               </div>
               {/* DI framed card — hidden in cash-only / restricted regions */}
-              {!cashOnly && (
+              {!cashOnly && showDi && (
                 <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/25">
                   <div className="size-10 shrink-0 rounded-xl grid place-items-center bg-white/20 ring-1 ring-white/30">
                     <Coins className="size-5" />
@@ -357,9 +359,11 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                     {result ? sarToLocal(valueSAR, country).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
                   </span>
                   <span className="text-sm font-extrabold opacity-90">{FX_VS_SAR[country]?.symbol}</span>
-                  <span className="text-[11px] opacity-75 font-bold">
-                    · 1 DI ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
-                  </span>
+                  {showDi && (
+                    <span className="text-[11px] opacity-75 font-bold">
+                      · 1 DI ≈ {(DI_TO_SAR * (FX_VS_SAR[country]?.perSAR ?? 1)).toLocaleString(undefined, { maximumFractionDigits: 3 })} {FX_VS_SAR[country]?.symbol}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -403,8 +407,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
           </div>
 
 
-          {/* DI link — full framed card */}
-          <DiLinkCard />
+          {/* DI link — hidden while DI is deferred */}
+          {showDi && <DiLinkCard />}
 
 
           {/* Breakdown */}
@@ -429,7 +433,7 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                     <tr className="border-t-2 border-primary/30 font-extrabold">
                       <td className="py-3 px-3 text-base">القيمة النهائية</td>
                       <td className="py-3 px-3 text-primary text-left text-base">
-                        {result.diA.toLocaleString()} DI · {result.valueA.toLocaleString()} ر.س
+                        {result.valueA.toLocaleString()} ر.س
                       </td>
                     </tr>
                   </tbody>
@@ -1135,7 +1139,7 @@ function BarterBar({
             const condBonus = Math.round(absDiff * (1 - condFactor) * 0.5); // older = larger negotiation margin
             const fairBand = bestPrice * 0.05;
             const inFairBand = absDiff <= fairBand;
-            const diEquiv = (absDiff / DI_TO_SAR).toFixed(2);
+            void DI_TO_SAR;
 
             type Opt = { tone: "ok" | "pay" | "gain" | "swap"; text: React.ReactNode };
             const opts: Opt[] = [];
@@ -1144,13 +1148,13 @@ function BarterBar({
               opts.push({ tone: "ok", text: <>✅ <b>أتمم الصفقة كما هي</b> — الفرق ({absDiff.toLocaleString()} ر.س ≈ {pctDiff.toFixed(1)}%) ضمن هامش العدالة (≤5%).</> });
             }
             if (priceDiff > 0) {
-              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً للطرف الآخر.</> });
+              opts.push({ tone: "pay", text: <>💰 <b>طابق القيمة:</b> ادفع <b>{absDiff.toLocaleString()} ر.س</b> نقداً للطرف الآخر.</> });
               if (condBonus > 50) {
                 opts.push({ tone: "swap", text: <>📉 <b>تفاوض بسبب الحالة ({product.condition}):</b> اعرض خصماً قدره <b>{condBonus.toLocaleString()} ر.س</b> فقط بدل المبلغ الكامل.</> });
               }
               opts.push({ tone: "swap", text: <>➕ <b>أضف عنصراً تكميلياً</b> من جهتك بقيمة تقارب <b>{absDiff.toLocaleString()} ر.س</b> لإلغاء الفرق نقدياً.</> });
             } else if (priceDiff < 0) {
-              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> ({diEquiv} DI) نقداً أو كرصيد DI.</> });
+              opts.push({ tone: "gain", text: <>💵 <b>اطلب فرقاً لصالحك:</b> <b>{absDiff.toLocaleString()} ر.س</b> نقداً.</> });
               if (condBonus > 50) {
                 opts.push({ tone: "swap", text: <>📈 <b>زيادة بسبب الحالة:</b> اطلب علاوة <b>+{condBonus.toLocaleString()} ر.س</b> أعلى من الفرق الأساسي لتعويض جودة سلعتك.</> });
               }

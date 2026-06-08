@@ -163,12 +163,12 @@ function ProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
             <div className="rounded-xl bg-card p-3 border border-border">
-              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2">الطرف (أ) — {lastAnalysis.diA.toLocaleString()} DI</div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2">الطرف (أ) — {(lastAnalysis.diA * SAR_PER_DI).toLocaleString()} ر.س</div>
               <ul className="text-sm space-y-1">
                 {lastAnalysis.itemsA.map((it, i) => (
                   <li key={i} className="flex justify-between gap-2">
                     <span className="truncate">{it.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{it.di} DI</span>
+                    <span className="font-mono text-xs text-muted-foreground">{(it.di * SAR_PER_DI).toLocaleString()} ر.س</span>
                   </li>
                 ))}
               </ul>
@@ -179,12 +179,12 @@ function ProfilePage() {
               <ArrowLeftRight className="size-5 mx-auto mt-1 text-primary" />
             </div>
             <div className="rounded-xl bg-card p-3 border border-border">
-              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2">الطرف (ب) — {lastAnalysis.diB.toLocaleString()} DI</div>
+              <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2">الطرف (ب) — {(lastAnalysis.diB * SAR_PER_DI).toLocaleString()} ر.س</div>
               <ul className="text-sm space-y-1">
                 {lastAnalysis.itemsB.map((it, i) => (
                   <li key={i} className="flex justify-between gap-2">
                     <span className="truncate">{it.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{it.di} DI</span>
+                    <span className="font-mono text-xs text-muted-foreground">{(it.di * SAR_PER_DI).toLocaleString()} ر.س</span>
                   </li>
                 ))}
               </ul>

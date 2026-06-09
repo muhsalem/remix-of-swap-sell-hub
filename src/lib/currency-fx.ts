@@ -20,6 +20,31 @@ export const FX_VS_SAR: Record<string, FxEntry> = {
   GBP: { label: "بريطانيا",  symbol: "£",    perSAR: 0.211,  flag: "🇬🇧" },
 };
 
+// ---------- Live FX overlay (24h client cache) ----------
+const FX_CACHE_KEY = "badel:fx-live";
+const FX_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Apply live perSAR rates onto FX_VS_SAR in-place. Safe to call repeatedly. */
+export function applyLiveFx(perSAR: Record<string, number>) {
+  for (const [code, rate] of Object.entries(perSAR)) {
+    if (FX_VS_SAR[code] && Number(rate) > 0) FX_VS_SAR[code].perSAR = Number(rate);
+  }
+}
+export function loadCachedFx(): { perSAR: Record<string, number>; fetchedAt: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(FX_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.fetchedAt || Date.now() - parsed.fetchedAt > FX_TTL_MS) return null;
+    return parsed;
+  } catch { return null; }
+}
+export function saveCachedFx(perSAR: Record<string, number>, fetchedAt: number) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(FX_CACHE_KEY, JSON.stringify({ perSAR, fetchedAt })); } catch { /* ignore */ }
+}
+
 export const COUNTRY_STORAGE_KEY = "badel:country";
 
 export function detectCountry(): string {

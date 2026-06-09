@@ -13,7 +13,8 @@ import {
   Briefcase, GraduationCap, Stethoscope, Banknote, Code2,
 } from "lucide-react";
 import { FAMILIES, ITEMS as CATALOG_ITEMS, familiesByType, type FamilyEntry } from "@/lib/badel-catalog";
-import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry, sarToLocal } from "@/lib/currency-fx";
+import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry, sarToLocal, applyLiveFx, loadCachedFx, saveCachedFx } from "@/lib/currency-fx";
+import { getLiveFx } from "@/lib/fx-live.functions";
 import { loadCashOnly } from "@/lib/region-mode";
 
 // ============================================================
@@ -109,6 +110,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   const [cashOnly, setCashOnly] = useState<boolean>(false);
   // العملة الرقمية الداخلية (DI) مؤجَّلة حالياً — تُخفى من واجهة المستخدم بالكامل.
   const showDi = false;
+  const [fxTick, setFxTick] = useState(0);
+  const fxFn = useServerFn(getLiveFx);
   useEffect(() => {
     const c = detectCurrency();
     if (c !== country) {
@@ -116,6 +119,20 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       setItems((prev) => prev.map((p) => ({ ...p, currency: c })));
     }
     setCashOnly(loadCashOnly(c));
+    // Load FX: cache first, else fetch live.
+    const cached = loadCachedFx();
+    if (cached?.perSAR) {
+      applyLiveFx(cached.perSAR);
+      setFxTick((n) => n + 1);
+    } else {
+      fxFn().then((r) => {
+        if (r?.perSAR && Object.keys(r.perSAR).length > 0) {
+          applyLiveFx(r.perSAR);
+          saveCachedFx(r.perSAR, r.fetchedAt);
+          setFxTick((n) => n + 1);
+        }
+      }).catch(() => { /* keep static fallback */ });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { setCashOnly(loadCashOnly(country)); }, [country]);
@@ -340,8 +357,13 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               {/* ===== Inline live currency converter ===== */}
               <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90">
+                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5">
                     بعملتك المحلية
+                    {fxTick > 0 && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-400/30 ring-1 ring-emerald-200/40" title="أسعار صرف حيّة محدّثة">
+                        LIVE
+                      </span>
+                    )}
                   </div>
                   <select
                     value={country}

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase as anonClient } from "@/integrations/supabase/client";
+import { checkHaram } from "./haram-filter";
 
 const ConditionEnum = z.enum(["new", "like-new", "excellent", "good", "fair"]);
 
@@ -58,6 +59,20 @@ export const createListing = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ListingInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // فحص شرعي/قانوني للسلع المحرّمة قبل الإدراج
+    const haram = checkHaram({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      wants: data.wants,
+    });
+    if (!haram.allowed) {
+      throw new Error(
+        `لا يمكن نشر هذا الإعلان — تصنيف محظور: ${haram.category}. ${haram.reason}`,
+      );
+    }
+
     const { data: row, error } = await supabase
       .from("listings")
       .insert({ ...data, owner_id: userId })

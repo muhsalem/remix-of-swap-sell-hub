@@ -373,6 +373,34 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </p>
               )}
 
+              {result?.confidence && (
+                <div className="mt-3 px-3 py-2 rounded-xl bg-white/10 backdrop-blur ring-1 ring-white/20">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className={`size-2 rounded-full ${
+                        result.confidence.level === "high" ? "bg-emerald-300" :
+                        result.confidence.level === "medium" ? "bg-amber-300" :
+                        "bg-rose-300"
+                      }`} />
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider opacity-90">
+                        ثقة {result.confidence.level === "high" ? "عالية" : result.confidence.level === "medium" ? "متوسطة" : "أولية"} · {result.confidence.score}%
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold opacity-80">
+                      {result.confidence.sampleCount} مرجع
+                    </span>
+                  </div>
+                  <div className="mt-1 text-xs font-extrabold tabular-nums">
+                    النطاق المتوقع: {sarToLocal(result.confidence.minSAR, country).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {" – "}
+                    {sarToLocal(result.confidence.maxSAR, country).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {" "}{FX_VS_SAR[country]?.symbol}
+                  </div>
+                  <p className="text-[10px] opacity-75 mt-1 leading-snug">{result.confidence.note}</p>
+                </div>
+              )}
+
+
               <div className="mt-4">
                 {shariah ? (
                   <div className={`px-4 py-3 rounded-2xl text-sm font-extrabold flex items-start gap-2 backdrop-blur ${

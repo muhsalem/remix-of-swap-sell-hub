@@ -366,6 +366,42 @@ export const calculateBarter = createServerFn({ method: "POST" })
     const shariah = analyzeShariahMulti(sideAAdj, sideBAdj, cashBalance, serviceBarter);
     const equivalence = buildEquivalence(Math.min(valueA, valueB));
 
+    // ===== درجة الثقة في التقييم =====
+    // تعتمد على عدد المراجع التاريخية في price_history للسلعة الرئيسية للجانب (أ)
+    let sampleCount = 0;
+    try {
+      const { supabase: anonClient2 } = await import("@/integrations/supabase/client");
+      const primary = sideAAdj[0];
+      if (primary) {
+        const key = primary.name.toLowerCase().trim();
+        const { data: hist } = await anonClient2
+          .from("price_history")
+          .select("price")
+          .eq("category", primary.category)
+          .eq("title_key", key)
+          .limit(30);
+        sampleCount = hist?.length ?? 0;
+      }
+    } catch { /* keep 0 */ }
+    const confLevel: "low" | "medium" | "high" =
+      sampleCount >= 10 ? "high" : sampleCount >= 3 ? "medium" : "low";
+    const band = confLevel === "high" ? 0.06 : confLevel === "medium" ? 0.10 : 0.15;
+    const confScore = confLevel === "high" ? 90 : confLevel === "medium" ? 70 : 45;
+    const confidence = {
+      level: confLevel,
+      score: confScore,
+      minSAR: Math.round(valueA * (1 - band)),
+      maxSAR: Math.round(valueA * (1 + band)),
+      sampleCount,
+      note:
+        confLevel === "high"
+          ? `تقدير عالي الثقة مبني على ${sampleCount} عملية مرجعية مشابهة.`
+          : confLevel === "medium"
+            ? `تقدير متوسط الثقة (${sampleCount} مرجع). النطاق المتوقع ±${Math.round(band * 100)}%.`
+            : `تقدير أولي — لا توجد مراجع كافية. النطاق المتوقع ±${Math.round(band * 100)}%.`,
+    };
+
+
     let recommendation =
       cashBalance < avg * 0.03
         ? "الصفقة متوازنة — يمكن إتمامها مباشرة."
@@ -428,5 +464,6 @@ ${serviceBarter ? "- وضع: مقايضة خدمة بخدمة" : ""}
       breakdownA, breakdownB, shariah, equivalence,
       itemsA: itemsA.map((x) => ({ name: x.product.name, sar: x.b.finalSAR, di: toDI(x.b.finalSAR) })),
       itemsB: itemsB.map((x) => ({ name: x.product.name, sar: x.b.finalSAR, di: toDI(x.b.finalSAR) })),
+      confidence,
     };
   });

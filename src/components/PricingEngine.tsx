@@ -357,8 +357,13 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               {/* ===== Inline live currency converter ===== */}
               <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90">
+                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5">
                     بعملتك المحلية
+                    {fxTick > 0 && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-400/30 ring-1 ring-emerald-200/40" title="أسعار صرف حيّة محدّثة">
+                        LIVE
+                      </span>
+                    )}
                   </div>
                   <select
                     value={country}

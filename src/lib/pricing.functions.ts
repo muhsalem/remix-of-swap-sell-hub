@@ -85,6 +85,14 @@ export type PricingResult = {
   equivalence: string;
   itemsA: { name: string; sar: number; di: number }[];
   itemsB: { name: string; sar: number; di: number }[];
+  confidence: {
+    level: "low" | "medium" | "high";
+    score: number;          // 0..100
+    minSAR: number;         // الحد الأدنى للنطاق
+    maxSAR: number;         // الحد الأعلى للنطاق
+    sampleCount: number;    // عدد المراجع المستخدمة
+    note: string;
+  };
 };
 
 const CONDITION_FACTOR: Record<string, number> = {

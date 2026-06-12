@@ -22,6 +22,8 @@ function NewListing() {
   const fn = useServerFn(createListing);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [ownsItem, setOwnsItem] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",

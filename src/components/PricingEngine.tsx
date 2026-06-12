@@ -111,6 +111,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   // العملة الرقمية الداخلية (DI) مؤجَّلة حالياً — تُخفى من واجهة المستخدم بالكامل.
   const showDi = false;
   const [fxTick, setFxTick] = useState(0);
+  const [fxSource, setFxSource] = useState<"live" | "cache" | null>(null);
+  const [fxFetchedAt, setFxFetchedAt] = useState<number | null>(null);
   const fxFn = useServerFn(getLiveFx);
   useEffect(() => {
     const c = detectCurrency();
@@ -119,20 +121,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       setItems((prev) => prev.map((p) => ({ ...p, currency: c })));
     }
     setCashOnly(loadCashOnly(c));
-    // Load FX: cache first, else fetch live.
+    // Load FX: cache first (show immediately), then refresh live in background.
     const cached = loadCachedFx();
     if (cached?.perSAR) {
       applyLiveFx(cached.perSAR);
+      setFxSource("cache");
+      setFxFetchedAt(cached.fetchedAt);
       setFxTick((n) => n + 1);
-    } else {
-      fxFn().then((r) => {
-        if (r?.perSAR && Object.keys(r.perSAR).length > 0) {
-          applyLiveFx(r.perSAR);
-          saveCachedFx(r.perSAR, r.fetchedAt);
-          setFxTick((n) => n + 1);
-        }
-      }).catch(() => { /* keep static fallback */ });
     }
+    fxFn().then((r) => {
+      if (r?.perSAR && Object.keys(r.perSAR).length > 0) {
+        applyLiveFx(r.perSAR);
+        saveCachedFx(r.perSAR, r.fetchedAt);
+        setFxSource("live");
+        setFxFetchedAt(r.fetchedAt);
+        setFxTick((n) => n + 1);
+      }
+    }).catch(() => { /* keep static fallback */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { setCashOnly(loadCashOnly(country)); }, [country]);

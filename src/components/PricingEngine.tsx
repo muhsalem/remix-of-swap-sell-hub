@@ -17,6 +17,18 @@ import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry, sarToLocal, applyLiveFx
 import { getLiveFx } from "@/lib/fx-live.functions";
 import { loadCashOnly } from "@/lib/region-mode";
 
+function formatFxAge(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 0 || diff < 60_000) return "الآن";
+  const m = Math.floor(diff / 60_000);
+  if (m < 60) return `قبل ${m} د`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `قبل ${h} س`;
+  const d = Math.floor(h / 24);
+  return `قبل ${d} يوم`;
+}
+
+
 // ============================================================
 // Types
 // ============================================================
@@ -111,6 +123,8 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
   // العملة الرقمية الداخلية (DI) مؤجَّلة حالياً — تُخفى من واجهة المستخدم بالكامل.
   const showDi = false;
   const [fxTick, setFxTick] = useState(0);
+  const [fxSource, setFxSource] = useState<"live" | "cache" | null>(null);
+  const [fxFetchedAt, setFxFetchedAt] = useState<number | null>(null);
   const fxFn = useServerFn(getLiveFx);
   useEffect(() => {
     const c = detectCurrency();
@@ -119,20 +133,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
       setItems((prev) => prev.map((p) => ({ ...p, currency: c })));
     }
     setCashOnly(loadCashOnly(c));
-    // Load FX: cache first, else fetch live.
+    // Load FX: cache first (show immediately), then refresh live in background.
     const cached = loadCachedFx();
     if (cached?.perSAR) {
       applyLiveFx(cached.perSAR);
+      setFxSource("cache");
+      setFxFetchedAt(cached.fetchedAt);
       setFxTick((n) => n + 1);
-    } else {
-      fxFn().then((r) => {
-        if (r?.perSAR && Object.keys(r.perSAR).length > 0) {
-          applyLiveFx(r.perSAR);
-          saveCachedFx(r.perSAR, r.fetchedAt);
-          setFxTick((n) => n + 1);
-        }
-      }).catch(() => { /* keep static fallback */ });
     }
+    fxFn().then((r) => {
+      if (r?.perSAR && Object.keys(r.perSAR).length > 0) {
+        applyLiveFx(r.perSAR);
+        saveCachedFx(r.perSAR, r.fetchedAt);
+        setFxSource("live");
+        setFxFetchedAt(r.fetchedAt);
+        setFxTick((n) => n + 1);
+      }
+    }).catch(() => { /* keep static fallback */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { setCashOnly(loadCashOnly(country)); }, [country]);
@@ -357,11 +374,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               {/* ===== Inline live currency converter ===== */}
               <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5 flex-wrap">
                     بعملتك المحلية
-                    {fxTick > 0 && (
-                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-400/30 ring-1 ring-emerald-200/40" title="أسعار صرف حيّة محدّثة">
-                        LIVE
+                    {fxSource && (
+                      <span
+                        className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ring-1 ${
+                          fxSource === "live"
+                            ? "bg-emerald-400/30 ring-emerald-200/40"
+                            : "bg-amber-400/30 ring-amber-200/40"
+                        }`}
+                        title={fxSource === "live" ? "أسعار صرف حيّة من open.er-api.com" : "أسعار صرف من ذاكرة التخزين المؤقت (24 ساعة)"}
+                      >
+                        {fxSource === "live" ? "LIVE" : "CACHE"}
+                      </span>
+                    )}
+                    {fxFetchedAt && (
+                      <span className="text-[10px] font-medium opacity-75 normal-case tracking-normal">
+                        · آخر تحديث {formatFxAge(fxFetchedAt)}
                       </span>
                     )}
                   </div>

@@ -17,6 +17,18 @@ import { FX_VS_SAR, DI_TO_SAR, loadCountry, saveCountry, sarToLocal, applyLiveFx
 import { getLiveFx } from "@/lib/fx-live.functions";
 import { loadCashOnly } from "@/lib/region-mode";
 
+function formatFxAge(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 0 || diff < 60_000) return "الآن";
+  const m = Math.floor(diff / 60_000);
+  if (m < 60) return `قبل ${m} د`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `قبل ${h} س`;
+  const d = Math.floor(h / 24);
+  return `قبل ${d} يوم`;
+}
+
+
 // ============================================================
 // Types
 // ============================================================

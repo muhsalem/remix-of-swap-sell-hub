@@ -198,9 +198,44 @@ function NewListing() {
             </div>
           )}
 
+          {/* Ownership & legal acknowledgment */}
+          <div className="rounded-2xl border border-border bg-stone-soft/50 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-extrabold text-foreground">
+              <ShieldCheck className="size-4 text-primary" />
+              إقرارات ضرورية قبل النشر
+            </div>
+            <label className="flex items-start gap-2 cursor-pointer text-xs leading-relaxed">
+              <input
+                type="checkbox"
+                required
+                checked={ownsItem}
+                onChange={(e) => setOwnsItem(e.target.checked)}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span>
+                أُقرّ بأنني <strong>المالك الشرعي</strong> لهذه السلعة/الخدمة، وأنها <strong>خالية من الرهن أو النزاع</strong>، ويحق لي التصرف فيها قانونياً.
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer text-xs leading-relaxed">
+              <input
+                type="checkbox"
+                required
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span>
+                وافقت على{" "}
+                <Link to="/legal/$doc" params={{ doc: "terms" }} className="text-primary underline">شروط الاستخدام</Link>{" "}و{" "}
+                <Link to="/legal/$doc" params={{ doc: "barter-agreement" }} className="text-primary underline">اتفاقية المقايضة</Link>{" "}و{" "}
+                <Link to="/legal/$doc" params={{ doc: "anti-riba" }} className="text-primary underline">سياسة مكافحة الربا</Link>.
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={mutation.isPending || uploading}
+            disabled={mutation.isPending || uploading || !ownsItem || !acceptTerms}
             className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {mutation.isPending && <Loader2 className="size-4 animate-spin" />}

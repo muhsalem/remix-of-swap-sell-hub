@@ -362,11 +362,23 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
               {/* ===== Inline live currency converter ===== */}
               <div className="mt-4 p-3 rounded-2xl bg-white/12 backdrop-blur ring-1 ring-white/20">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wider font-extrabold opacity-90 flex items-center gap-1.5 flex-wrap">
                     بعملتك المحلية
-                    {fxTick > 0 && (
-                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-400/30 ring-1 ring-emerald-200/40" title="أسعار صرف حيّة محدّثة">
-                        LIVE
+                    {fxSource && (
+                      <span
+                        className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ring-1 ${
+                          fxSource === "live"
+                            ? "bg-emerald-400/30 ring-emerald-200/40"
+                            : "bg-amber-400/30 ring-amber-200/40"
+                        }`}
+                        title={fxSource === "live" ? "أسعار صرف حيّة من open.er-api.com" : "أسعار صرف من ذاكرة التخزين المؤقت (24 ساعة)"}
+                      >
+                        {fxSource === "live" ? "LIVE" : "CACHE"}
+                      </span>
+                    )}
+                    {fxFetchedAt && (
+                      <span className="text-[10px] font-medium opacity-75 normal-case tracking-normal">
+                        · آخر تحديث {formatFxAge(fxFetchedAt)}
                       </span>
                     )}
                   </div>

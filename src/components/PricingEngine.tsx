@@ -451,6 +451,13 @@ export function PricingEngine({ embedded = false }: { embedded?: boolean }) {
                 </div>
               )}
 
+              {/* Legal disclaimer — non-binding valuation */}
+              <div className="mt-3 px-3 py-2 rounded-xl bg-white/10 ring-1 ring-white/15 text-[10px] leading-relaxed opacity-90">
+                <strong>تنويه:</strong> هذا التقييم إرشادي يعتمد على بيانات السوق ومحرّك ذكاء اصطناعي، ولا يُعدّ تقييماً معتمداً أو رأياً قانونياً أو خبرة قضائية. السعر النهائي يتحدّد بتراضي الطرفين.
+              </div>
+
+
+
 
               <div className="mt-4">
                 {shariah ? (

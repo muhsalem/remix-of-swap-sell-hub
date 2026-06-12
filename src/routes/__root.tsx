@@ -122,6 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthListener />
       <Outlet />
+      <CookieConsent />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
     </QueryClientProvider>
   );

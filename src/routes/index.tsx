@@ -37,6 +37,35 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "بيع، اشترِ، أو قايض بعدالة عبر محرك تسعير ذكي مدعوم بالذكاء الاصطناعي." },
       { property: "og:title", content: "بادل — منصة المقايضة الذكية" },
       { property: "og:description", content: "بيع واشترِ وقايض بثقة وعدالة." },
+      { property: "og:type", content: "website" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "بادل",
+              alternateName: "Badel",
+              url: "/",
+              description: "منصة سعودية للمقايضة العادلة بين الأفراد والشركات.",
+            },
+            {
+              "@type": "WebSite",
+              name: "بادل",
+              url: "/",
+              inLanguage: "ar",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "/?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Index,

@@ -30,6 +30,21 @@ export const Route = createFileRoute("/listings/$id")({
       ? supabase.storage.from("listing-images").getPublicUrl(ogImagePath).data.publicUrl
       : undefined;
     const url = `/listings/${params.id}`;
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: l.title,
+      description: desc,
+      category: l.category,
+      ...(ogImage ? { image: ogImage } : {}),
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "SAR",
+        price: Number(l.market_price ?? 0),
+        availability: "https://schema.org/InStock",
+        url,
+      },
+    };
     return {
       meta: [
         { title: `${l.title} — بادل` },
@@ -45,6 +60,9 @@ export const Route = createFileRoute("/listings/$id")({
         ] : []),
       ],
       links: [{ rel: "canonical", href: url }],
+      scripts: [
+        { type: "application/ld+json", children: JSON.stringify(jsonLd) },
+      ],
     };
   },
   errorComponent: ({ error }) => <div className="p-12 text-center">{error.message}</div>,

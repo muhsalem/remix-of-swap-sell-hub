@@ -109,6 +109,11 @@ function OfferDetailPage() {
             <ListingMini listing={offer.requested} title={isReceiver ? "ما يطلبه" : "ما طلبته"} />
           </div>
 
+          {offer.anchor_price_sar && offer.anchor_expires_at && (
+            <AnchorBadge price={Number(offer.anchor_price_sar)} expiresAt={offer.anchor_expires_at} status={offer.status} />
+          )}
+
+
           {offer.message && (
             <div className="mt-6 p-4 bg-stone-soft rounded-2xl text-sm">
               <span className="text-xs text-muted-foreground block mb-1">رسالة العارض:</span>

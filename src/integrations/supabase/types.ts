@@ -723,6 +723,8 @@ export type Database = {
       }
       trade_offers: {
         Row: {
+          anchor_expires_at: string | null
+          anchor_price_sar: number | null
           cash_balance: number | null
           created_at: string
           delivery_confirmed_by_from: boolean
@@ -748,6 +750,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anchor_expires_at?: string | null
+          anchor_price_sar?: number | null
           cash_balance?: number | null
           created_at?: string
           delivery_confirmed_by_from?: boolean
@@ -773,6 +777,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anchor_expires_at?: string | null
+          anchor_price_sar?: number | null
           cash_balance?: number | null
           created_at?: string
           delivery_confirmed_by_from?: boolean

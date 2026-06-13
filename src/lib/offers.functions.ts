@@ -57,6 +57,15 @@ export const createOffer = createServerFn({ method: "POST" })
 
 
 
+    // تثبيت السعر (Anchor) لمدة 24 ساعة من لحظة إنشاء العرض
+    const { data: requestedPrice } = await supabase
+      .from("listings")
+      .select("market_price")
+      .eq("id", data.requested_listing)
+      .maybeSingle();
+    const anchorPrice = Number(requestedPrice?.market_price ?? 0) + Number(data.cash_balance ?? 0);
+    const anchorExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
     const { data: row, error } = await supabase
       .from("trade_offers")
       .insert({
@@ -67,6 +76,8 @@ export const createOffer = createServerFn({ method: "POST" })
         message: data.message,
         cash_balance: data.cash_balance,
         fairness_score: data.fairness_score ?? null,
+        anchor_price_sar: anchorPrice > 0 ? anchorPrice : null,
+        anchor_expires_at: anchorPrice > 0 ? anchorExpires : null,
       })
       .select("id")
       .single();

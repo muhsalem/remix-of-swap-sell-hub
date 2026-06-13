@@ -40,9 +40,13 @@ function DisputesPage() {
     <div dir="rtl" className="min-h-screen bg-background font-body">
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-extrabold mb-6 flex items-center gap-2">
+        <h1 className="text-2xl font-extrabold mb-3 flex items-center gap-2">
           <AlertTriangle className="text-destructive" /> النزاعات والضمان
         </h1>
+        <div className="mb-6 rounded-2xl bg-primary/5 ring-1 ring-primary/20 p-3 text-xs leading-relaxed">
+          <b>التزامنا (SLA):</b> أول رد خلال <b>24 ساعة</b> · قرار ابتدائي خلال <b>72 ساعة</b> · قرار نهائي ≤ <b>7 أيام عمل</b>. المبلغ يظل في حساب الضمان حتى الحسم.{" "}
+          <Link to="/legal/$doc" params={{ doc: "sla" }} className="text-primary font-bold hover:underline">تفاصيل اتفاقية مستوى الخدمة ←</Link>
+        </div>
         {data.disputes.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">لا توجد نزاعات.</p>
         ) : (

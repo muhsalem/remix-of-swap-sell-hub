@@ -402,3 +402,28 @@ function ShippingBlock({ offer, userId, qc }: { offer: any; userId: string; qc: 
     </div>
   );
 }
+
+function AnchorBadge({ price, expiresAt, status }: { price: number; expiresAt: string; status: string }) {
+  const expired = new Date(expiresAt).getTime() < Date.now();
+  const locked = status === "accepted" || status === "completed";
+  const hoursLeft = Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 3_600_000));
+  return (
+    <div className={`mt-4 rounded-2xl p-3 text-xs flex flex-wrap items-center gap-2 ring-1 ${
+      locked ? "bg-emerald-50 ring-emerald-200 text-emerald-800"
+      : expired ? "bg-amber-50 ring-amber-200 text-amber-800"
+      : "bg-primary/5 ring-primary/20 text-foreground"
+    }`}>
+      <span className="font-extrabold">🔒 سعر مُثبَّت:</span>
+      <span className="font-bold">{price.toLocaleString()} ر.س</span>
+      <span className="text-muted-foreground">·</span>
+      {locked ? (
+        <span>تم تثبيت السعر نهائياً بقبول الصفقة.</span>
+      ) : expired ? (
+        <span>انتهت صلاحية التثبيت — يمكن إعادة التفاوض.</span>
+      ) : (
+        <span>صالح لمدة ~{hoursLeft} ساعة (حتى {new Date(expiresAt).toLocaleString("ar")})</span>
+      )}
+    </div>
+  );
+}
+

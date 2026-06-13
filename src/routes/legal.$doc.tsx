@@ -284,6 +284,7 @@ function LegalDoc() {
             <Link to="/legal/$doc" params={{ doc: "anti-riba" }} className="hover:text-foreground">مكافحة الربا</Link>
             <Link to="/legal/$doc" params={{ doc: "refund-policy" }} className="hover:text-foreground">الاسترداد</Link>
             <Link to="/legal/$doc" params={{ doc: "fees" }} className="hover:text-foreground">الرسوم</Link>
+            <Link to="/legal/$doc" params={{ doc: "sla" }} className="hover:text-foreground">مستوى الخدمة</Link>
           </nav>
         </div>
       </header>

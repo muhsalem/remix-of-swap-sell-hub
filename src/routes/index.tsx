@@ -288,6 +288,14 @@ function Index() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">المدينة</span>
+                  <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">كل المدن</option>
+                    {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">

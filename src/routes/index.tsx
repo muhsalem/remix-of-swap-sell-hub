@@ -3,7 +3,8 @@ import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-que
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizontal } from "lucide-react";
+import { Search, Sparkles, ArrowLeftRight, Loader2, Repeat2, Star, SlidersHorizontal, MapPin, BellPlus } from "lucide-react";
+import { toast } from "sonner";
 import { MatchFinder } from "@/components/MatchFinder";
 import { Nav } from "@/components/Nav";
 import { Hero } from "@/components/Hero";
@@ -13,6 +14,8 @@ import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
+import { addWishlistAlert } from "@/lib/wishlist.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const listingsQuery = queryOptions({
   queryKey: ["active-listings"],
@@ -83,6 +86,7 @@ function Index() {
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [condFilter, setCondFilter] = useState<string>(urlSearch.cond || "");
+  const [cityFilter, setCityFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(urlSearch.sort || "newest");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -93,6 +97,28 @@ function Index() {
     setCondFilter(urlSearch.cond || "");
     setSortBy(urlSearch.sort || "newest");
   }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.sort]);
+
+  // Available cities (from active listings)
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of listings) if ((l as any).city) set.add(String((l as any).city));
+    return Array.from(set).sort();
+  }, [listings]);
+
+  // Save-search alert
+  const addAlertFn = useServerFn(addWishlistAlert);
+  const saveSearchM = useMutation({
+    mutationFn: (term: string) => addAlertFn({ data: { searchTerm: term } }),
+    onSuccess: (r) => toast.success(r.duplicate ? "تنبيه مفعّل مسبقاً" : "تم تفعيل التنبيه — سنُعلمك فور توفّر ما يطابق بحثك"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر حفظ البحث"),
+  });
+  const handleSaveSearch = async () => {
+    const term = (query || activeCat || "").trim();
+    if (term.length < 2) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("سجّل دخولك أولاً لحفظ البحث"); return; }
+    saveSearchM.mutate(term);
+  };
 
   // Match mode — when user provides both "have" and "want"
   const matchFn = useServerFn(matchListings);
@@ -124,15 +150,16 @@ function Index() {
     if (min !== null) out = out.filter((x) => Number(x.l.market_price) >= min);
     if (max !== null) out = out.filter((x) => Number(x.l.market_price) <= max);
     if (condFilter) out = out.filter((x) => x.l.condition === condFilter);
+    if (cityFilter) out = out.filter((x) => (x.l as any).city === cityFilter);
     if (sortBy === "price-asc") out = [...out].sort((a, b) => Number(a.l.market_price) - Number(b.l.market_price));
     else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
     else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
     return out;
-  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, sortBy, fx.perSAR]);
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, cityFilter, sortBy, fx.perSAR]);
 
-  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter);
+  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter || cityFilter);
   const resetFilters = () => {
-    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setSortBy("newest");
+    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setCityFilter(""); setSortBy("newest");
   };
 
   const sectionTitle = matchMode
@@ -261,6 +288,14 @@ function Index() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">المدينة</span>
+                  <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">كل المدن</option>
+                    {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
@@ -296,9 +331,23 @@ function Index() {
                     : `${listings.length} عرض نشط`}
               </p>
             </div>
-            <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
-              أضف عرضك
-            </Link>
+            <div className="flex items-center gap-2">
+              {(query || activeCat) && !matchMode && (
+                <button
+                  type="button"
+                  onClick={handleSaveSearch}
+                  disabled={saveSearchM.isPending}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold border border-primary/40 text-primary hover:bg-primary/5 transition disabled:opacity-50"
+                  title="أبلغني عند توفّر سلعة تطابق هذا البحث"
+                >
+                  {saveSearchM.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <BellPlus className="size-3.5" />}
+                  أبلغني
+                </button>
+              )}
+              <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
+                أضف عرضك
+              </Link>
+            </div>
           </div>
 
           {matchMode ? (
@@ -371,12 +420,21 @@ function Index() {
                     <div className="absolute top-3 left-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
                       {l.condition}
                     </div>
+                    {(l as any).city && (
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-foreground/80 text-background text-[10px] font-bold rounded-full flex items-center gap-1 backdrop-blur">
+                        <MapPin className="size-3" /> {(l as any).city}
+                      </div>
+                    )}
                   </div>
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب مقابله: {l.wants}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-1">مطلوب مقابله: {l.wants}</p>
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
                     <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
-                    <span className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">قيّم ←</span>
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${(l as any).profiles?.trades_count ?? 0} صفقة مكتملة`}>
+                      <Star className="size-3 fill-accent text-accent" />
+                      {Number((l as any).profiles?.rating ?? 0).toFixed(1)}
+                      <span className="opacity-60">({(l as any).profiles?.trades_count ?? 0})</span>
+                    </span>
                   </div>
                 </Link>
               ))}

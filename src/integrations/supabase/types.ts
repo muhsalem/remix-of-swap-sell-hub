@@ -198,6 +198,7 @@ export type Database = {
           age_months: number
           boost_count: number
           category: string
+          city: string | null
           condition: Database["public"]["Enums"]["listing_condition"]
           created_at: string
           description: string | null
@@ -220,6 +221,7 @@ export type Database = {
           age_months?: number
           boost_count?: number
           category: string
+          city?: string | null
           condition: Database["public"]["Enums"]["listing_condition"]
           created_at?: string
           description?: string | null
@@ -242,6 +244,7 @@ export type Database = {
           age_months?: number
           boost_count?: number
           category?: string
+          city?: string | null
           condition?: Database["public"]["Enums"]["listing_condition"]
           created_at?: string
           description?: string | null

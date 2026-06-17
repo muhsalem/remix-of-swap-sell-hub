@@ -331,9 +331,23 @@ function Index() {
                     : `${listings.length} عرض نشط`}
               </p>
             </div>
-            <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
-              أضف عرضك
-            </Link>
+            <div className="flex items-center gap-2">
+              {(query || activeCat) && !matchMode && (
+                <button
+                  type="button"
+                  onClick={handleSaveSearch}
+                  disabled={saveSearchM.isPending}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold border border-primary/40 text-primary hover:bg-primary/5 transition disabled:opacity-50"
+                  title="أبلغني عند توفّر سلعة تطابق هذا البحث"
+                >
+                  {saveSearchM.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <BellPlus className="size-3.5" />}
+                  أبلغني
+                </button>
+              )}
+              <Link to="/new-listing" className="hidden sm:inline-flex px-5 py-2.5 bg-foreground text-background rounded-full text-sm font-bold hover:bg-primary transition-all">
+                أضف عرضك
+              </Link>
+            </div>
           </div>
 
           {matchMode ? (
@@ -406,12 +420,21 @@ function Index() {
                     <div className="absolute top-3 left-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
                       {l.condition}
                     </div>
+                    {(l as any).city && (
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-foreground/80 text-background text-[10px] font-bold rounded-full flex items-center gap-1 backdrop-blur">
+                        <MapPin className="size-3" /> {(l as any).city}
+                      </div>
+                    )}
                   </div>
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-1">مطلوب مقابله: {l.wants}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-1">مطلوب مقابله: {l.wants}</p>
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
                     <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
-                    <span className="text-primary text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">قيّم ←</span>
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${(l as any).profiles?.trades_count ?? 0} صفقة مكتملة`}>
+                      <Star className="size-3 fill-accent text-accent" />
+                      {Number((l as any).profiles?.rating ?? 0).toFixed(1)}
+                      <span className="opacity-60">({(l as any).profiles?.trades_count ?? 0})</span>
+                    </span>
                   </div>
                 </Link>
               ))}

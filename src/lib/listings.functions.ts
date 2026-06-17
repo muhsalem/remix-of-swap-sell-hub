@@ -16,12 +16,13 @@ const ListingInput = z.object({
   wants: z.string().min(2).max(200),
   images: z.array(z.string().min(1).max(500)).max(8).default([]),
   is_ribawi: z.boolean().default(false),
+  city: z.string().trim().min(2).max(60).optional().or(z.literal("")).transform((v) => (v ? v : undefined)),
 });
 
 export const listActiveListings = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await anonClient
     .from("listings")
-    .select("id,title,category,condition,age_months,market_price,wants,images,status,is_ribawi,created_at,owner_id,profiles:owner_id(display_name,avatar_url,rating)")
+    .select("id,title,category,condition,age_months,market_price,wants,images,status,is_ribawi,created_at,owner_id,city,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(60);
@@ -141,7 +142,7 @@ export const matchListings = createServerFn({ method: "POST" })
 
     const { data: candidates, error } = await anonClient
       .from("listings")
-      .select("id,title,category,condition,market_price,wants,images,owner_id,profiles:owner_id(display_name,avatar_url,rating)")
+      .select("id,title,category,condition,market_price,wants,images,owner_id,city,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
       .eq("status", "active")
       .or(wantOr || "title.ilike.%%")
       .limit(40);

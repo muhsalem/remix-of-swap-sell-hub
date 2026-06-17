@@ -32,6 +32,7 @@ function NewListing() {
     age_months: 0,
     market_price: 0,
     wants: "",
+    city: "",
   });
 
   const isRibawi = RIBAWI.includes(form.category);
@@ -160,6 +161,20 @@ function NewListing() {
               placeholder="مثال: لاب توب MacBook أو كاميرا"
               className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border outline-none text-sm focus:ring-2 ring-primary/30"
             />
+          </Field>
+
+          <Field label="المدينة (اختياري — يساعد المشترين القريبين على إيجادك)">
+            <input
+              list="city-suggestions"
+              minLength={2} maxLength={60}
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="مثال: الرياض، جدة، الدمام..."
+              className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border outline-none text-sm focus:ring-2 ring-primary/30"
+            />
+            <datalist id="city-suggestions">
+              {["الرياض","جدة","مكة المكرمة","المدينة المنورة","الدمام","الخبر","الظهران","الطائف","تبوك","بريدة","أبها","خميس مشيط","حائل","نجران","جازان","ينبع","الأحساء","القطيف"].map((c) => <option key={c} value={c} />)}
+            </datalist>
           </Field>
 
           <Field label="الصور (حتى 8 صور)">

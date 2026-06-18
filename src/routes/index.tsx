@@ -470,7 +470,7 @@ function Index() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map(({ l, score }) => {
-                const isService = /خدم|استشار|تعليم|تدريب/i.test(l.category || "");
+                const isService = ((l as any).listing_type ?? "item") === "service" || /خدم|استشار|تعليم|تدريب/i.test(l.category || "");
                 return (
                 <Link
                   key={l.id}

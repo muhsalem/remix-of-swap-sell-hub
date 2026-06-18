@@ -28,6 +28,10 @@ const searchSchema = z.object({
   q: z.string().optional().default(""),
   cat: z.string().optional().default(""),
   cond: z.string().optional().default(""),
+  city: z.string().optional().default(""),
+  min: z.string().optional().default(""),
+  max: z.string().optional().default(""),
+  type: z.enum(["", "item", "service"]).optional().default(""),
   sort: z.enum(["newest", "price-asc", "price-desc"]).optional().default("newest"),
 });
 

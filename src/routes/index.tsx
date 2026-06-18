@@ -474,6 +474,17 @@ function Index() {
           )}
         </section>
 
+function conditionLabel(c: string | null | undefined) {
+  const map: Record<string, string> = {
+    new: "جديد",
+    "like-new": "شبه جديد",
+    good: "جيد",
+    fair: "مقبول",
+    poor: "مستعمل",
+  };
+  return (c && map[c]) || c || "—";
+}
+
         {/* محرك التسعير (مع باحث المطابقات الحدثي) */}
         <div id="engine" className="scroll-mt-20">
           <MatchFinder />

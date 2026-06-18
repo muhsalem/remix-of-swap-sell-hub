@@ -110,6 +110,29 @@ function NewListing() {
             />
           </Field>
 
+          <Field label="نوع الإعلان *">
+            <div className="flex gap-2">
+              {([
+                { v: "item", label: "سلعة", hint: "منتج مادي" },
+                { v: "service", label: "خدمة", hint: "استشارة، تدريب، عمل" },
+              ] as const).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setForm({ ...form, listing_type: o.v })}
+                  className={`flex-1 px-4 py-3 rounded-xl border text-sm font-bold transition ${
+                    form.listing_type === o.v
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-stone-soft border-border hover:border-primary/40"
+                  }`}
+                >
+                  <div>{o.label}</div>
+                  <div className="text-[10px] font-normal opacity-70 mt-0.5">{o.hint}</div>
+                </button>
+              ))}
+            </div>
+          </Field>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="الفئة *">
               <select

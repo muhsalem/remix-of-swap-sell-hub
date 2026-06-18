@@ -525,3 +525,14 @@ function CatChip({ active, onClick, children }: { active: boolean; onClick: () =
   );
 }
 
+
+function conditionLabel(c: string | null | undefined) {
+  const map: Record<string, string> = {
+    new: "جديد",
+    "like-new": "شبه جديد",
+    good: "جيد",
+    fair: "مقبول",
+    poor: "مستعمل",
+  };
+  return (c && map[c]) || c || "—";
+}

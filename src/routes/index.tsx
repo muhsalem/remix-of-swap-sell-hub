@@ -393,17 +393,43 @@ function Index() {
               </div>
             )
           ) : filtered.length === 0 ? (
-            <div className="bg-card rounded-3xl p-16 text-center ring-1 ring-black/5">
-              <p className="text-muted-foreground mb-4">
-                {query || activeCat ? "لا توجد نتائج. جرّب كلمة بحث أخرى." : "لا توجد عروض بعد. كن أول من ينشر!"}
+            <div className="bg-card rounded-3xl p-12 md:p-16 text-center ring-1 ring-black/5">
+              <Search className="size-10 mx-auto mb-4 opacity-30 text-muted-foreground" aria-hidden />
+              <h3 className="font-display font-extrabold text-lg mb-2">
+                {query || activeCat ? "لا توجد نتائج تطابق بحثك" : "لا توجد عروض بعد"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                {query || activeCat
+                  ? "جرّب كلمة بحث مختلفة، أو فعّل التنبيه لنُعلمك فور توفّر ما تبحث عنه."
+                  : "كن أول من ينشر عرضاً وابدأ صفقتك الأولى اليوم."}
               </p>
-              <Link to="/new-listing" className="inline-flex px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold">
-                أضف عرضك الأول
-              </Link>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {(query || activeCat) && (
+                  <button
+                    type="button"
+                    onClick={handleSaveSearch}
+                    disabled={saveSearchM.isPending}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border border-primary/40 text-primary hover:bg-primary/5 transition disabled:opacity-50"
+                  >
+                    {saveSearchM.isPending ? <Loader2 className="size-4 animate-spin" /> : <BellPlus className="size-4" />}
+                    فعّل التنبيه
+                  </button>
+                )}
+                <Link to="/new-listing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:opacity-90 transition">
+                  <Sparkles className="size-4" /> أنشئ عرضك الأول
+                </Link>
+                {hasAnyFilter && (
+                  <button onClick={resetFilters} className="inline-flex items-center px-4 py-2.5 rounded-full text-sm font-bold text-muted-foreground hover:text-foreground">
+                    مسح الفلاتر
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map(({ l, score }) => (
+              {filtered.map(({ l, score }) => {
+                const isService = /خدم|استشار|تعليم|تدريب/i.test(l.category || "");
+                return (
                 <Link
                   key={l.id}
                   to="/listings/$id"
@@ -417,8 +443,13 @@ function Index() {
                   )}
                   <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/4] bg-stone-soft">
                     <ListingImage path={l.images?.[0]} alt={l.title} />
-                    <div className="absolute top-3 left-3 px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
-                      {l.condition}
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+                      <span className="px-3 py-1 bg-card/90 backdrop-blur text-[10px] font-bold rounded-full">
+                        {conditionLabel(l.condition)}
+                      </span>
+                      <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full backdrop-blur ${isService ? "bg-accent/90 text-accent-foreground" : "bg-primary/15 text-primary"}`}>
+                        {isService ? "خدمة" : "سلعة"}
+                      </span>
                     </div>
                     {(l as any).city && (
                       <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-foreground/80 text-background text-[10px] font-bold rounded-full flex items-center gap-1 backdrop-blur">
@@ -437,10 +468,13 @@ function Index() {
                     </span>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
+
+
 
         {/* محرك التسعير (مع باحث المطابقات الحدثي) */}
         <div id="engine" className="scroll-mt-20">
@@ -491,3 +525,14 @@ function CatChip({ active, onClick, children }: { active: boolean; onClick: () =
   );
 }
 
+
+function conditionLabel(c: string | null | undefined) {
+  const map: Record<string, string> = {
+    new: "جديد",
+    "like-new": "شبه جديد",
+    good: "جيد",
+    fair: "مقبول",
+    poor: "مستعمل",
+  };
+  return (c && map[c]) || c || "—";
+}

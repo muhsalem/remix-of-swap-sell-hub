@@ -33,6 +33,7 @@ function NewListing() {
     market_price: 0,
     wants: "",
     city: "",
+    listing_type: "item" as "item" | "service",
   });
 
   const isRibawi = RIBAWI.includes(form.category);

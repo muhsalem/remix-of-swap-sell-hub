@@ -329,6 +329,15 @@ function Index() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">النوع</span>
+                  <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">الكل</option>
+                    <option value="item">سلعة</option>
+                    <option value="service">خدمة</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">

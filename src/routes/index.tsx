@@ -183,15 +183,16 @@ function Index() {
     if (max !== null) out = out.filter((x) => Number(x.l.market_price) <= max);
     if (condFilter) out = out.filter((x) => x.l.condition === condFilter);
     if (cityFilter) out = out.filter((x) => (x.l as any).city === cityFilter);
+    if (typeFilter) out = out.filter((x) => ((x.l as any).listing_type || "item") === typeFilter);
     if (sortBy === "price-asc") out = [...out].sort((a, b) => Number(a.l.market_price) - Number(b.l.market_price));
     else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
     else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
     return out;
-  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, cityFilter, sortBy, fx.perSAR]);
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, cityFilter, typeFilter, sortBy, fx.perSAR]);
 
-  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter || cityFilter);
+  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter || cityFilter || typeFilter);
   const resetFilters = () => {
-    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setCityFilter(""); setSortBy("newest");
+    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setCityFilter(""); setTypeFilter(""); setSortBy("newest");
   };
 
   const sectionTitle = matchMode

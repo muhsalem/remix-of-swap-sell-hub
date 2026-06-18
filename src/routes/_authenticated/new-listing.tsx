@@ -33,6 +33,7 @@ function NewListing() {
     market_price: 0,
     wants: "",
     city: "",
+    listing_type: "item" as "item" | "service",
   });
 
   const isRibawi = RIBAWI.includes(form.category);
@@ -107,6 +108,29 @@ function NewListing() {
               placeholder="حالة المنتج، الملحقات، أي عيوب..."
               className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border outline-none text-sm focus:ring-2 ring-primary/30 resize-none"
             />
+          </Field>
+
+          <Field label="نوع الإعلان *">
+            <div className="flex gap-2">
+              {([
+                { v: "item", label: "سلعة", hint: "منتج مادي" },
+                { v: "service", label: "خدمة", hint: "استشارة، تدريب، عمل" },
+              ] as const).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setForm({ ...form, listing_type: o.v })}
+                  className={`flex-1 px-4 py-3 rounded-xl border text-sm font-bold transition ${
+                    form.listing_type === o.v
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-stone-soft border-border hover:border-primary/40"
+                  }`}
+                >
+                  <div>{o.label}</div>
+                  <div className="text-[10px] font-normal opacity-70 mt-0.5">{o.hint}</div>
+                </button>
+              ))}
+            </div>
           </Field>
 
           <div className="grid grid-cols-2 gap-4">

@@ -209,6 +209,7 @@ export type Database = {
           is_pinned: boolean
           is_ribawi: boolean
           last_boosted_at: string | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
           market_price: number
           owner_id: string
           pinned_until: string | null
@@ -232,6 +233,7 @@ export type Database = {
           is_pinned?: boolean
           is_ribawi?: boolean
           last_boosted_at?: string | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           market_price: number
           owner_id: string
           pinned_until?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           is_pinned?: boolean
           is_ribawi?: boolean
           last_boosted_at?: string | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           market_price?: number
           owner_id?: string
           pinned_until?: string | null
@@ -1002,6 +1005,7 @@ export type Database = {
         | "refund"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
+      listing_type: "item" | "service"
       offer_status:
         | "pending"
         | "accepted"
@@ -1158,6 +1162,7 @@ export const Constants = {
       ],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],
+      listing_type: ["item", "service"],
       offer_status: [
         "pending",
         "accepted",

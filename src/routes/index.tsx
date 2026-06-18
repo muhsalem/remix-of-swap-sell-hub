@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -28,6 +28,10 @@ const searchSchema = z.object({
   q: z.string().optional().default(""),
   cat: z.string().optional().default(""),
   cond: z.string().optional().default(""),
+  city: z.string().optional().default(""),
+  min: z.string().optional().default(""),
+  max: z.string().optional().default(""),
+  type: z.enum(["", "item", "service"]).optional().default(""),
   sort: z.enum(["newest", "price-asc", "price-desc"]).optional().default("newest"),
 });
 
@@ -79,14 +83,16 @@ function Index() {
   const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
   const urlSearch = Route.useSearch();
+  const navigate = useNavigate({ from: "/" });
 
   const [query, setQuery] = useState(urlSearch.q || "");
   const [have, setHave] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(urlSearch.cat || null);
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [minPrice, setMinPrice] = useState<string>(urlSearch.min || "");
+  const [maxPrice, setMaxPrice] = useState<string>(urlSearch.max || "");
   const [condFilter, setCondFilter] = useState<string>(urlSearch.cond || "");
-  const [cityFilter, setCityFilter] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>(urlSearch.city || "");
+  const [typeFilter, setTypeFilter] = useState<"" | "item" | "service">(urlSearch.type || "");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(urlSearch.sort || "newest");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -95,8 +101,34 @@ function Index() {
     setQuery(urlSearch.q || "");
     setActiveCat(urlSearch.cat || null);
     setCondFilter(urlSearch.cond || "");
+    setCityFilter(urlSearch.city || "");
+    setMinPrice(urlSearch.min || "");
+    setMaxPrice(urlSearch.max || "");
+    setTypeFilter(urlSearch.type || "");
     setSortBy(urlSearch.sort || "newest");
-  }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.sort]);
+  }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.city, urlSearch.min, urlSearch.max, urlSearch.type, urlSearch.sort]);
+
+  // Debounced sync: local filter state → URL (keeps shareable links accurate)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      navigate({
+        search: (prev: any) => ({
+          ...prev,
+          q: query || undefined,
+          cat: activeCat || undefined,
+          cond: condFilter || undefined,
+          city: cityFilter || undefined,
+          min: minPrice || undefined,
+          max: maxPrice || undefined,
+          type: typeFilter || undefined,
+          sort: sortBy === "newest" ? undefined : sortBy,
+        }),
+        replace: true,
+      });
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, activeCat, condFilter, cityFilter, minPrice, maxPrice, typeFilter, sortBy]);
 
   // Available cities (from active listings)
   const cities = useMemo(() => {
@@ -151,15 +183,16 @@ function Index() {
     if (max !== null) out = out.filter((x) => Number(x.l.market_price) <= max);
     if (condFilter) out = out.filter((x) => x.l.condition === condFilter);
     if (cityFilter) out = out.filter((x) => (x.l as any).city === cityFilter);
+    if (typeFilter) out = out.filter((x) => ((x.l as any).listing_type || "item") === typeFilter);
     if (sortBy === "price-asc") out = [...out].sort((a, b) => Number(a.l.market_price) - Number(b.l.market_price));
     else if (sortBy === "price-desc") out = [...out].sort((a, b) => Number(b.l.market_price) - Number(a.l.market_price));
     else if (hasTextOrCat) out = [...out].sort((a, b) => b.score - a.score);
     return out;
-  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, cityFilter, sortBy, fx.perSAR]);
+  }, [listings, query, activeCat, minPrice, maxPrice, condFilter, cityFilter, typeFilter, sortBy, fx.perSAR]);
 
-  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter || cityFilter);
+  const hasAnyFilter = !!(query || activeCat || minPrice || maxPrice || condFilter || cityFilter || typeFilter);
   const resetFilters = () => {
-    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setCityFilter(""); setSortBy("newest");
+    setQuery(""); setActiveCat(null); setMinPrice(""); setMaxPrice(""); setCondFilter(""); setCityFilter(""); setTypeFilter(""); setSortBy("newest");
   };
 
   const sectionTitle = matchMode
@@ -296,6 +329,15 @@ function Index() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">النوع</span>
+                  <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                    className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
+                    <option value="">الكل</option>
+                    <option value="item">سلعة</option>
+                    <option value="service">خدمة</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">الترتيب</span>
                   <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                     className="px-3 py-2 rounded-xl bg-stone-soft border border-border text-sm outline-none focus:ring-2 ring-primary/30">
@@ -428,7 +470,7 @@ function Index() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map(({ l, score }) => {
-                const isService = /خدم|استشار|تعليم|تدريب/i.test(l.category || "");
+                const isService = ((l as any).listing_type ?? "item") === "service" || /خدم|استشار|تعليم|تدريب/i.test(l.category || "");
                 return (
                 <Link
                   key={l.id}

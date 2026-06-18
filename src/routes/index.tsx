@@ -83,14 +83,16 @@ function Index() {
   const { data } = useSuspenseQuery(listingsQuery);
   const listings = data?.listings ?? [];
   const urlSearch = Route.useSearch();
+  const navigate = useNavigate({ from: "/" });
 
   const [query, setQuery] = useState(urlSearch.q || "");
   const [have, setHave] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(urlSearch.cat || null);
-  const [minPrice, setMinPrice] = useState<string>("");
-  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [minPrice, setMinPrice] = useState<string>(urlSearch.min || "");
+  const [maxPrice, setMaxPrice] = useState<string>(urlSearch.max || "");
   const [condFilter, setCondFilter] = useState<string>(urlSearch.cond || "");
-  const [cityFilter, setCityFilter] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>(urlSearch.city || "");
+  const [typeFilter, setTypeFilter] = useState<"" | "item" | "service">(urlSearch.type || "");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">(urlSearch.sort || "newest");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -99,8 +101,34 @@ function Index() {
     setQuery(urlSearch.q || "");
     setActiveCat(urlSearch.cat || null);
     setCondFilter(urlSearch.cond || "");
+    setCityFilter(urlSearch.city || "");
+    setMinPrice(urlSearch.min || "");
+    setMaxPrice(urlSearch.max || "");
+    setTypeFilter(urlSearch.type || "");
     setSortBy(urlSearch.sort || "newest");
-  }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.sort]);
+  }, [urlSearch.q, urlSearch.cat, urlSearch.cond, urlSearch.city, urlSearch.min, urlSearch.max, urlSearch.type, urlSearch.sort]);
+
+  // Debounced sync: local filter state → URL (keeps shareable links accurate)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      navigate({
+        search: (prev: any) => ({
+          ...prev,
+          q: query || undefined,
+          cat: activeCat || undefined,
+          cond: condFilter || undefined,
+          city: cityFilter || undefined,
+          min: minPrice || undefined,
+          max: maxPrice || undefined,
+          type: typeFilter || undefined,
+          sort: sortBy === "newest" ? undefined : sortBy,
+        }),
+        replace: true,
+      });
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, activeCat, condFilter, cityFilter, minPrice, maxPrice, typeFilter, sortBy]);
 
   // Available cities (from active listings)
   const cities = useMemo(() => {

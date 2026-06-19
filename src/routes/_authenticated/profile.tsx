@@ -257,6 +257,58 @@ function ProfilePage() {
 
 
       <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Stat icon={CheckCircle2} label="صفقات مكتملة" value={stats.completedTrades} />
+        <Stat icon={Inbox} label="عروض معلقة" value={stats.pendingOffers} />
+        <Stat icon={Package} label="إعلاناتي النشطة" value={stats.activeListings} />
+        <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
+      </div>
+
+      {/* الشارات والمجتمع */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-bold mb-4 flex items-center gap-2">
+            <Award className="size-4 text-primary" /> شاراتي
+          </h2>
+          {social && social.badges.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {social.badges.map((b) => {
+                const meta = BADGE_META[b.badge] ?? { label: b.badge, icon: Award, color: "text-muted-foreground" };
+                const Icon = meta.icon;
+                return (
+                  <span key={b.badge} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-soft text-xs font-bold border border-border ${meta.color}`} title={new Date(b.awarded_at).toLocaleDateString("ar")}>
+                    <Icon className="size-3.5" /> {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">لا توجد شارات بعد. أكمل صفقتك الأولى لفتح شارة "أول صفقة"!</p>
+          )}
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-bold mb-4 flex items-center gap-2">
+            <Users className="size-4 text-primary" /> المجتمع
+          </h2>
+          <div className="flex items-center gap-6">
+            <div>
+              <div className="text-2xl font-extrabold">{social?.followers ?? 0}</div>
+              <div className="text-xs text-muted-foreground">متابِع</div>
+            </div>
+            <div className="w-px h-10 bg-border" />
+            <div>
+              <div className="text-2xl font-extrabold">{social?.following ?? 0}</div>
+              <div className="text-xs text-muted-foreground">يتابعهم</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">ابنِ شبكة موثوقة من المقايضين لتلقي عروض حصرية.</p>
+        </div>
+      </div>
+
+      <ContactSettings />
+      <VerificationCard />
+
+      <div className="rounded-2xl border border-border bg-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <Star className="size-4 text-amber-500" /> آخر المراجعات
         </h2>

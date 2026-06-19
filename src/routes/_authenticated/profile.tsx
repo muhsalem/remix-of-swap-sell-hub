@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getWalletStats } from "@/lib/wallet.functions";
+import { getFollowStats } from "@/lib/social.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
-import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
+import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck, Users, Zap, Crown, Trophy } from "lucide-react";
 import { ContactSettings } from "@/components/ContactSettings";
 import { VerificationCard } from "@/components/VerificationCard";
 import { getPricing } from "@/lib/promotions.functions";
@@ -11,6 +12,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 const pricingQO = queryOptions({ queryKey: ["pricing"], queryFn: () => getPricing() });
+const socialQO = queryOptions({ queryKey: ["social-self"], queryFn: () => getFollowStats({ data: {} }) });
+
+const BADGE_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  verified_id:      { label: "موثّق الهوية",  icon: BadgeCheck,  color: "text-primary" },
+  first_trade:      { label: "أول صفقة",       icon: Sparkles,    color: "text-accent" },
+  trusted_trader:   { label: "تاجر موثوق",     icon: ShieldCheck, color: "text-emerald-500" },
+  top_trader:       { label: "تاجر متميّز",    icon: Crown,       color: "text-amber-500" },
+  fast_responder:   { label: "سريع الردّ",     icon: Zap,         color: "text-blue-500" },
+  shariah_champion: { label: "بطل الشريعة",    icon: Trophy,      color: "text-violet-500" },
+  early_adopter:    { label: "مستخدم مبكّر",   icon: Award,       color: "text-rose-500" },
+};
 
 export const Route = createFileRoute("/_authenticated/profile")({
   loader: ({ context }) => context.queryClient.ensureQueryData(walletQO),

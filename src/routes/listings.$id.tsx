@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ShareListing } from "@/components/ShareListing";
 import { PromotionPanel } from "@/components/PromotionPanel";
+import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";

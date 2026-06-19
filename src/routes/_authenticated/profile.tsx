@@ -85,6 +85,7 @@ function ProfilePage() {
       if (raw) setLastAnalysis(JSON.parse(raw));
     } catch { /* ignore */ }
   }, []);
+  const { data: social } = useQuery(socialQO);
 
   const ShIcon = lastAnalysis?.shariahLevel === "forbidden" ? Ban
     : lastAnalysis?.shariahLevel === "warning" ? AlertTriangle : ShieldCheck;

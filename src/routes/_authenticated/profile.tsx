@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getWalletStats } from "@/lib/wallet.functions";
+import { getFollowStats } from "@/lib/social.functions";
 import { SAR_PER_DI } from "@/lib/pricing.functions";
-import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck } from "lucide-react";
+import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck, Users, Zap, Crown, Trophy } from "lucide-react";
 import { ContactSettings } from "@/components/ContactSettings";
 import { VerificationCard } from "@/components/VerificationCard";
 import { getPricing } from "@/lib/promotions.functions";
@@ -11,6 +12,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWalletStats() });
 const pricingQO = queryOptions({ queryKey: ["pricing"], queryFn: () => getPricing() });
+const socialQO = queryOptions({ queryKey: ["social-self"], queryFn: () => getFollowStats({ data: {} }) });
+
+const BADGE_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  verified_id:      { label: "موثّق الهوية",  icon: BadgeCheck,  color: "text-primary" },
+  first_trade:      { label: "أول صفقة",       icon: Sparkles,    color: "text-accent" },
+  trusted_trader:   { label: "تاجر موثوق",     icon: ShieldCheck, color: "text-emerald-500" },
+  top_trader:       { label: "تاجر متميّز",    icon: Crown,       color: "text-amber-500" },
+  fast_responder:   { label: "سريع الردّ",     icon: Zap,         color: "text-blue-500" },
+  shariah_champion: { label: "بطل الشريعة",    icon: Trophy,      color: "text-violet-500" },
+  early_adopter:    { label: "مستخدم مبكّر",   icon: Award,       color: "text-rose-500" },
+};
 
 export const Route = createFileRoute("/_authenticated/profile")({
   loader: ({ context }) => context.queryClient.ensureQueryData(walletQO),
@@ -73,6 +85,7 @@ function ProfilePage() {
       if (raw) setLastAnalysis(JSON.parse(raw));
     } catch { /* ignore */ }
   }, []);
+  const { data: social } = useQuery(socialQO);
 
   const ShIcon = lastAnalysis?.shariahLevel === "forbidden" ? Ban
     : lastAnalysis?.shariahLevel === "warning" ? AlertTriangle : ShieldCheck;
@@ -238,10 +251,49 @@ function ProfilePage() {
         <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
       </div>
 
+      {/* الشارات والمجتمع */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-bold mb-4 flex items-center gap-2">
+            <Award className="size-4 text-primary" /> شاراتي
+          </h2>
+          {social && social.badges.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {social.badges.map((b) => {
+                const meta = BADGE_META[b.badge] ?? { label: b.badge, icon: Award, color: "text-muted-foreground" };
+                const Icon = meta.icon;
+                return (
+                  <span key={b.badge} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-soft text-xs font-bold border border-border ${meta.color}`} title={new Date(b.awarded_at).toLocaleDateString("ar")}>
+                    <Icon className="size-3.5" /> {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">لا توجد شارات بعد. أكمل صفقتك الأولى لفتح شارة "أول صفقة"!</p>
+          )}
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-bold mb-4 flex items-center gap-2">
+            <Users className="size-4 text-primary" /> المجتمع
+          </h2>
+          <div className="flex items-center gap-6">
+            <div>
+              <div className="text-2xl font-extrabold">{social?.followers ?? 0}</div>
+              <div className="text-xs text-muted-foreground">متابِع</div>
+            </div>
+            <div className="w-px h-10 bg-border" />
+            <div>
+              <div className="text-2xl font-extrabold">{social?.following ?? 0}</div>
+              <div className="text-xs text-muted-foreground">يتابعهم</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">ابنِ شبكة موثوقة من المقايضين لتلقي عروض حصرية.</p>
+        </div>
+      </div>
+
       <ContactSettings />
       <VerificationCard />
-
-
 
       <div className="rounded-2xl border border-border bg-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">

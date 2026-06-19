@@ -193,6 +193,27 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           age_months: number
@@ -840,6 +861,27 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          badge: Database["public"]["Enums"]["badge_kind"]
+          id: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge: Database["public"]["Enums"]["badge_kind"]
+          id?: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge?: Database["public"]["Enums"]["badge_kind"]
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -994,6 +1036,14 @@ export type Database = {
     Enums: {
       account_type: "individual" | "company"
       app_role: "admin" | "moderator" | "user"
+      badge_kind:
+        | "verified_id"
+        | "first_trade"
+        | "trusted_trader"
+        | "top_trader"
+        | "fast_responder"
+        | "shariah_champion"
+        | "early_adopter"
       dispute_status: "open" | "under_review" | "resolved" | "rejected"
       fee_status: "due" | "paid" | "waived"
       kyc_status: "none" | "pending" | "verified" | "rejected"
@@ -1150,6 +1200,15 @@ export const Constants = {
     Enums: {
       account_type: ["individual", "company"],
       app_role: ["admin", "moderator", "user"],
+      badge_kind: [
+        "verified_id",
+        "first_trade",
+        "trusted_trader",
+        "top_trader",
+        "fast_responder",
+        "shariah_champion",
+        "early_adopter",
+      ],
       dispute_status: ["open", "under_review", "resolved", "rejected"],
       fee_status: ["due", "paid", "waived"],
       kyc_status: ["none", "pending", "verified", "rejected"],

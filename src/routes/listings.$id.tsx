@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { ShareListing } from "@/components/ShareListing";
 import { PromotionPanel } from "@/components/PromotionPanel";
+import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
@@ -130,19 +131,20 @@ function ListingPage() {
             </div>
 
             {profile && (
-              <Link to="/" className="block bg-card rounded-2xl p-4 ring-1 ring-black/5 hover:ring-primary/30 transition-all">
+              <div className="bg-card rounded-2xl p-4 ring-1 ring-black/5">
                 <div className="flex items-center gap-3">
                   <div className="size-12 rounded-full bg-stone-soft grid place-items-center font-bold text-primary">
                     {profile.display_name?.[0]?.toUpperCase() ?? "?"}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-sm">{profile.display_name}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm truncate">{profile.display_name}</div>
                     <div className="text-xs text-muted-foreground flex items-center gap-2">
                       <Star className="size-3 fill-accent text-accent" /> {Number(profile.rating).toFixed(1)} · {profile.trades_count} صفقة
                     </div>
                   </div>
+                  <FollowButton userId={l.owner_id} currentUserId={user?.id ?? null} />
                 </div>
-              </Link>
+              </div>
             )}
 
             <Link

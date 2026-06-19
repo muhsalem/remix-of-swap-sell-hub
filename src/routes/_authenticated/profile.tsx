@@ -251,19 +251,6 @@ function ProfilePage() {
         <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
       </div>
 
-      <ContactSettings />
-      <VerificationCard />
-
-
-
-      <div className="rounded-2xl border border-border bg-card p-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat icon={CheckCircle2} label="صفقات مكتملة" value={stats.completedTrades} />
-        <Stat icon={Inbox} label="عروض معلقة" value={stats.pendingOffers} />
-        <Stat icon={Package} label="إعلاناتي النشطة" value={stats.activeListings} />
-        <Stat icon={Star} label="متوسط التقييم" value={Number(stats.averageRating).toFixed(2)} hint={`${stats.totalReviews} مراجعة`} />
-      </div>
-
       {/* الشارات والمجتمع */}
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border bg-card p-6">

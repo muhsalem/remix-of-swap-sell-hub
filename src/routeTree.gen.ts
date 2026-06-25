@@ -20,6 +20,7 @@ import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as ApiSitemapDotxmlRouteImport } from './routes/api/sitemap[.]xml'
 import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
+import { Route as AuthenticatedThreeWayRouteImport } from './routes/_authenticated/three-way'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
 import { Route as AuthenticatedNewListingRouteImport } from './routes/_authenticated/new-listing'
@@ -86,6 +87,11 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedThreeWayRoute = AuthenticatedThreeWayRouteImport.update({
+  id: '/three-way',
+  path: '/three-way',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
+  '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
+  '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/three-way': typeof AuthenticatedThreeWayRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/new-listing'
     | '/offers'
     | '/profile'
+    | '/three-way'
     | '/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/new-listing'
     | '/offers'
     | '/profile'
+    | '/three-way'
     | '/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated/new-listing'
     | '/_authenticated/offers'
     | '/_authenticated/profile'
+    | '/_authenticated/three-way'
     | '/_authenticated/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
@@ -368,6 +380,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/three-way': {
+      id: '/_authenticated/three-way'
+      path: '/three-way'
+      fullPath: '/three-way'
+      preLoaderRoute: typeof AuthenticatedThreeWayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -474,6 +493,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedThreeWayRoute: typeof AuthenticatedThreeWayRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
 }
@@ -485,6 +505,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedThreeWayRoute: AuthenticatedThreeWayRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
 }

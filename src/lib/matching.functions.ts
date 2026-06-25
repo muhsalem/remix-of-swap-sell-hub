@@ -41,15 +41,16 @@ export const findThreeWayMatches = createServerFn({ method: "POST" })
       .neq("owner_id", userId)
       .limit(20);
 
-    if (!hops1 || hops1.length === 0) {
-      return { chains: [] as Array<{ b: typeof mine; c: typeof mine; intermediateCategory: string }> };
-    }
-
-    const chains: Array<{
+    type Chain = {
       bListing: { id: string; title: string; category: string; owner: string };
       cListing: { id: string; title: string; category: string; owner: string };
       intermediateCategory: string;
-    }> = [];
+    };
+    if (!hops1 || hops1.length === 0) {
+      return { chains: [] as Chain[] };
+    }
+
+    const chains: Chain[] = [];
 
     // 3) For each B, pick a plausible "intermediate" category they might want
     //    Then find C who has that intermediate and wants myCat.

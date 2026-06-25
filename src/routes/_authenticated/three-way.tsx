@@ -70,7 +70,7 @@ function ThreeWayPage() {
             onChange={(e) => setListingId(e.target.value)}
           >
             <option value="">— اختر إعلاناً —</option>
-            {mine.data?.map((l: any) => (
+            {mine.data?.listings.map((l: any) => (
               <option key={l.id} value={l.id}>{l.title}</option>
             ))}
           </select>
@@ -117,7 +117,7 @@ function ThreeWayPage() {
                 variant="outline"
                 onClick={() =>
                   negotiateAI.mutate({
-                    myItem: mine.data?.find((l: any) => l.id === listingId)?.title ?? "",
+                    myItem: mine.data?.listings.find((l: any) => l.id === listingId)?.title ?? "",
                     theirItem: c.bListing.title,
                   })
                 }

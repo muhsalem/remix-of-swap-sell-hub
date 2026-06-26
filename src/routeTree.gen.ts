@@ -9,10 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
@@ -32,6 +34,11 @@ import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 
+const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
+  id: '/sharia-committee',
+  path: '/sharia-committee',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingEngineRoute = PricingEngineRouteImport.update({
   id: '/pricing-engine',
   path: '/pricing-engine',
@@ -50,6 +57,11 @@ const DigitalCurrencyRoute = DigitalCurrencyRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -148,10 +160,12 @@ const AuthenticatedAdminDisputesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/sharia-committee': typeof ShariaCommitteeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -171,10 +185,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/sharia-committee': typeof ShariaCommitteeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -196,10 +212,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/sharia-committee': typeof ShariaCommitteeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
@@ -221,10 +239,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
     | '/digital-currency'
     | '/premium'
     | '/pricing-engine'
+    | '/sharia-committee'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -244,10 +264,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/digital-currency'
     | '/premium'
     | '/pricing-engine'
+    | '/sharia-committee'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -268,10 +290,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
     | '/digital-currency'
     | '/premium'
     | '/pricing-engine'
+    | '/sharia-committee'
     | '/_authenticated/admin'
     | '/_authenticated/disputes'
     | '/_authenticated/my-listings'
@@ -293,10 +317,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
+  ShariaCommitteeRoute: typeof ShariaCommitteeRoute
   ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
   ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
@@ -305,6 +331,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sharia-committee': {
+      id: '/sharia-committee'
+      path: '/sharia-committee'
+      fullPath: '/sharia-committee'
+      preLoaderRoute: typeof ShariaCommitteeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing-engine': {
       id: '/pricing-engine'
       path: '/pricing-engine'
@@ -331,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -516,10 +556,12 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,
+  ShariaCommitteeRoute: ShariaCommitteeRoute,
   ApiRobotsDottxtRoute: ApiRobotsDottxtRoute,
   ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,

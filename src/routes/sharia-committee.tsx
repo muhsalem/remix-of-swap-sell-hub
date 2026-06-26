@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/sharia-committee")({
   head: () => ({
@@ -55,6 +56,7 @@ function ShariaPage() {
           </p>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -65,6 +66,7 @@ function AboutPage() {
           </Link>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

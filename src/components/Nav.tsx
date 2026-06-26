@@ -110,20 +110,22 @@ export function Nav() {
               {isAdmin && (
                 <Link
                   to="/admin/disputes"
+                  aria-label="لوحة المشرف"
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20"
                   title="لوحة المشرف"
                 >
-                  <ShieldAlert className="size-4" />
+                  <ShieldAlert className="size-4" aria-hidden />
                 </Link>
               )}
               <ThemeToggle />
               <NotificationBell />
               <button
                 onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+                aria-label="تسجيل الخروج"
                 title="تسجيل الخروج"
-                className="p-2 rounded-full hover:bg-stone-soft"
+                className="p-2 rounded-full hover:bg-stone-soft min-w-11 min-h-11 flex items-center justify-center"
               >
-                <LogOut className="size-4" />
+                <LogOut className="size-4" aria-hidden />
               </button>
             </>
           ) : (

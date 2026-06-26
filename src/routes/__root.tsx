@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 function NotFoundComponent() {
   return (
@@ -108,7 +109,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl">
       <head>
         <HeadContent />
       </head>
@@ -127,6 +128,7 @@ function RootComponent() {
       <AuthListener />
       <Outlet />
       <CookieConsent />
+      <OnboardingTour />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
     </QueryClientProvider>
   );

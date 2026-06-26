@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BarterHub — منصة المقايضة الذكية</title>
+  <meta name="description" content="أول منصة مقايضة ذكية متوافقة شرعياً — قيّم وقايض سلعك وخدماتك مع 30+ دولة. BarterCoins · AI Scanner · Sharia Compliant">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ════════════ HEADER ════════════ -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⇅</div>
+      <div>
+        <h1 data-en="Barter Pricing Engine" data-ar="محرك تسعير المقايضة">محرك تسعير المقايضة</h1>
+        <p data-en="Smart barter valuation · Sharia compliant · 30+ countries" data-ar="تقييم ذكي للمقايضات · متوافق شرعياً · 30+ دولة">تقييم ذكي للمقايضات · متوافق شرعياً · 30+ دولة</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="country-select-wrap">
+        <select id="countrySelect" aria-label="Country"></select>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn" id="btnEn">EN</button>
+        <button class="lang-btn active" id="btnAr">عربي</button>
+      </div>
+      <button class="dark-mode-toggle" id="darkModeToggle" onclick="DarkMode.toggle()" title="الوضع الداكن">🌙</button>
+      <!-- User Area (login/profile) -->
+      <div id="userHeaderArea"></div>
+    </div>
+  </header>
+
+  <!-- ════════════ PLATFORM NAV ════════════ -->
+  <div class="platform-nav" id="platformNav">
+    <button class="pnav-btn" onclick="DashboardPanel.show()" data-en="📊 Dashboard" data-ar="📊 لوحة التحكم">📊 لوحة التحكم</button>
+    <button class="pnav-btn" onclick="TradesPanel.show()" data-en="🤝 My Trades" data-ar="🤝 مقايضاتي">🤝 مقايضاتي</button>
+    <button class="pnav-btn pnav-primary" onclick="CreateListingModal.show()" data-en="➕ New Listing" data-ar="➕ عرض جديد">➕ عرض جديد</button>
+  </div>
+
+  <!-- ════════════ ONBOARDING ════════════ -->
+  <div class="onboarding" id="onboardingBanner">
+    <div class="onboarding-content">
+      <span class="onboarding-icon">💡</span>
+      <div>
+        <strong data-en="How it works" data-ar="كيف يعمل المحرك؟">كيف يعمل المحرك؟</strong>
+        <p data-en="1. Choose item type → 2. Set details → 3. Compare prices across countries → 4. Find matching trades" data-ar="1. اختر نوع السلعة أو الخدمة ← 2. حدد التفاصيل ← 3. قارن الأسعار بين البلدان ← 4. اعثر على مقايضات متوافقة">1. اختر نوع السلعة أو الخدمة ← 2. حدد التفاصيل ← 3. قارن الأسعار بين البلدان ← 4. اعثر على مقايضات متوافقة</p>
+      </div>
+      <button class="onboarding-close" id="closeOnboarding">✕</button>
+    </div>
+  </div>
+
+  <!-- ════════════ STATS BAR ════════════ -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-num">30+</span>
+      <span class="stat-label" data-en="Countries" data-ar="دولة">دولة</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">14</span>
+      <span class="stat-label" data-en="Categories" data-ar="تصنيف">تصنيف</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">50+</span>
+      <span class="stat-label" data-en="Subcategories" data-ar="تصنيف فرعي">تصنيف فرعي</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">✅</span>
+      <span class="stat-label" data-en="Sharia Compliant" data-ar="متوافق شرعياً">متوافق شرعياً</span>
+    </div>
+  </div>
+
+  <!-- ════════════ MAIN GRID ════════════ -->
+  <div class="grid">
+
+    <!-- ── LEFT: Valuation Sandbox ── -->
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-title">
+          <span data-en="Valuation Sandbox" data-ar="مختبر التقييم">مختبر التقييم</span>
+          <span class="icon">⚖️</span>
+        </div>
+
+        <!-- AI Image Upload -->
+        <div class="ai-upload-section">
+          <div class="ai-section-title">
+            <span class="ai-icon">🤖</span>
+            <span data-en="AI Product Scanner" data-ar="ماسح المنتجات بالذكاء الاصطناعي">ماسح المنتجات بالذكاء الاصطناعي</span>
+          </div>
+          <div class="image-dropzone" id="imageDropzone">
+            <input type="file" id="imageFileInput" accept="image/*" hidden>
+            <div class="dropzone-content">
+              <span class="dropzone-icon">📷</span>
+              <span class="dropzone-text" data-en="Drop product image here or click to upload" data-ar="اسحب صورة المنتج هنا أو اضغط لرفعها">اسحب صورة المنتج هنا أو اضغط لرفعها</span>
+              <span class="dropzone-hint" data-en="AI will auto-detect category, subcategory & price" data-ar="الذكاء الاصطناعي سيكتشف التصنيف والسعر تلقائياً">الذكاء الاصطناعي سيكتشف التصنيف والسعر تلقائياً</span>
+            </div>
+          </div>
+          <div class="image-preview-wrap" id="imagePreviewWrap" style="display:none">
+            <img id="imagePreview" alt="Product Preview">
+            <button class="btn-reset-img" onclick="resetImageUpload()">✕</button>
+          </div>
+          <div class="ai-results-panel" id="aiResultsPanel" style="display:none">
+            <div id="aiResultsContent"></div>
+          </div>
+        </div>
+
+        <!-- Type Toggle -->
+        <div class="type-toggle">
+          <button class="type-btn active" id="typeGoodBtn" data-en="Good (سلعة)" data-ar="سلعة (Good)">سلعة (Good)</button>
+          <button class="type-btn" id="typeServiceBtn" data-en="Service (خدمة)" data-ar="خدمة (Service)">خدمة (Service)</button>
+        </div>
+
+        <!-- Goods Form -->
+        <div id="goodsForm">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label data-en="Product Name / Model" data-ar="اسم المنتج / الموديل">اسم المنتج / الموديل</label>
+              <input type="text" id="goodTitle" placeholder="e.g. iPhone 14 Pro Max" value="iPhone 14 Pro Max">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Category" data-ar="التصنيف">التصنيف</label>
+              <select id="goodCategory"></select>
+            </div>
+            <div class="form-group">
+              <label data-en="Subcategory" data-ar="التصنيف الفرعي">التصنيف الفرعي</label>
+              <select id="goodSubcategory"></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Original Price ($)" data-ar="السعر الأصلي ($)">السعر الأصلي ($)</label>
+              <input type="number" id="goodBasePrice" value="1200" step="10" min="0" max="10000000">
+            </div>
+            <div class="form-group">
+              <label data-en="Age (years)" data-ar="العمر (سنوات)">العمر (سنوات)</label>
+              <input type="number" id="goodAge" value="2" min="0" max="100" step="0.5">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Condition" data-ar="حالة السلعة">حالة السلعة</label>
+              <select id="goodCondition"></select>
+            </div>
+            <div class="form-group">
+              <label data-en="Market Demand" data-ar="مستوى الطلب">مستوى الطلب</label>
+              <select id="goodDemand"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services Form -->
+        <div id="servicesForm" style="display:none">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label data-en="Service Name / Specialty" data-ar="اسم الخدمة / التخصص">اسم الخدمة / التخصص</label>
+              <input type="text" id="serviceTitle" placeholder="e.g. Web Development" value="Web Development">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Service Category" data-ar="مجال الخدمة">مجال الخدمة</label>
+              <select id="serviceCategory"></select>
+            </div>
+            <div class="form-group">
+              <label data-en="Service Type" data-ar="نوع الخدمة">نوع الخدمة</label>
+              <select id="serviceSubcategory"></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Hourly Rate ($)" data-ar="سعر الساعة ($)">سعر الساعة ($)</label>
+              <input type="number" id="serviceHourlyRate" value="50" step="5" min="0" max="1000">
+            </div>
+            <div class="form-group">
+              <label data-en="Estimated Hours" data-ar="الساعات التقديرية">الساعات التقديرية</label>
+              <input type="number" id="serviceHours" value="12" min="1" max="10000" step="1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-en="Complexity" data-ar="مستوى التعقيد">مستوى التعقيد</label>
+              <select id="serviceComplexity"></select>
+            </div>
+            <div class="form-group">
+              <label data-en="Experience Level" data-ar="مستوى الخبرة">مستوى الخبرة</label>
+              <select id="serviceExperience"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swap Preference -->
+        <div class="sep">
+          <div class="form-group" style="margin:0">
+            <label data-en="Desired Swap Category" data-ar="التصنيف المرغوب للمقايضة">التصنيف المرغوب للمقايضة</label>
+            <select id="desiredCategory"></select>
+          </div>
+        </div>
+
+        <!-- Valuation Result -->
+        <div class="val-result">
+          <div class="val-flag" id="valCountryFlag">🇪🇬</div>
+          <div class="val-amount" id="valResultAmount">0</div>
+          <div class="val-usd" id="valResultUsd">≈ $0.00</div>
+          <div class="val-depr-model" id="valDeprModel">📉 إهلاك</div>
+          <div class="val-detail" id="valResultDetail">—</div>
+        </div>
+
+        <!-- Valuation Suggestions -->
+        <div class="val-suggestions" id="valSuggestionsBox" style="display:none; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border)">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-2); margin-bottom: 10px;" data-en="Equal Value Swap Offers" data-ar="مقايضات مقترحة بنفس القيمة">مقايضات مقترحة بنفس القيمة</h4>
+          <div id="valSuggestionsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Main Area ── -->
+    <div class="main-col">
+
+      <!-- Country Comparison Panel -->
+      <div class="card comp-panel">
+        <div class="card-title">
+          <span data-en="Country Price Comparison" data-ar="مقارنة الأسعار بين البلدان">مقارنة الأسعار بين البلدان</span>
+          <span class="icon">🌍</span>
+        </div>
+        <div class="comp-countries">
+          <div class="form-group" style="margin:0">
+            <label data-en="Country A" data-ar="البلد الأول">البلد الأول</label>
+            <select id="compareCountryA"></select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label data-en="Country B" data-ar="البلد الثاني">البلد الثاني</label>
+            <select id="compareCountryB"></select>
+          </div>
+        </div>
+        <div class="comp-cards">
+          <div class="country-card">
+            <div class="country-flag" id="compAFlag">🇪🇬</div>
+            <div class="country-name" id="compAName">مصر</div>
+            <div class="country-price" id="compAPrice">0</div>
+            <div class="country-power" id="compAPower">—</div>
+          </div>
+          <div class="comp-vs"><span>VS</span></div>
+          <div class="country-card">
+            <div class="country-flag" id="compBFlag">🇸🇦</div>
+            <div class="country-name" id="compBName">السعودية</div>
+            <div class="country-price" id="compBPrice">0</div>
+            <div class="country-power" id="compBPower">—</div>
+          </div>
+        </div>
+        <div class="comp-diff-badge neutral" id="compDiffBadge">—</div>
+        <div class="comp-analysis" id="compAnalysis" data-en="Select items to compare pricing across countries" data-ar="اختر عناصر لمقارنة الأسعار عبر البلدان">اختر عناصر لمقارنة الأسعار عبر البلدان</div>
+      </div>
+
+      <!-- Swap Compatibility Tester -->
+      <div class="card match-panel">
+        <div class="card-title">
+          <span data-en="Swap Compatibility Tester" data-ar="مختبر توافق المقايضات">مختبر توافق المقايضات</span>
+          <span class="badge-feasibility high" id="feasibilityBadge" style="display:none">—</span>
+        </div>
+        <div class="match-slots">
+          <div class="slot-card active">
+            <div class="slot-label" data-en="YOUR OFFER" data-ar="عرضك">عرضك</div>
+            <div class="slot-name" id="slotAName">—</div>
+            <div class="slot-cat" id="slotACat">—</div>
+            <div class="slot-price" id="slotAPrice">$0.00</div>
+            <div class="slot-liq" id="slotALiq">—</div>
+          </div>
+          <div class="gauge-wrap">
+            <div class="gauge" id="compGauge">
+              <div class="gauge-inner">
+                <div class="gauge-val" id="compValue">—</div>
+                <div class="gauge-lbl" data-en="Match" data-ar="توافق">توافق</div>
+              </div>
+            </div>
+          </div>
+          <div class="slot-card" id="slotB">
+            <div class="slot-label" data-en="COUNTER OFFER" data-ar="العرض المقابل">العرض المقابل</div>
+            <div class="slot-name" id="slotBName" data-en="No Item Selected" data-ar="لم يتم الاختيار">لم يتم الاختيار</div>
+            <div class="slot-cat" id="slotBCat" data-en="Select from inventory below" data-ar="اختر من القائمة بالأسفل">اختر من القائمة بالأسفل</div>
+            <div class="slot-price" id="slotBPrice">$0.00</div>
+            <div class="slot-liq" id="slotBLiq"></div>
+          </div>
+        </div>
+
+        <!-- Diagnostics -->
+        <div class="diag-box">
+          <div class="diag-title" data-en="Swap Diagnostics" data-ar="تحليلات المقايضة">تحليلات المقايضة</div>
+          <div class="diag-text" id="diagSummary" data-en="Select an item from inventory to analyze." data-ar="اختر عنصراً من القائمة لتحليل التوافق.">اختر عنصراً من القائمة لتحليل التوافق.</div>
+
+          <!-- Sharia Compliance Panel -->
+          <div class="sharia-panel" id="shariaPanel" style="display:none">
+            <div class="sharia-header">
+              <span class="sharia-badge" id="shariaBadge">✅</span>
+              <span class="sharia-title" data-en="Sharia Compliance" data-ar="التوافق الشرعي">التوافق الشرعي</span>
+            </div>
+            <div class="sharia-warnings" id="shariaWarnings"></div>
+          </div>
+
+          <div class="diag-settle">
+            <div style="display:flex;align-items:center;gap:8px">
+              <label data-en="Settle Via" data-ar="التسوية عبر">التسوية عبر</label>
+              <select id="settlementMode">
+                <option value="cash" data-en="Cash 💵" data-ar="نقد 💵">نقد 💵</option>
+                <option value="credits" data-en="Credits 🪙" data-ar="نقاط 🪙">نقاط 🪙</option>
+              </select>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+              <div>
+                <span class="diag-fee-label" data-en="Platform Fee (1.5%): " data-ar="رسوم المنصة (1.5%): ">رسوم المنصة (1.5%): </span>
+                <span class="diag-fee-val" id="diagFee">$0.00</span>
+              </div>
+              <div id="shippingFeeContainer" style="display: none; align-items: center; gap: 4px;">
+                <span class="diag-fee-label" id="shippingFeeLabel" data-en="Shipping & Transport: " data-ar="الشحن والنقل: ">الشحن والنقل: </span>
+                <span class="diag-fee-val" id="shippingFee" style="color: var(--amber); font-weight: 700;">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="score-row">
+            <div class="score-card">
+              <div class="score-lbl" data-en="Value Alignment" data-ar="توافق القيمة">توافق القيمة</div>
+              <div class="score-val" id="scoreValueAlign">—</div>
+            </div>
+            <div class="score-card">
+              <div class="score-lbl" data-en="Category Match" data-ar="تطابق التصنيف">تطابق التصنيف</div>
+              <div class="score-val" id="scorePrefMatch">—</div>
+            </div>
+            <div class="score-card">
+              <div class="score-lbl" data-en="Liquidity" data-ar="السيولة">السيولة</div>
+              <div class="score-val" id="scoreLiquidity">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="card inv-panel">
+        <div class="inv-header">
+          <h3 data-en="Trading Inventory" data-ar="السلع والخدمات المتاحة للمقايضة">السلع والخدمات المتاحة للمقايضة</h3>
+          <span class="inv-count" id="inventoryCount">0</span>
+        </div>
+        <div class="search-row">
+          <input type="text" id="searchInventory" placeholder="🔍 ابحث عن سلعة أو خدمة..." data-en="🔍 Search items..." data-ar="🔍 ابحث عن سلعة أو خدمة...">
+          <select id="filterCategory"></select>
+        </div>
+        <div class="products-grid" id="inventoryGrid"></div>
+
+        <!-- CTA Row -->
+        <div class="cta-row">
+          <button class="btn-cta" onclick="CreateListingModal.show()" data-en="📢 List Your Item for Trade" data-ar="📢 اعرض سلعتك للمقايضة">📢 اعرض سلعتك للمقايضة</button>
+          <button class="btn-share" id="shareBtn" onclick="if(navigator.share)navigator.share({title:'BarterHub',url:location.href});else{navigator.clipboard.writeText(location.href);Toast.show('Link copied!','success')}" data-en="🔗 Share" data-ar="🔗 مشاركة">🔗 مشاركة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="platform.js"></script>
+<script src="ui-components.js"></script>
+<script>
+  // Platform UI Init
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      if (typeof HeaderUI !== 'undefined') HeaderUI.update();
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }, 100);
+  });
+</script>
+</body>
+</html>

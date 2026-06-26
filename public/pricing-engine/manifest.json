@@ -1,0 +1,16 @@
+{
+  "name": "منصة المقايضة الذكية",
+  "short_name": "BarterHub",
+  "description": "أول منصة مقايضة ذكية متوافقة شرعياً — قيّم وقايض سلعك وخدماتك مع 30+ دولة",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#06b6d4",
+  "orientation": "any",
+  "icons": [
+    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⇅</text></svg>", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "categories": ["shopping", "business", "finance"],
+  "lang": "ar",
+  "dir": "rtl"
+}

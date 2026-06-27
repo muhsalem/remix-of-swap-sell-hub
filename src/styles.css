@@ -28,63 +28,149 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: 'Cairo', sans-serif;
-  --font-body: 'Tajawal', sans-serif;
+  --color-cyan-glow: var(--cyan-glow);
+  --color-violet-glow: var(--violet-glow);
+  --color-amber-glow: var(--amber-glow);
+  --color-emerald-glow: var(--emerald-glow);
+  --font-display: 'Cairo', 'Outfit', sans-serif;
+  --font-body: 'Cairo', 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* ──────────────────────────────────────────────────────────
+   Pricing Engine Visual Identity (default)
+   Premium dark · cyan↔violet · amber price tone · glassmorphism
+   ────────────────────────────────────────────────────────── */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.985 0.005 240);
-  --foreground: oklch(0.22 0.04 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.04 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.04 260);
-  --primary: oklch(0.62 0.14 165);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.01 240);
-  --secondary-foreground: oklch(0.22 0.04 260);
-  --muted: oklch(0.95 0.01 240);
-  --muted-foreground: oklch(0.5 0.03 260);
-  --accent: oklch(0.78 0.16 85);
-  --accent-foreground: oklch(0.22 0.04 260);
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.22 0.04 260 / 0.1);
-  --input: oklch(0.22 0.04 260 / 0.1);
-  --ring: oklch(0.62 0.14 165);
-  --stone-bg: oklch(0.97 0.005 240);
+  --radius: 0.875rem;
+
+  /* Deep navy base */
+  --background: hsl(225 28% 6%);
+  --foreground: hsl(210 30% 97%);
+
+  /* Glass surfaces */
+  --card: hsl(225 22% 10%);
+  --card-foreground: hsl(210 30% 97%);
+  --popover: hsl(225 22% 12%);
+  --popover-foreground: hsl(210 30% 97%);
+
+  /* Primary = engine cyan */
+  --primary: hsl(190 95% 46%);
+  --primary-foreground: hsl(225 28% 6%);
+
+  /* Accent = engine violet */
+  --accent: hsl(262 80% 64%);
+  --accent-foreground: hsl(210 30% 97%);
+
+  --secondary: hsl(225 22% 14%);
+  --secondary-foreground: hsl(210 30% 97%);
+  --muted: hsl(225 22% 12%);
+  --muted-foreground: hsl(215 16% 72%);
+
+  --destructive: hsl(350 80% 58%);
+  --destructive-foreground: hsl(210 30% 97%);
+
+  --border: hsl(225 18% 22% / 0.55);
+  --input: hsl(225 18% 22% / 0.55);
+  --ring: hsl(190 95% 46%);
+
+  /* Soft stone surface kept as a subtle elevated panel */
+  --stone-bg: hsl(225 22% 9%);
+
+  /* Engine signature glows */
+  --cyan-glow:    hsl(190 95% 46% / 0.12);
+  --violet-glow:  hsl(262 80% 64% / 0.14);
+  --amber-glow:   hsl(38 92% 55% / 0.12);
+  --emerald-glow: hsl(155 75% 48% / 0.12);
+
+  /* Signature gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(190 95% 46%), hsl(262 80% 64%));
+  --gradient-warm:    linear-gradient(135deg, hsl(38 92% 55%), hsl(350 80% 58%));
+  --gradient-deep:    linear-gradient(135deg, hsl(225 28% 8%), hsl(225 28% 5%));
+
+  --shadow-glass: 0 8px 32px hsl(225 28% 2% / 0.45);
+  --shadow-glow:  0 0 32px hsl(190 95% 46% / 0.25);
 }
 
-.dark {
-  --background: oklch(0.18 0.03 260);
-  --foreground: oklch(0.98 0.005 240);
-  --card: oklch(0.22 0.04 260);
-  --card-foreground: oklch(0.98 0.005 240);
-  --primary: oklch(0.7 0.16 165);
-  --primary-foreground: oklch(0.18 0.03 260);
-  --border: oklch(1 0 0 / 0.1);
+/* Optional light mode (rare) — kept legible but the platform defaults to dark. */
+.light {
+  --background: hsl(210 30% 98%);
+  --foreground: hsl(225 28% 10%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(225 28% 10%);
+  --primary: hsl(190 85% 36%);
+  --primary-foreground: hsl(0 0% 100%);
+  --accent: hsl(262 70% 50%);
+  --border: hsl(225 18% 80% / 0.6);
+  --muted: hsl(225 22% 95%);
+  --muted-foreground: hsl(225 18% 35%);
+  --stone-bg: hsl(225 30% 96%);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
+  html, body { background-color: var(--color-background); color: var(--color-foreground); }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
     font-family: var(--font-body);
+    background-image:
+      radial-gradient(ellipse at 5% 5%,  hsl(190 80% 15% / 0.10) 0, transparent 50%),
+      radial-gradient(ellipse at 95% 95%, hsl(262 80% 15% / 0.10) 0, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(38 80% 10% / 0.05) 0, transparent 60%);
+    background-attachment: fixed;
   }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  ::selection { background: hsl(190 95% 46% / 0.35); color: hsl(210 30% 97%); }
 }
 
+/* ── Custom Utilities ── */
+@utility glass {
+  background: hsl(225 22% 12% / 0.65);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid hsl(225 18% 24% / 0.45);
+  box-shadow: var(--shadow-glass);
+}
+@utility glass-strong {
+  background: hsl(225 22% 14% / 0.85);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid hsl(225 18% 28% / 0.6);
+  box-shadow: var(--shadow-glass);
+}
+@utility text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-gradient-engine {
+  background: var(--gradient-primary);
+}
+@utility bg-gradient-warm {
+  background: var(--gradient-warm);
+}
+@utility ring-glow-cyan {
+  box-shadow: 0 0 28px hsl(190 95% 46% / 0.25);
+}
+@utility ring-glow-violet {
+  box-shadow: 0 0 28px hsl(262 80% 64% / 0.30);
+}
+@utility bg-stone-soft {
+  background-color: var(--stone-bg);
+}
+
+/* ── Animations ── */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes balanceScale {
   0% { transform: rotate(-2deg); }
   50% { transform: rotate(2deg); }
   100% { transform: rotate(0deg); }
 }
-.animate-in { animation: slideUp 0.8s cubic-bezier(0.19, 1, 0.22, 1) both; }
-.animate-balance { animation: balanceScale 1.2s cubic-bezier(0.19, 1, 0.22, 1) both; }
-.bg-stone-soft { background-color: var(--stone-bg); }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px hsl(190 95% 46% / 0.20); }
+  50%      { box-shadow: 0 0 30px hsl(262 80% 64% / 0.30), 0 0 20px hsl(190 95% 46% / 0.20); }
+}
+.animate-in       { animation: slideUp .8s cubic-bezier(.19,1,.22,1) both; }
+.animate-balance  { animation: balanceScale 1.2s cubic-bezier(.19,1,.22,1) both; }
+.animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }

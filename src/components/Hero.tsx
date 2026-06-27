@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeftRight, Shield, Sparkles, TrendingUp, BadgeCheck } from "lucide-react";
+import { ArrowLeftRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { getPublicStats, getMyStats } from "@/lib/stats.functions";
+import { MiniPricingEngine } from "@/components/MiniPricingEngine";
+import { LocalPrice } from "@/components/LocalPrice";
 
 const publicStatsQ = queryOptions({
   queryKey: ["public-stats"],

@@ -149,24 +149,3 @@ function StatHighlight({ n, t }: { n: React.ReactNode; t: string }) {
   );
 }
 
-function Card(_: { title: string; price: string }) { return null; }
-function Badge(_: { icon: React.ReactNode; label: string; cls: string }) { return null; }
-
-
-function Card({ title, price }: { title: string; price: string }) {
-  return (
-    <div className="bg-stone-soft rounded-2xl p-3">
-      <div className="aspect-square bg-card rounded-xl mb-2" />
-      <div className="text-xs font-bold truncate">{title}</div>
-      <div className="text-[10px] text-muted-foreground">{price} ر.س</div>
-    </div>
-  );
-}
-
-function Badge({ icon, label, cls }: { icon: React.ReactNode; label: string; cls: string }) {
-  return (
-    <div className={`absolute ${cls} flex items-center gap-1.5 px-3 py-2 bg-card rounded-full shadow-lg text-xs font-bold`}>
-      {icon} {label}
-    </div>
-  );
-}

@@ -84,15 +84,15 @@ export function Hero() {
               {isGuest ? (
                 <>
                   <Stat n={fmt(pub?.count)} t="عرض نشط الآن" />
-                  <Stat n={pub?.avgPriceSAR ? `${fmt(pub.avgPriceSAR)} ر.س` : "—"} t="متوسط قيمة العروض" />
-                  <StatHighlight n="0 ر.س" t="رسوم نشر العروض" />
+                  <StatLocal sar={pub?.avgPriceSAR ?? 0} t="متوسط قيمة العروض" />
+                  <StatHighlight n={<>0 <span className="opacity-80">رسوم</span></>} t="رسوم نشر العروض" />
                 </>
               ) : (
                 <>
                   <Stat n={fmt(mine?.activeListings)} t="إعلاناتي النشطة" />
                   <Stat n={fmt(mine?.completedDeals)} t="صفقات مكتملة" />
                   <StatHighlight
-                    n={mine?.savedSAR ? `${fmt(mine.savedSAR)} ر.س` : "0 ر.س"}
+                    n={<LocalPrice sar={mine?.savedSAR ?? 0} />}
                     t="توفيرك التقديري"
                   />
                 </>
@@ -101,26 +101,14 @@ export function Hero() {
           </div>
 
           <div className="hidden lg:block relative">
-            <div className="relative bg-card rounded-3xl p-6 shadow-2xl ring-1 ring-black/5 rotate-2 hover:rotate-0 transition-transform duration-700">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-mono text-muted-foreground">مقايضة #2847</span>
-                <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">عادلة 94%</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Card title="آيفون 14 برو" price="4,200" />
-                <Card title="سماعات Sony" price="1,850" />
-              </div>
-              <div className="mt-4 p-3 bg-primary text-primary-foreground rounded-2xl text-xs">
-                <strong>توصية AI:</strong> أضف مبلغ 950 ر.س لموازنة الصفقة.
-              </div>
+            <div className="rotate-2 hover:rotate-0 transition-transform duration-700">
+              <MiniPricingEngine />
             </div>
-            <Badge icon={<Shield className="size-4" />} label="مقايضات موثّقة" cls="-top-3 -right-3 bg-accent" />
-            <Badge
-              icon={isGuest ? <TrendingUp className="size-4" /> : <BadgeCheck className="size-4" />}
-              label={isGuest ? "قيم متطورة" : "حسابك جاهز"}
-              cls="-bottom-3 -left-3 bg-primary text-primary-foreground"
-            />
+            <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent rounded-full shadow-lg text-xs font-bold">
+              <Sparkles className="size-4" /> تسعير عادل بالـ AI
+            </div>
           </div>
+
         </div>
       </div>
     </section>
@@ -132,7 +120,7 @@ function fmt(n: number | undefined | null) {
   return Number(n).toLocaleString();
 }
 
-function Stat({ n, t }: { n: string; t: string }) {
+function Stat({ n, t }: { n: React.ReactNode; t: string }) {
   return (
     <div>
       <div className="font-display text-2xl font-extrabold text-primary tabular-nums">{n}</div>
@@ -141,7 +129,18 @@ function Stat({ n, t }: { n: string; t: string }) {
   );
 }
 
-function StatHighlight({ n, t }: { n: string; t: string }) {
+function StatLocal({ sar, t }: { sar: number; t: string }) {
+  return (
+    <div>
+      <div className="font-display text-2xl font-extrabold text-primary tabular-nums">
+        {sar > 0 ? <LocalPrice sar={sar} /> : "—"}
+      </div>
+      <div className="text-[11px] text-muted-foreground mt-1 leading-snug">{t}</div>
+    </div>
+  );
+}
+
+function StatHighlight({ n, t }: { n: React.ReactNode; t: string }) {
   return (
     <div className="relative -mt-2 -mb-2 px-3 py-2 rounded-2xl bg-primary/5 ring-1 ring-primary/20">
       <div className="font-display text-2xl font-extrabold text-primary leading-none tabular-nums">{n}</div>
@@ -149,6 +148,10 @@ function StatHighlight({ n, t }: { n: string; t: string }) {
     </div>
   );
 }
+
+function Card(_: { title: string; price: string }) { return null; }
+function Badge(_: { icon: React.ReactNode; label: string; cls: string }) { return null; }
+
 
 function Card({ title, price }: { title: string; price: string }) {
   return (

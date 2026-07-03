@@ -1308,3 +1308,13 @@ body:not(.dark-mode) .trades-item:hover {
 }
 
 
+
+/* ── Baddel integration override ─────────────────────────────
+   المنصة الرئيسية (بدِّل) تدير المصادقة. نُخفي واجهة تسجيل
+   الدخول والتنقّل الداخلي لمنع التعارض مع Supabase auth. */
+#userHeaderArea,
+.btn-header-login,
+#platformNav,
+.platform-nav {
+  display: none !important;
+}

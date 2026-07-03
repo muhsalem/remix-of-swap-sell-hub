@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeftRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { getPublicStats, getMyStats } from "@/lib/stats.functions";
-import { MiniPricingEngine } from "@/components/MiniPricingEngine";
 import { LocalPrice } from "@/components/LocalPrice";
 
 const publicStatsQ = queryOptions({

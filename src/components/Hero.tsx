@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeftRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { getPublicStats, getMyStats } from "@/lib/stats.functions";
-import { MiniPricingEngine } from "@/components/MiniPricingEngine";
 import { LocalPrice } from "@/components/LocalPrice";
 
 const publicStatsQ = queryOptions({
@@ -101,8 +100,34 @@ export function Hero() {
           </div>
 
           <div className="hidden lg:block relative">
-            <div className="rotate-2 hover:rotate-0 transition-transform duration-700">
-              <MiniPricingEngine />
+            <div className="relative rounded-3xl overflow-hidden border border-border shadow-2xl bg-card">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-stone-soft">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full bg-rose-400" />
+                  <span className="size-2.5 rounded-full bg-amber-400" />
+                  <span className="size-2.5 rounded-full bg-emerald-400" />
+                </div>
+                <span className="text-[11px] font-mono text-muted-foreground">
+                  pricing-engine · نسخة مصغرة
+                </span>
+                <Link to="/pricing-engine" className="text-[11px] font-bold text-primary hover:underline">
+                  فتح كامل ↗
+                </Link>
+              </div>
+              <div className="relative w-full h-[520px] overflow-hidden bg-background">
+                <iframe
+                  src="/pricing-engine/index.html"
+                  title="محرك التسعير — نسخة مصغرة"
+                  loading="lazy"
+                  className="absolute top-0 left-0 border-0"
+                  style={{
+                    width: "166.67%",
+                    height: "166.67%",
+                    transform: "scale(0.6)",
+                    transformOrigin: "top left",
+                  }}
+                />
+              </div>
             </div>
             <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent rounded-full shadow-lg text-xs font-bold">
               <Sparkles className="size-4" /> تسعير عادل بالـ AI

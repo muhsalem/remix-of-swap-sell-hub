@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://aavpbfzbmeksufwsmloi.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "baddel-mcp",
+      "version": "0.1.0",
+      "title": "Baddel — Barter Platform"
+    },
+    "tools": [
+      {
+        "name": "search_listings",
+        "title": "Search barter listings",
+        "description": "Search active public barter listings on Baddel. Optionally filter by category or free-text keywords in the title/wants.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "maxLength": 120,
+              "description": "Free-text search over listing titles and wants."
+            },
+            "category": {
+              "type": "string",
+              "maxLength": 60,
+              "description": "Category slug to filter by."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max results (default 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_listing",
+        "title": "Get listing details",
+        "description": "Fetch full details of a single Baddel listing by its UUID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Listing UUID."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "my_listings",
+        "title": "My listings",
+        "description": "Return the signed-in user's own Baddel listings (any status).",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_listing",
+        "title": "Create a barter listing",
+        "description": "Create a new Baddel barter listing for the signed-in user. Returns the created row.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "category": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "condition": {
+              "type": "string",
+              "enum": [
+                "new",
+                "like-new",
+                "excellent",
+                "good",
+                "fair"
+              ]
+            },
+            "age_months": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 360
+            },
+            "market_price": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10000000
+            },
+            "wants": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 200,
+              "description": "What the user wants in exchange."
+            },
+            "city": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60
+            },
+            "listing_type": {
+              "type": "string",
+              "enum": [
+                "item",
+                "service"
+              ]
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "condition",
+            "age_months",
+            "market_price",
+            "wants"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -29,10 +30,13 @@ import { Route as AuthenticatedNewListingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
 const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
   id: '/sharia-committee',
@@ -47,6 +51,11 @@ const PricingEngineRoute = PricingEngineRouteImport.update({
 const PremiumRoute = PremiumRouteImport.update({
   id: '/premium',
   path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DigitalCurrencyRoute = DigitalCurrencyRouteImport.update({
@@ -134,6 +143,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedOffersIdRoute = AuthenticatedOffersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -157,15 +178,24 @@ const AuthenticatedAdminDisputesRoute =
     path: '/disputes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -178,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -188,9 +219,12 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -203,6 +237,7 @@ export interface FileRoutesByTo {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -215,9 +250,12 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
@@ -230,6 +268,7 @@ export interface FileRoutesById {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -242,9 +281,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/mcp'
     | '/premium'
     | '/pricing-engine'
     | '/sharia-committee'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -257,6 +299,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
     | '/admin/monitoring'
     | '/offer/$listingId'
@@ -267,9 +310,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/mcp'
     | '/premium'
     | '/pricing-engine'
     | '/sharia-committee'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/disputes'
     | '/my-listings'
@@ -282,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
     | '/admin/monitoring'
     | '/offer/$listingId'
@@ -293,9 +340,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/mcp'
     | '/premium'
     | '/pricing-engine'
     | '/sharia-committee'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/disputes'
     | '/_authenticated/my-listings'
@@ -308,6 +358,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/disputes'
     | '/_authenticated/admin/monitoring'
     | '/_authenticated/offer/$listingId'
@@ -320,13 +371,17 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
+  McpRoute: typeof McpRoute
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
   ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -350,6 +405,13 @@ declare module '@tanstack/react-router' {
       path: '/premium'
       fullPath: '/premium'
       preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/digital-currency': {
@@ -471,6 +533,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/offers/$id': {
       id: '/_authenticated/offers/$id'
       path: '/$id'
@@ -498,6 +574,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/disputes'
       preLoaderRoute: typeof AuthenticatedAdminDisputesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -559,13 +642,18 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
+  McpRoute: McpRoute,
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiRobotsDottxtRoute: ApiRobotsDottxtRoute,
   ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

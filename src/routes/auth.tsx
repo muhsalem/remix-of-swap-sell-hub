@@ -6,8 +6,15 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { TERMS_VERSION } from "./legal.$doc";
 
+function isSafeRelativePath(p: unknown): p is string {
+  return typeof p === "string" && /^\/[^/\\]/.test(p) && !p.startsWith("//");
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: isSafeRelativePath(s.next) ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "تسجيل الدخول — بادل بادل" },
@@ -19,6 +26,14 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const redirectAfterAuth = () => {
+    if (next) {
+      window.location.href = next;
+    } else {
+      navigate({ to: "/" });
+    }
+  };
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [accountType, setAccountType] = useState<"individual" | "company">("individual");
   const [email, setEmail] = useState("");
@@ -30,13 +45,14 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/" });
+      if (data.user) redirectAfterAuth();
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (s) navigate({ to: "/" });
+      if (s) redirectAfterAuth();
     });
     return () => subscription.unsubscribe();
-  }, [navigate]);
+     
+  }, [next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

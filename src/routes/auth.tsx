@@ -78,7 +78,7 @@ function AuthPage() {
               terms_accepted: "true",
               terms_version: TERMS_VERSION,
             },
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}${next ?? "/"}`,
           },
         });
         if (error) throw error;
@@ -103,7 +103,7 @@ function AuthPage() {
   const google = async () => {
     setLoading(true);
     try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}${next ?? ""}` });
     } catch (e) {
       toast.error("تعذّر الدخول بـ Google");
       setLoading(false);

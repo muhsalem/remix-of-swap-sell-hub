@@ -146,12 +146,18 @@ export const listPendingKyc = createServerFn({ method: "GET" })
     await assertAdmin(supabase, userId);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,display_name,company_name,commercial_register,company_kyc_status,company_kyc_doc_url,company_kyc_notes,created_at")
+      .select("id,display_name,company_name,company_kyc_status,created_at,profiles_private(commercial_register,company_kyc_doc_url,company_kyc_notes)")
       .eq("account_type", "company")
       .in("company_kyc_status", ["pending", "rejected"])
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return { profiles: data ?? [] };
+    // Flatten the private-data embed so the admin UI keeps its flat shape
+    const profiles = (data ?? []).map((row: any) => {
+      const { profiles_private, ...rest } = row;
+      const priv = Array.isArray(profiles_private) ? profiles_private[0] : profiles_private;
+      return { ...rest, ...(priv ?? {}) };
+    });
+    return { profiles };
   });
 
 export const reviewKyc = createServerFn({ method: "POST" })
@@ -170,11 +176,14 @@ export const reviewKyc = createServerFn({ method: "POST" })
       .from("profiles")
       .update({
         company_kyc_status: data.decision,
-        company_kyc_notes: data.notes,
         company_verified: data.decision === "verified",
       } as never)
       .eq("id", data.profile_id);
     if (error) throw new Error(error.message);
+    const { error: privErr } = await supabase
+      .from("profiles_private")
+      .upsert({ user_id: data.profile_id, company_kyc_notes: data.notes } as never, { onConflict: "user_id" });
+    if (privErr) throw new Error(privErr.message);
     await supabase.from("notifications").insert({
       user_id: data.profile_id,
       type: "kyc_decision",

@@ -17,9 +17,9 @@ export const getMyContact = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data, error } = await supabase
-      .from("profiles")
+      .from("profiles_private")
       .select("contact_phone,whatsapp")
-      .eq("id", userId)
+      .eq("user_id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return { contact_phone: (data as { contact_phone?: string } | null)?.contact_phone ?? null, whatsapp: (data as { whatsapp?: string } | null)?.whatsapp ?? null };
@@ -36,9 +36,11 @@ export const updateMyContact = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
-      .from("profiles")
-      .update({ contact_phone: data.contact_phone ?? null, whatsapp: data.whatsapp ?? null } as never)
-      .eq("id", userId);
+      .from("profiles_private")
+      .upsert(
+        { user_id: userId, contact_phone: data.contact_phone ?? null, whatsapp: data.whatsapp ?? null } as never,
+        { onConflict: "user_id" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });

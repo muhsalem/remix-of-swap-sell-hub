@@ -39,6 +39,19 @@ export async function enforceRateLimit(userId: string | null, opts: Options): Pr
     .then(({ error: insErr }) => {
       if (insErr) console.error("[rate-limit] insert failed", insErr);
     });
+
+  // Opportunistic cleanup (~1% of calls): purge entries older than 24h
+  // so the table never grows unbounded.
+  if (Math.random() < 0.01) {
+    const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    await supabaseAdmin
+      .from("rate_limits")
+      .delete()
+      .lt("created_at", dayAgo)
+      .then(({ error: delErr }) => {
+        if (delErr) console.error("[rate-limit] cleanup failed", delErr);
+      });
+  }
 }
 
 export async function logServerError(

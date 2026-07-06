@@ -37,6 +37,7 @@ import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
   id: '/sharia-committee',
@@ -184,6 +185,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
     | '/admin/monitoring'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
     | '/admin/monitoring'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/disputes'
     | '/_authenticated/admin/monitoring'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -582,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -653,6 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport

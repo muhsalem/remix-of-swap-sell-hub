@@ -451,9 +451,13 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
           bio: string | null
+          commercial_register: string | null
+          company_kyc_doc_url: string | null
+          company_kyc_notes: string | null
           company_kyc_status: Database["public"]["Enums"]["kyc_status"]
           company_name: string | null
           company_verified: boolean
+          contact_phone: string | null
           created_at: string
           display_name: string
           id: string
@@ -464,14 +468,19 @@ export type Database = {
           updated_at: string
           verified_badge: boolean
           verified_until: string | null
+          whatsapp: string | null
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
+          commercial_register?: string | null
+          company_kyc_doc_url?: string | null
+          company_kyc_notes?: string | null
           company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
+          contact_phone?: string | null
           created_at?: string
           display_name: string
           id: string
@@ -482,14 +491,19 @@ export type Database = {
           updated_at?: string
           verified_badge?: boolean
           verified_until?: string | null
+          whatsapp?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
+          commercial_register?: string | null
+          company_kyc_doc_url?: string | null
+          company_kyc_notes?: string | null
           company_kyc_status?: Database["public"]["Enums"]["kyc_status"]
           company_name?: string | null
           company_verified?: boolean
+          contact_phone?: string | null
           created_at?: string
           display_name?: string
           id?: string
@@ -500,49 +514,9 @@ export type Database = {
           updated_at?: string
           verified_badge?: boolean
           verified_until?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
-      }
-      profiles_private: {
-        Row: {
-          commercial_register: string | null
-          company_kyc_doc_url: string | null
-          company_kyc_notes: string | null
-          contact_phone: string | null
-          created_at: string
-          updated_at: string
-          user_id: string
-          whatsapp: string | null
-        }
-        Insert: {
-          commercial_register?: string | null
-          company_kyc_doc_url?: string | null
-          company_kyc_notes?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          updated_at?: string
-          user_id: string
-          whatsapp?: string | null
-        }
-        Update: {
-          commercial_register?: string | null
-          company_kyc_doc_url?: string | null
-          company_kyc_notes?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          updated_at?: string
-          user_id?: string
-          whatsapp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_private_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       promotions: {
         Row: {

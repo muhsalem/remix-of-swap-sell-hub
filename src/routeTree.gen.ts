@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
@@ -40,9 +42,19 @@ import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authen
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
   id: '/sharia-committee',
   path: '/sharia-committee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -206,7 +218,9 @@ export interface FileRoutesByFullPath {
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -237,7 +251,9 @@ export interface FileRoutesByTo {
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -270,7 +286,9 @@ export interface FileRoutesById {
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -303,7 +321,9 @@ export interface FileRouteTypes {
     | '/premium'
     | '/pricing-engine'
     | '/reset-password'
+    | '/robots.txt'
     | '/sharia-committee'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -334,7 +354,9 @@ export interface FileRouteTypes {
     | '/premium'
     | '/pricing-engine'
     | '/reset-password'
+    | '/robots.txt'
     | '/sharia-committee'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -366,7 +388,9 @@ export interface FileRouteTypes {
     | '/premium'
     | '/pricing-engine'
     | '/reset-password'
+    | '/robots.txt'
     | '/sharia-committee'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -399,7 +423,9 @@ export interface RootRouteChildren {
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
@@ -412,11 +438,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sharia-committee': {
       id: '/sharia-committee'
       path: '/sharia-committee'
       fullPath: '/sharia-committee'
       preLoaderRoute: typeof ShariaCommitteeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -686,7 +726,9 @@ const rootRouteChildren: RootRouteChildren = {
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,

@@ -9,7 +9,20 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "رؤية ورسالة منصة بدِّل: اقتصاد مقايضة عادل ومتوافق شرعياً يربط الأفراد والشركات في الشرق الأوسط." },
       { property: "og:title", content: "من نحن — منصة بدِّل" },
       { property: "og:description", content: "رؤية ورسالة منصة بدِّل لاقتصاد مقايضة عادل وذكي." },
+      { property: "og:url", content: "https://badelbarter.lovable.app/about" },
+      { property: "og:type", content: "article" },
     ],
+    links: [{ rel: "canonical", href: "https://badelbarter.lovable.app/about" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        name: "من نحن — بدِّل",
+        url: "https://badelbarter.lovable.app/about",
+        inLanguage: "ar",
+      }),
+    }],
   }),
   component: AboutPage,
 });

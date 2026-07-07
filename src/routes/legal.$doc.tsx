@@ -251,11 +251,15 @@ export const Route = createFileRoute("/legal/$doc")({
     if (!d) throw notFound();
     return { doc: d, slug: params.doc };
   },
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, params }) => ({
     meta: [
       { title: loaderData?.doc.title ?? "وثيقة قانونية — بادل" },
       { name: "description", content: `${loaderData?.doc.title ?? "وثيقة قانونية"} — منصة بادل للمقايضة العادلة.` },
+      { property: "og:title", content: loaderData?.doc.title ?? "وثيقة قانونية — بادل" },
+      { property: "og:url", content: `https://badelbarter.lovable.app/legal/${params.doc}` },
+      { property: "og:type", content: "article" },
     ],
+    links: [{ rel: "canonical", href: `https://badelbarter.lovable.app/legal/${params.doc}` }],
   }),
   component: LegalDoc,
   notFoundComponent: () => (

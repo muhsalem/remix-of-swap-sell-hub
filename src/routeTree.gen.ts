@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -42,6 +43,11 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
   id: '/sharia-committee',
   path: '/sharia-committee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingEngineRoute = PricingEngineRouteImport.update({
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
+    | '/reset-password'
     | '/sharia-committee'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
+    | '/reset-password'
     | '/sharia-committee'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
+    | '/reset-password'
     | '/sharia-committee'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/sharia-committee'
       fullPath: '/sharia-committee'
       preLoaderRoute: typeof ShariaCommitteeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing-engine': {
@@ -665,6 +685,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:

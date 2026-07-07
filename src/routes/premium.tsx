@@ -7,7 +7,11 @@ export const Route = createFileRoute("/premium")({
     meta: [
       { title: "بادل Premium — قريباً" },
       { name: "description", content: "باقات بادل Premium ومكافآت الإحالة ستُتاح قريباً مع إطلاق المرحلة الثانية." },
+      { property: "og:title", content: "بادل Premium — قريباً" },
+      { property: "og:description", content: "باقات Premium وبرنامج الإحالة قريباً." },
+      { property: "og:url", content: "https://badelbarter.lovable.app/premium" },
     ],
+    links: [{ rel: "canonical", href: "https://badelbarter.lovable.app/premium" }],
   }),
   component: PremiumGate,
 });

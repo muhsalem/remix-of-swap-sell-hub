@@ -264,6 +264,13 @@ function AuthPage() {
               {mode === "signin" ? "أنشئ حساباً" : "سجّل دخولك"}
             </button>
           </p>
+          {mode === "signin" && (
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              <Link to="/reset-password" className="hover:text-foreground hover:underline">
+                نسيت كلمة المرور؟
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

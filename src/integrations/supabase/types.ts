@@ -518,6 +518,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_private: {
+        Row: {
+          company_kyc_notes: string | null
+          contact_phone: string | null
+          created_at: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          company_kyc_notes?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          company_kyc_notes?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       promotions: {
         Row: {
           cost_di: number

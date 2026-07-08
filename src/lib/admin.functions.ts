@@ -172,7 +172,10 @@ export const reviewKyc = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { error } = await supabase
+    // Privileged columns (company_kyc_status, company_verified) are locked at the
+    // grant level to the user role — use admin client to write them.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({
         company_kyc_status: data.decision,
@@ -180,11 +183,11 @@ export const reviewKyc = createServerFn({ method: "POST" })
       } as never)
       .eq("id", data.profile_id);
     if (error) throw new Error(error.message);
-    const { error: privErr } = await supabase
+    const { error: privErr } = await supabaseAdmin
       .from("profiles_private")
       .upsert({ user_id: data.profile_id, company_kyc_notes: data.notes } as never, { onConflict: "user_id" });
     if (privErr) throw new Error(privErr.message);
-    await supabase.from("notifications").insert({
+    await supabaseAdmin.from("notifications").insert({
       user_id: data.profile_id,
       type: "kyc_decision",
       title: data.decision === "verified" ? "تم توثيق شركتك ✓" : "تم رفض طلب التوثيق",

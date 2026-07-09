@@ -4,10 +4,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/offers.functions";
+import { logConsent } from "@/lib/consent.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
-import { LocalPrice } from "@/components/LocalPrice";
+import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { OfferPreviewPanel } from "@/components/OfferPreviewPanel";
+import { ConsentCheckbox } from "@/components/ConsentCheckbox";
 import { ArrowLeftRight, Plus } from "lucide-react";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });
@@ -36,12 +38,30 @@ function NewOfferPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [cash, setCash] = useState(0);
   const [message, setMessage] = useState("");
+  const [consent, setConsent] = useState(false);
+  const { country } = useUserCurrency();
 
   const createFn = useServerFn(createOffer);
+  const consentFn = useServerFn(logConsent);
   const m = useMutation({
-    mutationFn: () => createFn({
-      data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
-    }),
+    mutationFn: async () => {
+      const res = await createFn({
+        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
+      });
+      try {
+        await consentFn({
+          data: {
+            country_code: (country === "EG" ? "EG" : "SA") as "SA" | "EG",
+            context: "create_offer",
+            docs: ["terms", "privacy", "barter"],
+            offer_id: res.id,
+            listing_id: listingId,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+          },
+        });
+      } catch (e) { console.warn("consent log failed", e); }
+      return res;
+    },
     onSuccess: ({ id }) => {
       toast.success("تم إرسال عرض المقايضة");
       navigate({ to: "/offers/$id", params: { id } });
@@ -135,10 +155,17 @@ function NewOfferPage() {
               cash={cash}
             />
 
+            <div className="mt-4 mb-3">
+              <ConsentCheckbox checked={consent} onChange={setConsent} context="create_offer" />
+            </div>
+
             <button
-              onClick={() => m.mutate()}
-              disabled={m.isPending}
-              className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50"
+              onClick={() => {
+                if (!consent) { toast.error("يجب الموافقة على الشروط أولاً"); return; }
+                m.mutate();
+              }}
+              disabled={m.isPending || !consent}
+              className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {m.isPending ? "جاري الإرسال..." : "تأكيد وإرسال عرض المقايضة"}
             </button>

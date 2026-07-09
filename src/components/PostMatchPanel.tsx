@@ -198,6 +198,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const diOn = pricing?.diEnabled ?? false;
   const [diAmt, setDiAmt] = useState(0);
   const [cashAmt, setCashAmt] = useState(0);
+  const { country } = useUserCurrency();
 
   const pay = useMutation({
     mutationFn: () => payFn({ data: { offer_id: offer.id, di_amount: diOn ? diAmt : 0, cash_amount: cashAmt } }),
@@ -211,8 +212,6 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
 
   if (isLoading || !data) return null;
 
-  // Derive user's country → currency → tax profile
-  const { country } = useUserCurrency();
   const dealSar = Math.max(data.cashBalance ?? 0, 50);
   const fee = computeFee(dealSar, country);
   const { profile, baseLocal, vatLocal, totalLocal } = fee;

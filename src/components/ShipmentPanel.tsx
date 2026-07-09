@@ -293,13 +293,36 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
         </label>
       </div>
 
+      {issue && issue.code !== "no_from" && issue.code !== "no_to" && (
+        <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+          <AlertTriangle className="size-3.5 mt-0.5 shrink-0 text-amber-600" />
+          <div className="flex-1">
+            <div>{issue.msg}</div>
+            {issue.suggest && issue.suggest.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {issue.suggest.map((s) => (
+                  <button
+                    key={s.code}
+                    onClick={() => { setTo(s.code); setQuote(null); }}
+                    className="px-2 py-0.5 rounded-full bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 font-bold"
+                  >
+                    {s.name_ar} <span className="opacity-60 font-normal">· {s.region_ar}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => q.mutate()}
-        disabled={!from || !to || !weight || q.isPending}
+        disabled={!!issue || q.isPending}
         className="w-full px-3 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold disabled:opacity-50 mb-2"
       >
         {q.isPending ? "جاري الحساب…" : "احسب سعر الشحن"}
       </button>
+
 
       {quote && (
         <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1">

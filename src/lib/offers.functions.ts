@@ -111,8 +111,8 @@ export const getOffer = createServerFn({ method: "GET" })
       .from("trade_offers")
       .select(`
         *,
-        requested:requested_listing(id,title,images,market_price,owner_id),
-        offered:offered_listing(id,title,images,market_price,owner_id),
+        requested:requested_listing(id,title,images,market_price,owner_id,listing_type),
+        offered:offered_listing(id,title,images,market_price,owner_id,listing_type),
         from_profile:from_user(display_name,avatar_url,rating),
         to_profile:to_user(display_name,avatar_url,rating)
       `)

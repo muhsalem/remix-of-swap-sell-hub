@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -75,6 +76,11 @@ const PremiumRoute = PremiumRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DigitalCurrencyRoute = DigitalCurrencyRouteImport.update({
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -419,6 +431,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   McpRoute: typeof McpRoute
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
@@ -485,6 +498,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/digital-currency': {
@@ -722,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
+  LeaderboardRoute: LeaderboardRoute,
   McpRoute: McpRoute,
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,

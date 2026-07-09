@@ -8,6 +8,8 @@ import {
 } from "@/lib/post-match.functions";
 import { getPricing } from "@/lib/promotions.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserCurrency } from "@/components/LocalPrice";
+import { computeFee, fmtLocal } from "@/lib/tax-config";
 
 type Props = { offer: any; userId: string; qc: ReturnType<typeof useQueryClient> };
 
@@ -196,6 +198,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const diOn = pricing?.diEnabled ?? false;
   const [diAmt, setDiAmt] = useState(0);
   const [cashAmt, setCashAmt] = useState(0);
+  const { country } = useUserCurrency();
 
   const pay = useMutation({
     mutationFn: () => payFn({ data: { offer_id: offer.id, di_amount: diOn ? diAmt : 0, cash_amount: cashAmt } }),
@@ -208,19 +211,47 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   });
 
   if (isLoading || !data) return null;
+
+  const dealSar = Math.max(data.cashBalance ?? 0, 50);
+  const fee = computeFee(dealSar, country);
+  const { profile, baseLocal, vatLocal, totalLocal } = fee;
+  const vatPct = Math.round(profile.vatRate * 100);
+
   const effDi = diOn ? diAmt : 0;
-  const totalSar = effDi * 5 + cashAmt;
-  const enough = totalSar >= data.feeSar;
+  const totalCoveredSar = effDi * 5 + cashAmt;
+  const enough = totalCoveredSar >= fee.totalSar;
+  const missingLocal = Math.max(0, (fee.totalSar - totalCoveredSar) * profile.perSAR);
 
   return (
     <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
       <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
-        <Wallet className="size-4 text-primary" /> عمولة المنصة (3%)
+        <Wallet className="size-4 text-primary" /> عمولة المنصة ({Math.round(profile.feeRate * 100)}%)
+        <span className="mr-auto text-[10px] font-normal text-muted-foreground">
+          {profile.flag} {profile.label}
+        </span>
       </h3>
+
       <div className="text-xs space-y-1 mb-3 p-2 bg-stone-soft rounded-lg">
-        <div className="flex justify-between"><span>المبلغ المطلوب:</span><b>{data.feeSar.toLocaleString()} ر.س</b></div>
+        <div className="flex justify-between"><span>العمولة قبل الضريبة:</span><b>{fmtLocal(baseLocal, profile)}</b></div>
+        {profile.vatRate > 0 ? (
+          <div className="flex justify-between text-muted-foreground">
+            <span>ضريبة القيمة المضافة ({vatPct}%):</span>
+            <span>{fmtLocal(vatLocal, profile)}</span>
+          </div>
+        ) : (
+          <div className="text-[10px] text-muted-foreground">لا تُطبَّق ضريبة قيمة مضافة في {profile.label}</div>
+        )}
+        <div className="flex justify-between border-t border-border/60 pt-1 mt-1">
+          <span className="font-bold">الإجمالي المطلوب:</span>
+          <b className="text-primary">{fmtLocal(totalLocal, profile)}</b>
+        </div>
+        {profile.code !== "SA" && (
+          <div className="text-[10px] text-muted-foreground pt-1">
+            ≈ {fee.totalSar.toFixed(2)} ر.س (يُخصم من الرصيد الداخلي بالريال ثم يُحوَّل)
+          </div>
+        )}
         {diOn && (
-          <div className="flex justify-between"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI (≈ {data.diValueSar.toFixed(0)} ر.س)</b></div>
+          <div className="flex justify-between pt-1"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI</b></div>
         )}
       </div>
 
@@ -252,18 +283,26 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
             </div>
           )}
           <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block">نقدي (ر.س)</label>
+            <label className="text-[11px] text-muted-foreground mb-1 block">
+              نقدي ({profile.symbol}) — تُخصم بالمعادل بالريال
+            </label>
             <input type="number" min={0} step={0.5} value={cashAmt}
               onChange={(e) => setCashAmt(Math.max(0, Number(e.target.value)))}
-              className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
+              className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
+              placeholder={`أدخل المبلغ بالريال (${profile.symbol} ≈ ${(1 / profile.perSAR).toFixed(2)} ر.س)`} />
           </div>
           <div className={`text-[11px] text-center font-bold ${enough ? "text-emerald-600" : "text-destructive"}`}>
-            إجمالي تغطيتك: {totalSar.toFixed(0)} ر.س {enough ? "✓ كافٍ" : `— ينقص ${(data.feeSar - totalSar).toFixed(0)} ر.س`}
+            {enough
+              ? `✓ التغطية كافية (${fmtLocal(totalCoveredSar * profile.perSAR, profile)})`
+              : `ينقص ${fmtLocal(missingLocal, profile)}`}
           </div>
           <button onClick={() => pay.mutate()} disabled={!enough || pay.isPending}
             className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50">
-            دفع العمولة الآن
+            دفع {fmtLocal(totalLocal, profile)} الآن
           </button>
+          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+            {profile.einvoiceNote} · {profile.taxAuthority}
+          </p>
           {!diOn && (
             <p className="text-[10px] text-muted-foreground text-center">
               الدفع نقدي فقط في المرحلة الأولى. العملة الداخلية (DI) ستُتاح لاحقاً.

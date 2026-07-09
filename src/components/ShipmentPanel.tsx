@@ -9,6 +9,7 @@ import {
   getShipmentTracking,
   listShippingCities,
 } from "@/lib/shipping.functions";
+import { validateShipmentInput } from "@/lib/shipment-validation";
 import { confirmDelivery } from "@/lib/logistics.functions";
 import { LocalPrice } from "@/components/LocalPrice";
 

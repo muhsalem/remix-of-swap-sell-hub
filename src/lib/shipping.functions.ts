@@ -232,7 +232,7 @@ export const bookShipment = createServerFn({ method: "POST" })
     if (offer.status !== "accepted") throw new Error("لا يمكن حجز الشحن إلا بعد قبول العرض");
     if (offer.tracking_number) throw new Error("تم حجز الشحن مسبقاً لهذه الصفقة");
 
-    const quote = calcCost({
+    const quote = await calcCost({
       from: data.from_city,
       to: data.to_city,
       weightKg: data.weight_kg,

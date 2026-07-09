@@ -314,8 +314,14 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
               ? `✓ التغطية كافية (${fmtLocal(totalCoveredSar * profile.perSAR, profile)})`
               : `ينقص ${fmtLocal(missingLocal, profile)}`}
           </div>
-          <button onClick={() => pay.mutate()} disabled={!enough || pay.isPending}
-            className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50">
+          <ConsentCheckbox checked={payConsent} onChange={setPayConsent} context="payment" />
+          <button
+            onClick={() => {
+              if (!payConsent) { toast.error("يجب الموافقة على الشروط قبل الدفع"); return; }
+              pay.mutate();
+            }}
+            disabled={!enough || pay.isPending || !payConsent}
+            className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed">
             دفع {fmtLocal(totalLocal, profile)} الآن
           </button>
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">

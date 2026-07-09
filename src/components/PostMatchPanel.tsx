@@ -8,6 +8,8 @@ import {
 } from "@/lib/post-match.functions";
 import { getPricing } from "@/lib/promotions.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserCurrency } from "@/components/LocalPrice";
+import { computeFee, fmtLocal } from "@/lib/tax-config";
 
 type Props = { offer: any; userId: string; qc: ReturnType<typeof useQueryClient> };
 

@@ -247,31 +247,21 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       </h3>
 
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <label className="text-[11px] text-muted-foreground">
-          من مدينة
-          <select
-            value={from}
-            onChange={(e) => { setFrom(e.target.value); setQuote(null); }}
-            className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
-          >
-            <option value="">اختر…</option>
-            {renderGroups("🇸🇦", saGroups)}
-            {renderGroups("🇪🇬", egGroups)}
-          </select>
-        </label>
-        <label className="text-[11px] text-muted-foreground">
-          إلى مدينة
-          <select
-            value={to}
-            onChange={(e) => { setTo(e.target.value); setQuote(null); }}
-            className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
-          >
-            <option value="">اختر…</option>
-            {renderGroups("🇸🇦", saGroups)}
-            {renderGroups("🇪🇬", egGroups)}
-          </select>
-        </label>
+        <CityPicker
+          label="من مدينة"
+          value={from}
+          onChange={(v) => { setFrom(v); setQuote(null); }}
+          cities={cities}
+        />
+        <CityPicker
+          label="إلى مدينة"
+          value={to}
+          onChange={(v) => { setTo(v); setQuote(null); }}
+          cities={cities}
+          restrictCountry={fromCity?.country}
+        />
       </div>
+
 
 
       <div className="grid grid-cols-2 gap-2 mb-2">

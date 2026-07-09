@@ -143,27 +143,25 @@ export const listShippingCities = createServerFn({ method: "GET" }).handler(asyn
   return Object.entries(zones).map(([code, v]) => ({ code, ...v }));
 });
 
-async function calcCost(params: {
-  from: string;
-  to: string;
-  weightKg: number;
-  declaredValueSar: number;
-}) {
-  const zones = await loadZones();
+/** Pure, synchronous cost calc against a supplied zones map — used in tests. */
+export function calcCostSync(
+  zones: Record<string, { country: "SA" | "EG"; zone: number; name_ar: string; region_ar: string }>,
+  params: { from: string; to: string; weightKg: number; declaredValueSar: number },
+) {
   const from = zones[params.from];
-  const to = CITY_ZONES[params.to];
+  const to = zones[params.to];
   if (!from || !to) throw new Error("مدينة غير مدعومة");
   if (from.country !== to.country) {
     throw new Error("الشحن الدولي غير مفعّل — الإطلاق الحالي لمصر والسعودية فقط داخل نفس البلد.");
   }
   const kg = Math.max(0.5, params.weightKg);
-  const perKg = from.country === "SA" ? 6.5 : 3.2; // SAR/kg (EG base cheaper)
-  const base = from.country === "SA" ? 22 : 12; // SAR
+  const perKg = from.country === "SA" ? 6.5 : 3.2;
+  const base = from.country === "SA" ? 22 : 12;
   const zoneDiff = Math.abs(from.zone - to.zone);
   const zoneFee = zoneDiff * (from.country === "SA" ? 10 : 5);
-  const sameCity = from === to;
+  const sameCity = params.from === params.to;
   const intercityFee = sameCity ? 0 : from.country === "SA" ? 15 : 8;
-  const insurance = Math.min(50, params.declaredValueSar * 0.005); // 0.5% cap 50
+  const insurance = Math.min(50, params.declaredValueSar * 0.005);
   const subtotal = base + perKg * kg + zoneFee + intercityFee + insurance;
   const vat = from.country === "SA" ? subtotal * 0.15 : subtotal * 0.14;
   const total = Math.round((subtotal + vat) * 100) / 100;
@@ -184,6 +182,19 @@ async function calcCost(params: {
     weight_kg: kg,
   };
 }
+
+export const CITY_ZONES_FALLBACK = CITY_ZONES;
+
+async function calcCost(params: {
+  from: string;
+  to: string;
+  weightKg: number;
+  declaredValueSar: number;
+}) {
+  const zones = await loadZones();
+  return calcCostSync(zones, params);
+}
+
 
 export const quoteShipping = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) =>

@@ -211,6 +211,32 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       </optgroup>
     ));
 
+  // ── Smart validation + suggestions ──────────────────────────────────
+  const fromCity = cities.find((c: any) => c.code === from);
+  const toCity = cities.find((c: any) => c.code === to);
+  type Issue = { code: "no_from" | "no_to" | "bad_from" | "bad_to" | "cross_border" | "bad_weight" | "bad_value" | "same_city"; msg: string; suggest?: { code: string; name_ar: string; region_ar: string }[] };
+  let issue: Issue | null = null;
+  if (!from) issue = { code: "no_from", msg: "اختر مدينة المنشأ." };
+  else if (!fromCity) issue = { code: "bad_from", msg: `الرمز \"${from}\" غير مدعوم — اختر من القائمة.` };
+  else if (!to) issue = { code: "no_to", msg: "اختر مدينة الوجهة." };
+  else if (!toCity) issue = { code: "bad_to", msg: `الرمز \"${to}\" غير مدعوم — اختر من القائمة.` };
+  else if (fromCity.country !== toCity.country) {
+    const same = cities
+      .filter((c: any) => c.country === fromCity.country && c.code !== fromCity.code)
+      .sort((a: any, b: any) => (a.region_ar === fromCity.region_ar ? -1 : 1))
+      .slice(0, 4);
+    issue = {
+      code: "cross_border",
+      msg: `الشحن الدولي غير مفعّل. المنشأ في ${fromCity.country === "SA" ? "🇸🇦 السعودية" : "🇪🇬 مصر"} والوجهة في ${toCity.country === "SA" ? "🇸🇦 السعودية" : "🇪🇬 مصر"}. اختر وجهة داخل نفس البلد:`,
+      suggest: same,
+    };
+  } else if (from === to) issue = { code: "same_city", msg: "مدينة المنشأ والوجهة متطابقتان — اختر وجهة مختلفة." };
+  else if (!Number.isFinite(weight) || weight <= 0) issue = { code: "bad_weight", msg: "الوزن يجب أن يكون أكبر من صفر." };
+  else if (weight > 200) issue = { code: "bad_weight", msg: "الحد الأقصى للوزن 200 كجم." };
+  else if (!Number.isFinite(declared) || declared < 0) issue = { code: "bad_value", msg: "القيمة المُعلنة يجب ألا تقل عن صفر." };
+  else if (declared > 500000) issue = { code: "bad_value", msg: "الحد الأقصى للقيمة المُعلنة 500,000 ر.س." };
+
+
   return (
     <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
       <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">

@@ -194,13 +194,29 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
   const cities = citiesQ.data ?? [];
   const saCities = cities.filter((c: any) => c.country === "SA");
   const egCities = cities.filter((c: any) => c.country === "EG");
+  const groupByRegion = (list: any[]) => {
+    const m: Record<string, any[]> = {};
+    for (const c of list) {
+      const k = c.region_ar || c.name_ar;
+      (m[k] ||= []).push(c);
+    }
+    return m;
+  };
+  const saGroups = groupByRegion(saCities);
+  const egGroups = groupByRegion(egCities);
+  const renderGroups = (flag: string, groups: Record<string, any[]>) =>
+    Object.entries(groups).map(([region, list]) => (
+      <optgroup key={`${flag}-${region}`} label={`${flag} ${region}`}>
+        {list.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
+      </optgroup>
+    ));
 
   return (
     <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
       <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
         <Truck className="size-4 text-primary" /> حجز الشحن (Sandbox)
         <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200">
-          BadelShip
+          BadelShip · {saCities.length + egCities.length} مدينة
         </span>
       </h3>
 
@@ -213,12 +229,8 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           >
             <option value="">اختر…</option>
-            <optgroup label="🇸🇦 السعودية">
-              {saCities.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
-            </optgroup>
-            <optgroup label="🇪🇬 مصر">
-              {egCities.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
-            </optgroup>
+            {renderGroups("🇸🇦", saGroups)}
+            {renderGroups("🇪🇬", egGroups)}
           </select>
         </label>
         <label className="text-[11px] text-muted-foreground">
@@ -229,15 +241,12 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           >
             <option value="">اختر…</option>
-            <optgroup label="🇸🇦 السعودية">
-              {saCities.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
-            </optgroup>
-            <optgroup label="🇪🇬 مصر">
-              {egCities.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
-            </optgroup>
+            {renderGroups("🇸🇦", saGroups)}
+            {renderGroups("🇪🇬", egGroups)}
           </select>
         </label>
       </div>
+
 
       <div className="grid grid-cols-2 gap-2 mb-2">
         <label className="text-[11px] text-muted-foreground">

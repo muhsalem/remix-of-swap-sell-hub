@@ -38,12 +38,30 @@ function NewOfferPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [cash, setCash] = useState(0);
   const [message, setMessage] = useState("");
+  const [consent, setConsent] = useState(false);
+  const { country } = useUserCurrency();
 
   const createFn = useServerFn(createOffer);
+  const consentFn = useServerFn(logConsent);
   const m = useMutation({
-    mutationFn: () => createFn({
-      data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
-    }),
+    mutationFn: async () => {
+      const res = await createFn({
+        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
+      });
+      try {
+        await consentFn({
+          data: {
+            country_code: (country === "EG" ? "EG" : "SA") as "SA" | "EG",
+            context: "create_offer",
+            docs: ["terms", "privacy", "barter"],
+            offer_id: res.id,
+            listing_id: listingId,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+          },
+        });
+      } catch (e) { console.warn("consent log failed", e); }
+      return res;
+    },
     onSuccess: ({ id }) => {
       toast.success("تم إرسال عرض المقايضة");
       navigate({ to: "/offers/$id", params: { id } });

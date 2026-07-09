@@ -33,7 +33,7 @@ export function ConsentCheckbox({ checked, onChange, context }: Props) {
         {LABELS[context]} أقرّ بأني قرأت ووافقت على{" "}
         <Link to="/legal/$doc" params={{ doc: "terms" }} target="_blank" className="text-primary font-bold underline">شروط الاستخدام</Link>
         {" و "}
-        <Link to="/legal/$doc" params={{ doc: "privacy" }} params-search={{}} target="_blank" className="text-primary font-bold underline">سياسة الخصوصية</Link>
+        <Link to="/legal/$doc" params={{ doc: "privacy" }} target="_blank" className="text-primary font-bold underline">سياسة الخصوصية</Link>
         {" و "}
         <Link to="/legal/$doc" params={{ doc: "barter" }} target="_blank" className="text-primary font-bold underline">اتفاقية المقايضة</Link>
         {" الخاصة بـ "}<strong className="text-foreground">{flag}</strong>.

@@ -976,9 +976,9 @@ function seedDemoData() {
   var demoUsers = [
     { name: 'أحمد محمد', email: 'ahmed@demo.com', password: 'demo123', country: 'EG', avatar: '😎' },
     { name: 'سارة العلي', email: 'sara@demo.com', password: 'demo123', country: 'SA', avatar: '🧕' },
-    { name: 'محمد خان', email: 'khan@demo.com', password: 'demo123', country: 'AE', avatar: '🧑‍💼' },
-    { name: 'ياسر الحمصي', email: 'yasser@demo.com', password: 'demo123', country: 'SY', avatar: '👨‍💼' },
-    { name: 'منى الجابري', email: 'mona@demo.com', password: 'demo123', country: 'OM', avatar: '👩‍💼' }
+    { name: 'محمد خان', email: 'khan@demo.com', password: 'demo123', country: 'SA', avatar: '🧑‍💼' },
+    { name: 'ياسر الحمصي', email: 'yasser@demo.com', password: 'demo123', country: 'EG', avatar: '👨‍💼' },
+    { name: 'منى الجابري', email: 'mona@demo.com', password: 'demo123', country: 'SA', avatar: '👩‍💼' }
   ];
 
   var createdUsers = [];

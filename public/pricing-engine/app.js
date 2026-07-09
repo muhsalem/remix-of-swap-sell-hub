@@ -156,16 +156,14 @@ const IMPORT_DUTIES = {
 //  3b. COUNTRY PROXIMITY REGIONS
 // ─────────────────────────────────────────────────────
 const COUNTRY_REGIONS = {
-  gulf:        ['SA','AE','KW','QA','BH','OM'],
-  levant:      ['JO','LB','IQ','LY','SY'],
-  north_africa:['EG','TN','MA','DZ','SD'],
+  gulf:        ['SA'],
+  north_africa:['EG'],
 };
 
 // adjacency: which regions are "close" to each other
 const REGION_ADJACENCY = {
-  gulf:        ['levant','north_africa'],
-  levant:      ['gulf','north_africa'],
-  north_africa:['levant','gulf'],
+  gulf:        ['north_africa'],
+  north_africa:['gulf'],
 };
 
 function getCountryRegion(code) {
@@ -373,21 +371,21 @@ const MULTIPLIERS = {
 const SAMPLE_INVENTORY = [
   { id:'inv-1',  type:'good',    category:'electronics', subcategory:'laptops',      nameEn:'Dell XPS 13 (2024)',                  nameAr:'لابتوب Dell XPS 13 (2024)',          basePrice:1300, ageYears:1,   conditionKey:'like_new',  demandKey:'high',   desiredCategory:'services',    countryCode:'SA', value:0 },
   { id:'inv-2',  type:'good',    category:'electronics', subcategory:'smartphones',  nameEn:'iPhone 15 Pro Max (256GB)',            nameAr:'آيفون 15 برو ماكس (256 جيجا)',       basePrice:1100, ageYears:0.5, conditionKey:'excellent', demandKey:'high',   desiredCategory:'electronics', countryCode:'SA', value:0 },
-  { id:'inv-3',  type:'good',    category:'vehicles',    subcategory:'bicycles',     nameEn:'Specialized Hybrid Bike',              nameAr:'دراجة هوائية هجينة Specialized',     basePrice:500,  ageYears:1,   conditionKey:'like_new',  demandKey:'normal', desiredCategory:'home_garden', countryCode:'JO', value:0 },
+  { id:'inv-3',  type:'good',    category:'vehicles',    subcategory:'bicycles',     nameEn:'Specialized Hybrid Bike',              nameAr:'دراجة هوائية هجينة Specialized',     basePrice:500,  ageYears:1,   conditionKey:'like_new',  demandKey:'normal', desiredCategory:'home_garden', countryCode:'EG', value:0 },
   { id:'inv-4',  type:'service', category:'services',    subcategory:'development',  nameEn:'E-commerce Website (React + Node)',     nameAr:'برمجة متجر إلكتروني (React + Node)', hourlyRate:50,  hours:20, complexityKey:'complex', experienceKey:'mid',    desiredCategory:'electronics', countryCode:'EG', value:0 },
-  { id:'inv-5',  type:'service', category:'services',    subcategory:'design',       nameEn:'Brand Identity & Logo Package',         nameAr:'تصميم هوية بصرية وشعار كامل',       hourlyRate:35,  hours:10, complexityKey:'medium',  experienceKey:'expert', desiredCategory:'services',    countryCode:'AE', value:0 },
+  { id:'inv-5',  type:'service', category:'services',    subcategory:'design',       nameEn:'Brand Identity & Logo Package',         nameAr:'تصميم هوية بصرية وشعار كامل',       hourlyRate:35,  hours:10, complexityKey:'medium',  experienceKey:'expert', desiredCategory:'services',    countryCode:'SA', value:0 },
   { id:'inv-6',  type:'good',    category:'home_garden', subcategory:'furniture',    nameEn:'Modern L-Shape Sectional Sofa',         nameAr:'أريكة زاوية حديثة L-Shape',          basePrice:900,  ageYears:2,   conditionKey:'good',     demandKey:'normal', desiredCategory:'vehicles',    countryCode:'EG', value:0 },
   { id:'inv-7',  type:'good',    category:'electronics', subcategory:'consoles',     nameEn:'Sony PlayStation 5 + 3 Games',          nameAr:'بلايستيشن 5 سوني + 3 ألعاب',        basePrice:550,  ageYears:1,   conditionKey:'excellent', demandKey:'high',  desiredCategory:'electronics', countryCode:'SA', value:0 },
   { id:'inv-8',  type:'service', category:'education',   subcategory:'languages',    nameEn:'Private English Lessons (30h Package)',  nameAr:'دروس إنجليزي خصوصي (باقة 30 ساعة)', hourlyRate:30,  hours:30, complexityKey:'simple',  experienceKey:'expert', desiredCategory:'electronics', countryCode:'EG', value:0 },
-  { id:'inv-9',  type:'good',    category:'fashion',     subcategory:'watches',      nameEn:'Seiko Presage Automatic Watch',          nameAr:'ساعة سيكو بريساج أوتوماتيك',        basePrice:450,  ageYears:1.5, conditionKey:'excellent', demandKey:'normal',desiredCategory:'services',    countryCode:'KW', value:0 },
-  { id:'inv-10', type:'service', category:'services',    subcategory:'marketing',    nameEn:'Social Media Management (3 months)',     nameAr:'إدارة سوشيال ميديا (3 أشهر)',       hourlyRate:25,  hours:60, complexityKey:'medium',  experienceKey:'mid',    desiredCategory:'fashion',     countryCode:'MA', value:0 },
+  { id:'inv-9',  type:'good',    category:'fashion',     subcategory:'watches',      nameEn:'Seiko Presage Automatic Watch',          nameAr:'ساعة سيكو بريساج أوتوماتيك',        basePrice:450,  ageYears:1.5, conditionKey:'excellent', demandKey:'normal',desiredCategory:'services',    countryCode:'SA', value:0 },
+  { id:'inv-10', type:'service', category:'services',    subcategory:'marketing',    nameEn:'Social Media Management (3 months)',     nameAr:'إدارة سوشيال ميديا (3 أشهر)',       hourlyRate:25,  hours:60, complexityKey:'medium',  experienceKey:'mid',    desiredCategory:'fashion',     countryCode:'EG', value:0 },
   // ── New items for new categories ──
   { id:'inv-11', type:'good',    category:'real_estate', subcategory:'apartments',   nameEn:'2BR Apartment Downtown Cairo',           nameAr:'شقة غرفتين وسط القاهرة',            basePrice:45000, ageYears:5,  conditionKey:'good',     demandKey:'high',   desiredCategory:'vehicles',    countryCode:'EG', value:0 },
   { id:'inv-12', type:'service', category:'home_services', subcategory:'painting',   nameEn:'Full Apartment Painting (3BR)',           nameAr:'نقاشة شقة كاملة (3 غرف)',           hourlyRate:20,  hours:40, complexityKey:'medium',  experienceKey:'mid',    desiredCategory:'electronics', countryCode:'EG', value:0 },
   { id:'inv-13', type:'good',    category:'food_agri',   subcategory:'livestock',    nameEn:'5 Sheep (Awassi Breed)',                  nameAr:'5 رؤوس غنم (سلالة عواسي)',          basePrice:2500, ageYears:0.5, conditionKey:'excellent', demandKey:'high',  desiredCategory:'home_garden', countryCode:'SA', value:0 },
   { id:'inv-14', type:'service', category:'education',   subcategory:'languages',    nameEn:'Arabic for Beginners (20h)',               nameAr:'تعليم عربي للمبتدئين (20 ساعة)',     hourlyRate:30,  hours:20, complexityKey:'medium',  experienceKey:'expert', desiredCategory:'digital',     countryCode:'EG', value:0 },
-  { id:'inv-15', type:'good',    category:'arts_crafts', subcategory:'antiques',     nameEn:'Ottoman-era Brass Coffee Set',             nameAr:'طقم قهوة نحاسي عثماني أثري',        basePrice:1200, ageYears:80, conditionKey:'good',     demandKey:'normal', desiredCategory:'fashion',     countryCode:'SY', value:0 },
-  { id:'inv-16', type:'good',    category:'industrial',  subcategory:'tools',        nameEn:'DeWalt Power Drill Kit',                   nameAr:'شنيور ديوالت مع طقم سنون',          basePrice:350,  ageYears:1,  conditionKey:'like_new',  demandKey:'normal', desiredCategory:'home_services', countryCode:'IQ', value:0 },
+  { id:'inv-15', type:'good',    category:'arts_crafts', subcategory:'antiques',     nameEn:'Ottoman-era Brass Coffee Set',             nameAr:'طقم قهوة نحاسي عثماني أثري',        basePrice:1200, ageYears:80, conditionKey:'good',     demandKey:'normal', desiredCategory:'fashion',     countryCode:'EG', value:0 },
+  { id:'inv-16', type:'good',    category:'industrial',  subcategory:'tools',        nameEn:'DeWalt Power Drill Kit',                   nameAr:'شنيور ديوالت مع طقم سنون',          basePrice:350,  ageYears:1,  conditionKey:'like_new',  demandKey:'normal', desiredCategory:'home_services', countryCode:'SA', value:0 },
 ];
 
 // ─────────────────────────────────────────────────────
@@ -859,9 +857,7 @@ function areIdenticalModels(name1, name2) {
 function populateCountrySelect(selectEl, selectedCode) {
   selectEl.innerHTML = '';
   const regions = [
-    { label: state.lang === 'en' ? '── Arab Countries ──' : '── الدول العربية ──', codes: ['EG','SA','AE','KW','QA','BH','OM','JO','LB','IQ','LY','TN','MA','DZ','SD'] },
-    { label: state.lang === 'en' ? '── Western Countries ──' : '── الدول الغربية ──', codes: ['US','GB','DE','FR','ES'] },
-    { label: state.lang === 'en' ? '── Other Economies ──' : '── اقتصادات أخرى ──', codes: ['TR','IN','CN','JP','BR','NG','ZA','MX','RU','PK'] },
+    { label: state.lang === 'en' ? '── Launch Markets ──' : '── أسواق الإطلاق ──', codes: ['EG','SA'] },
   ];
   regions.forEach(r => {
     const grp = document.createElement('optgroup');

@@ -96,7 +96,7 @@ const BARTER_CATEGORIES = {
   },
   // ── SERVICE-TYPE CATEGORIES ──
   services: {
-    labelEn:'Professional Services', labelAr:'خدمات مهنية', icon:'🛠️', globalFactor:0.20, isService:true,
+    labelEn:'Professional Services', labelAr:'خدمات مهنية', icon:'🛠️', globalFactor:0.65, isService:true,
     subcategories: {
       development:  { labelEn:'Software Dev',       labelAr:'برمجة وتطوير',     hourlyRate:50, liquidity:0.50 },
       design:       { labelEn:'Graphic Design',      labelAr:'تصميم غرافيك',     hourlyRate:35, liquidity:0.60 },
@@ -106,7 +106,7 @@ const BARTER_CATEGORIES = {
     }
   },
   home_services: {
-    labelEn:'Home Services', labelAr:'خدمات منزلية', icon:'🔧', globalFactor:0.10, isService:true,
+    labelEn:'Home Services', labelAr:'خدمات منزلية', icon:'🔧', globalFactor:0.15, isService:true,
     subcategories: {
       plumbing:    { labelEn:'Plumbing',       labelAr:'سباكة',           hourlyRate:25, liquidity:0.75 },
       electrical:  { labelEn:'Electrical',     labelAr:'كهرباء',          hourlyRate:30, liquidity:0.70 },
@@ -116,7 +116,7 @@ const BARTER_CATEGORIES = {
     }
   },
   education: {
-    labelEn:'Education & Training', labelAr:'تعليم وتدريب', icon:'🎓', globalFactor:0.15, isService:true,
+    labelEn:'Education & Training', labelAr:'تعليم وتدريب', icon:'🎓', globalFactor:0.25, isService:true,
     subcategories: {
       academic:      { labelEn:'Academic Tutoring',      labelAr:'دروس أكاديمية',  hourlyRate:25, liquidity:0.70 },
       languages:     { labelEn:'Language Classes',       labelAr:'دورات لغات',     hourlyRate:30, liquidity:0.75 },
@@ -124,7 +124,7 @@ const BARTER_CATEGORIES = {
     }
   },
   health_beauty: {
-    labelEn:'Health & Beauty', labelAr:'صحة وجمال', icon:'💊', globalFactor:0.40, isService:true,
+    labelEn:'Health & Beauty', labelAr:'صحة وجمال', icon:'💊', globalFactor:0.35, isService:true,
     subcategories: {
       medical_svc:  { labelEn:'Medical Services',  labelAr:'خدمات طبية',    hourlyRate:60, liquidity:0.35 },
       beauty_svc:   { labelEn:'Beauty Services',   labelAr:'خدمات تجميل',   hourlyRate:25, liquidity:0.70 },

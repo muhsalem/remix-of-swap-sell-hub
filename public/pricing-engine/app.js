@@ -1084,10 +1084,29 @@ function calculateValuation() {
   // Country-adjusted price
   const cp = BarterEngine.getCountryPrice(valUSD, state.country, categoryKey);
 
+  // Country VAT / commission profile (auto by state.country)
+  const TAX_BY_COUNTRY = {
+    SA: { vat: 0.15, fee: 0.03, auth: 'ZATCA',        note: 'فاتورة متوافقة مع فوترة السعودية' },
+    EG: { vat: 0.14, fee: 0.03, auth: 'ETA',          note: 'فاتورة متوافقة مع الفاتورة الإلكترونية المصرية' },
+    AE: { vat: 0.05, fee: 0.03, auth: 'FTA',          note: 'VAT الإماراتي' },
+    KW: { vat: 0.00, fee: 0.03, auth: 'MOF-KW',       note: 'لا تُطبَّق VAT' },
+    QA: { vat: 0.00, fee: 0.03, auth: 'GTA-QA',       note: 'لا تُطبَّق VAT' },
+    BH: { vat: 0.10, fee: 0.03, auth: 'NBR-BH',       note: 'VAT البحريني' },
+    OM: { vat: 0.05, fee: 0.03, auth: 'TA-OM',        note: 'VAT العُماني' },
+    JO: { vat: 0.16, fee: 0.03, auth: 'ISTD-JO',      note: 'ضريبة المبيعات الأردنية' },
+  };
+  const tax = TAX_BY_COUNTRY[state.country] || { vat: 0, fee: 0.03, auth: '—', note: '' };
+  const feeLocal = cp.local * tax.fee;
+  const vatLocal = feeLocal * tax.vat;
+  const totalWithVat = cp.local + feeLocal + vatLocal;
+
   // Update result UI
   el.valResultAmount.textContent = fmtLocal(cp.local, state.country);
   el.valResultUsd.textContent = `≈ ${fmtUSD(cp.usd)}`;
-  el.valResultDetail.textContent = detailText;
+  const vatSuffix = tax.vat > 0
+    ? ` · العمولة ${Math.round(tax.fee*100)}% + VAT ${Math.round(tax.vat*100)}% (${tax.auth}) = ${fmtLocal(totalWithVat, state.country)}`
+    : ` · العمولة ${Math.round(tax.fee*100)}% (بدون VAT) = ${fmtLocal(cp.local + feeLocal, state.country)}`;
+  el.valResultDetail.textContent = detailText + vatSuffix;
   el.valCountryFlag.textContent = COUNTRIES[state.country]?.flag || '🌍';
   if (el.valDeprModel) {
     const modelIcon = deprModel === 'appreciation' ? '📈' : (deprModel === 'rapid_decay' ? '📉⚡' : '📉');

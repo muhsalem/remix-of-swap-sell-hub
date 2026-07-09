@@ -407,7 +407,11 @@ class BarterEngine {
 
     if (depr < 0) {
       // APPRECIATION model (real estate, antiques, art, jewelry, livestock)
-      deprVal = inflAdj * Math.pow(1 + Math.abs(depr), age);
+      // Cap effective age at 30y and add asymptotic damping to prevent runaway growth for antiques.
+      const effAge = Math.min(age, 30);
+      deprVal = inflAdj * Math.pow(1 + Math.abs(depr), effAge);
+      const maxMult = 8; // hard cap: no item appreciates more than 8× base
+      if (deprVal > inflAdj * maxMult) deprVal = inflAdj * maxMult;
     } else if (depr > 0.5) {
       // RAPID DECAY model (perishables, dairy, produce)
       deprVal = inflAdj * Math.exp(-depr * age * 12); // monthly decay

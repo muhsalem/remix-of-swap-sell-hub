@@ -114,17 +114,17 @@ export function Hero() {
                   فتح كامل ↗
                 </Link>
               </div>
-              <div className="relative w-full h-[520px] overflow-hidden bg-background">
+              <div className="relative w-full h-[560px] overflow-hidden bg-background">
                 <iframe
                   src="/pricing-engine/index.html"
                   title="محرك التسعير — نسخة مصغرة"
                   loading="lazy"
-                  className="absolute top-0 left-0 border-0"
+                  className="absolute top-0 right-0 border-0"
                   style={{
-                    width: "166.67%",
-                    height: "166.67%",
-                    transform: "scale(0.6)",
-                    transformOrigin: "top left",
+                    width: "1280px",
+                    height: "1120px",
+                    transform: "scale(0.44)",
+                    transformOrigin: "top right",
                   }}
                 />
               </div>

@@ -857,9 +857,7 @@ function areIdenticalModels(name1, name2) {
 function populateCountrySelect(selectEl, selectedCode) {
   selectEl.innerHTML = '';
   const regions = [
-    { label: state.lang === 'en' ? '── Arab Countries ──' : '── الدول العربية ──', codes: ['EG','SA','AE','KW','QA','BH','OM','JO','LB','IQ','LY','TN','MA','DZ','SD'] },
-    { label: state.lang === 'en' ? '── Western Countries ──' : '── الدول الغربية ──', codes: ['US','GB','DE','FR','ES'] },
-    { label: state.lang === 'en' ? '── Other Economies ──' : '── اقتصادات أخرى ──', codes: ['TR','IN','CN','JP','BR','NG','ZA','MX','RU','PK'] },
+    { label: state.lang === 'en' ? '── Launch Markets ──' : '── أسواق الإطلاق ──', codes: ['EG','SA'] },
   ];
   regions.forEach(r => {
     const grp = document.createElement('optgroup');

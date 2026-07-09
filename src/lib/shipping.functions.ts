@@ -112,17 +112,45 @@ const CITY_ZONES: Record<string, { country: "SA" | "EG"; zone: number; name_ar: 
   MRS: { country: "EG", zone: 3, name_ar: "مرسى مطروح", region_ar: "مطروح" },
 };
 
+// DB-backed override (admin-managed) with 60s cache. Falls back to CITY_ZONES.
+let _zonesCache: { at: number; map: Record<string, { country: "SA" | "EG"; zone: number; name_ar: string; region_ar: string }> } | null = null;
+async function loadZones() {
+  if (_zonesCache && Date.now() - _zonesCache.at < 60_000) return _zonesCache.map;
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+    });
+    const { data, error } = await sb
+      .from("shipping_cities")
+      .select("code,country,region_ar,name_ar,zone,active")
+      .eq("active", true);
+    if (error || !data || data.length === 0) throw error ?? new Error("empty");
+    const map: Record<string, any> = {};
+    for (const r of data as any[]) {
+      map[r.code] = { country: r.country, zone: r.zone, name_ar: r.name_ar, region_ar: r.region_ar };
+    }
+    _zonesCache = { at: Date.now(), map };
+    return map;
+  } catch {
+    return CITY_ZONES;
+  }
+}
+export function _invalidateZonesCache() { _zonesCache = null; }
+
 export const listShippingCities = createServerFn({ method: "GET" }).handler(async () => {
-  return Object.entries(CITY_ZONES).map(([code, v]) => ({ code, ...v }));
+  const zones = await loadZones();
+  return Object.entries(zones).map(([code, v]) => ({ code, ...v }));
 });
 
-function calcCost(params: {
+async function calcCost(params: {
   from: string;
   to: string;
   weightKg: number;
   declaredValueSar: number;
 }) {
-  const from = CITY_ZONES[params.from];
+  const zones = await loadZones();
+  const from = zones[params.from];
   const to = CITY_ZONES[params.to];
   if (!from || !to) throw new Error("مدينة غير مدعومة");
   if (from.country !== to.country) {

@@ -331,3 +331,166 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
     </div>
   );
 }
+
+// ─────────────────────────── CityPicker ───────────────────────────
+type CityRow = { code: string; name_ar: string; region_ar: string; country: string };
+
+function CityPicker({
+  label,
+  value,
+  onChange,
+  cities,
+  restrictCountry,
+}: {
+  label: string;
+  value: string;
+  onChange: (code: string) => void;
+  cities: CityRow[];
+  restrictCountry?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [country, setCountry] = useState<"ALL" | "SA" | "EG">("ALL");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (restrictCountry === "SA" || restrictCountry === "EG") setCountry(restrictCountry);
+  }, [restrictCountry]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const selected = cities.find((c) => c.code === value);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let list = cities;
+    if (country !== "ALL") list = list.filter((c) => c.country === country);
+    if (restrictCountry) list = list.filter((c) => c.country === restrictCountry);
+    if (q) {
+      list = list.filter(
+        (c) =>
+          c.name_ar.toLowerCase().includes(q) ||
+          (c.region_ar || "").toLowerCase().includes(q) ||
+          c.code.toLowerCase().includes(q),
+      );
+    }
+    return list.slice(0, 200);
+  }, [cities, query, country, restrictCountry]);
+
+  const grouped = useMemo(() => {
+    const m: Record<string, CityRow[]> = {};
+    for (const c of filtered) {
+      const key = `${c.country}|${c.region_ar || c.name_ar}`;
+      (m[key] ||= []).push(c);
+    }
+    return m;
+  }, [filtered]);
+
+  const flag = (co: string) => (co === "SA" ? "🇸🇦" : co === "EG" ? "🇪🇬" : "🌍");
+
+  return (
+    <div className="text-[11px] text-muted-foreground" ref={ref}>
+      <div>{label}</div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none flex items-center justify-between gap-1 text-start"
+      >
+        <span className={selected ? "text-foreground font-medium truncate" : "text-muted-foreground"}>
+          {selected ? `${flag(selected.country)} ${selected.name_ar}` : "اختر…"}
+        </span>
+        <ChevronDown className="size-3.5 shrink-0 opacity-60" />
+      </button>
+
+      {open && (
+        <div className="relative">
+          <div className="absolute z-30 mt-1 w-full bg-card rounded-xl ring-1 ring-black/10 shadow-lg p-2">
+            <div className="relative mb-1.5">
+              <Search className="size-3.5 absolute top-1/2 -translate-y-1/2 start-2 text-muted-foreground" />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="ابحث بالمدينة أو المنطقة…"
+                className="w-full ps-7 pe-7 py-1.5 rounded-lg bg-stone-soft border border-border text-xs outline-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute top-1/2 -translate-y-1/2 end-2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+
+            {!restrictCountry && (
+              <div className="flex gap-1 mb-1.5">
+                {(["ALL", "SA", "EG"] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCountry(c)}
+                    className={`flex-1 px-2 py-1 rounded-lg text-[11px] font-bold ${
+                      country === c ? "bg-primary text-primary-foreground" : "bg-stone-soft text-muted-foreground"
+                    }`}
+                  >
+                    {c === "ALL" ? "الكل" : c === "SA" ? "🇸🇦 السعودية" : "🇪🇬 مصر"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="max-h-64 overflow-y-auto -mx-1 px-1">
+              {Object.keys(grouped).length === 0 ? (
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  لا توجد نتائج مطابقة.
+                </div>
+              ) : (
+                Object.entries(grouped).map(([key, list]) => {
+                  const [co, region] = key.split("|");
+                  return (
+                    <div key={key} className="mb-1">
+                      <div className="sticky top-0 bg-card text-[10px] font-bold text-muted-foreground px-1.5 py-1">
+                        {flag(co)} {region}
+                      </div>
+                      {list.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => {
+                            onChange(c.code);
+                            setOpen(false);
+                            setQuery("");
+                          }}
+                          className={`w-full text-start px-2 py-1.5 rounded-md text-xs hover:bg-primary/5 ${
+                            c.code === value ? "bg-primary/10 text-primary font-bold" : ""
+                          }`}
+                        >
+                          {c.name_ar}
+                          <span className="text-[10px] text-muted-foreground ms-1">· {c.code}</span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="text-[10px] text-muted-foreground text-center pt-1 border-t border-border mt-1">
+              {filtered.length} مدينة{filtered.length >= 200 ? "+ (اكتب للتحديد)" : ""}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

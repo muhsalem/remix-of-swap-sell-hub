@@ -9,6 +9,8 @@ import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
+import { CountrySwitcher } from "@/components/CountrySwitcher";
+
 import { supabase } from "@/integrations/supabase/client";
 
 const listingQuery = (id: string) => queryOptions({

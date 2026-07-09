@@ -1113,6 +1113,26 @@ export type Database = {
           verified_badge: boolean | null
           weekly_trades: number | null
         }
+        Insert: {
+          avatar_url?: string | null
+          badges_count?: never
+          display_name?: string | null
+          rating?: never
+          total_trades?: never
+          user_id?: string | null
+          verified_badge?: boolean | null
+          weekly_trades?: never
+        }
+        Update: {
+          avatar_url?: string | null
+          badges_count?: never
+          display_name?: string | null
+          rating?: never
+          total_trades?: never
+          user_id?: string | null
+          verified_badge?: boolean | null
+          weekly_trades?: never
+        }
         Relationships: []
       }
     }

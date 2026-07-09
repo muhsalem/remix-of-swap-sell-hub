@@ -50,18 +50,8 @@ export const COUNTRY_STORAGE_KEY = "badel:country";
 export function detectCountry(): string {
   if (typeof navigator === "undefined") return "SAR";
   const lang = (navigator.language || "ar-SA").toLowerCase();
-  if (lang.includes("-eg")) return "EGP";
-  if (lang.includes("-ae")) return "AED";
-  if (lang.includes("-kw")) return "KWD";
-  if (lang.includes("-qa")) return "QAR";
-  if (lang.includes("-bh")) return "BHD";
-  if (lang.includes("-om")) return "OMR";
-  if (lang.includes("-jo")) return "JOD";
-  if (lang.includes("-ma")) return "MAD";
-  if (lang.includes("-tn")) return "TND";
-  if (lang.includes("-gb")) return "GBP";
-  if (lang.includes("-us")) return "USD";
-  if (lang.startsWith("fr") || lang.startsWith("de") || lang.startsWith("es") || lang.startsWith("it")) return "EUR";
+  // Launch scope: Saudi Arabia + Egypt only. Everything else defaults to SAR.
+  if (lang.includes("-eg") || lang.startsWith("ar-eg")) return "EGP";
   return "SAR";
 }
 
@@ -69,15 +59,20 @@ export function loadCountry(): string {
   if (typeof window === "undefined") return "SAR";
   try {
     const saved = localStorage.getItem(COUNTRY_STORAGE_KEY);
-    if (saved && FX_VS_SAR[saved]) return saved;
+    if (saved === "SAR" || saved === "EGP") return saved;
   } catch { /* ignore */ }
   return detectCountry();
 }
 
 export function saveCountry(code: string) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(COUNTRY_STORAGE_KEY, code); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(COUNTRY_STORAGE_KEY, code);
+    // Same-tab listeners (LocalPrice, filters) — 'storage' only fires in *other* tabs.
+    window.dispatchEvent(new CustomEvent("badel:country-changed", { detail: code }));
+  } catch { /* ignore */ }
 }
+
 
 export function diToLocal(di: number, code: string): number {
   const fx = FX_VS_SAR[code] ?? FX_VS_SAR.SAR;

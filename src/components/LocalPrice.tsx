@@ -13,12 +13,18 @@ export function useUserCurrency() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "badel:country") setCountry(loadCountry());
     };
+    const onCustom = () => setCountry(loadCountry());
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("badel:country-changed", onCustom as EventListener);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("badel:country-changed", onCustom as EventListener);
+    };
   }, []);
   const fx = FX_VS_SAR[country] ?? FX_VS_SAR.SAR;
   return { country, fx };
 }
+
 
 export function LocalPrice({
   sar,

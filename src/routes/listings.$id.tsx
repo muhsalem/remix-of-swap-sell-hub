@@ -9,6 +9,8 @@ import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
+import { CountrySwitcher } from "@/components/CountrySwitcher";
+
 import { supabase } from "@/integrations/supabase/client";
 
 const listingQuery = (id: string) => queryOptions({
@@ -118,9 +120,15 @@ function ListingPage() {
             {l.description && <p className="text-sm text-muted-foreground leading-relaxed">{l.description}</p>}
 
             <div className="bg-card rounded-2xl p-5 ring-1 ring-black/5">
-              <div className="text-xs text-muted-foreground mb-1">السعر السوقي</div>
-              <div className="font-display text-3xl font-extrabold text-primary"><LocalPrice sar={l.market_price} /></div>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <span className="text-xs text-muted-foreground">السعر السوقي (وفق بلدك)</span>
+                <CountrySwitcher />
+              </div>
+              <div className="font-display text-3xl font-extrabold text-primary">
+                <LocalPrice sar={l.market_price} showOriginal />
+              </div>
             </div>
+
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">

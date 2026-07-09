@@ -4,10 +4,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/offers.functions";
+import { logConsent } from "@/lib/consent.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
-import { LocalPrice } from "@/components/LocalPrice";
+import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { OfferPreviewPanel } from "@/components/OfferPreviewPanel";
+import { ConsentCheckbox } from "@/components/ConsentCheckbox";
 import { ArrowLeftRight, Plus } from "lucide-react";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });

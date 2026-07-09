@@ -892,6 +892,42 @@ export type Database = {
           },
         ]
       }
+      shipping_cities: {
+        Row: {
+          active: boolean
+          code: string
+          country: string
+          created_at: string
+          id: string
+          name_ar: string
+          region_ar: string
+          updated_at: string
+          zone: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          country: string
+          created_at?: string
+          id?: string
+          name_ar: string
+          region_ar: string
+          updated_at?: string
+          zone: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          country?: string
+          created_at?: string
+          id?: string
+          name_ar?: string
+          region_ar?: string
+          updated_at?: string
+          zone?: number
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           canceled_at: string | null

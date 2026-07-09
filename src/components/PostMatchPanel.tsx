@@ -7,9 +7,11 @@ import {
   getPeerContact, setMeetup, saveReceiptUrl, getFeeStatus, payPlatformFee,
 } from "@/lib/post-match.functions";
 import { getPricing } from "@/lib/promotions.functions";
+import { logConsent } from "@/lib/consent.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserCurrency } from "@/components/LocalPrice";
 import { computeFee, fmtLocal } from "@/lib/tax-config";
+import { ConsentCheckbox } from "@/components/ConsentCheckbox";
 
 type Props = { offer: any; userId: string; qc: ReturnType<typeof useQueryClient> };
 

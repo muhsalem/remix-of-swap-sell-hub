@@ -194,22 +194,8 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
   const cities = citiesQ.data ?? [];
   const saCities = cities.filter((c: any) => c.country === "SA");
   const egCities = cities.filter((c: any) => c.country === "EG");
-  const groupByRegion = (list: any[]) => {
-    const m: Record<string, any[]> = {};
-    for (const c of list) {
-      const k = c.region_ar || c.name_ar;
-      (m[k] ||= []).push(c);
-    }
-    return m;
-  };
-  const saGroups = groupByRegion(saCities);
-  const egGroups = groupByRegion(egCities);
-  const renderGroups = (flag: string, groups: Record<string, any[]>) =>
-    Object.entries(groups).map(([region, list]) => (
-      <optgroup key={`${flag}-${region}`} label={`${flag} ${region}`}>
-        {list.map((c: any) => <option key={c.code} value={c.code}>{c.name_ar}</option>)}
-      </optgroup>
-    ));
+
+
 
   // ── Smart validation + suggestions ──────────────────────────────────
   const fromCity = cities.find((c: any) => c.code === from);

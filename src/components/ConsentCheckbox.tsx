@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
-import { useUserCurrency } from "@/lib/currency-fx";
+import { useUserCurrency } from "@/components/LocalPrice";
 
 type Props = {
   checked: boolean;

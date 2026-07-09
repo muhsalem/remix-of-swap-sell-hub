@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getOffer, respondToOffer, sendMessage, submitReview } from "@/lib/offers.functions";
 import { openDispute, listOfferDisputes } from "@/lib/disputes.functions";
-import { setShipping, confirmDelivery } from "@/lib/logistics.functions";
+import { ShipmentPanel } from "@/components/ShipmentPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
@@ -207,7 +207,7 @@ function OfferDetailPage() {
             <PostMatchPanel offer={offer} userId={data.userId} qc={qc} />
 
             {(offer.status === "accepted" || offer.status === "completed") && (
-              <ShippingBlock offer={offer} userId={data.userId} qc={qc} />
+              <ShipmentPanel offer={offer} userId={data.userId} />
             )}
 
             {(offer.status === "accepted" || offer.status === "completed") && (

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getOffer, respondToOffer, sendMessage, submitReview } from "@/lib/offers.functions";
 import { openDispute, listOfferDisputes } from "@/lib/disputes.functions";
 import { ShipmentPanel } from "@/components/ShipmentPanel";
+import { ServiceDeliveryPanel } from "@/components/ServiceDeliveryPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
@@ -206,9 +207,15 @@ function OfferDetailPage() {
 
             <PostMatchPanel offer={offer} userId={data.userId} qc={qc} />
 
-            {(offer.status === "accepted" || offer.status === "completed") && (
-              <ShipmentPanel offer={offer} userId={data.userId} />
-            )}
+            {(offer.status === "accepted" || offer.status === "completed") && (() => {
+              const offType = (offer.offered?.listing_type ?? "item");
+              const reqType = (offer.requested?.listing_type ?? "item");
+              const hasGoods = offType === "item" || reqType === "item";
+              return hasGoods
+                ? <ShipmentPanel offer={offer} userId={data.userId} />
+                : <ServiceDeliveryPanel offer={offer} userId={data.userId} />;
+            })()}
+
 
             {(offer.status === "accepted" || offer.status === "completed") && (
               <DisputeBlock offerId={id} disputes={disputes} qc={qc} />

@@ -50,8 +50,8 @@ export function Nav() {
           <div className="hidden md:flex gap-6 text-sm font-medium items-center">
             <Link to="/pricing-engine" className="hover:text-primary transition-colors inline-flex items-center gap-1">🧮 محرك التسعير</Link>
             <Link to="/" hash="market" className="hover:text-primary transition-colors">السوق</Link>
+            <Link to="/leaderboard" className="hover:text-primary transition-colors inline-flex items-center gap-1">🏆 المتصدرون</Link>
             <Link to="/" hash="how" className="hover:text-primary transition-colors">كيف يعمل؟</Link>
-            {/* Premium/DI link مؤجَّل حالياً */}
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "بدِّل — أول منصة مقايضة ذكية عادلة ومتوافقة شرعياً" },
-      { name: "description", content: "بدِّل ما تملك بما تحتاج. منصة عربية للمقايضة الرقمية بمحرك تسعير ذكي (AI) متوافق شرعياً، يخدم 30+ دولة و14 فئة سلع وخدمات." },
+      { name: "description", content: "بدِّل ما تملك بما تحتاج. منصة عربية للمقايضة الرقمية بمحرك تسعير ذكي (AI) متوافق شرعياً، إطلاق مبدئي في مصر والسعودية و14 فئة سلع وخدمات." },
       { name: "author", content: "Baddel" },
       { name: "theme-color", content: "#06b6d4" },
       { name: "apple-mobile-web-app-capable", content: "yes" },

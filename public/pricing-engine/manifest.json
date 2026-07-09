@@ -1,7 +1,7 @@
 {
   "name": "منصة المقايضة الذكية",
   "short_name": "BarterHub",
-  "description": "أول منصة مقايضة ذكية متوافقة شرعياً — قيّم وقايض سلعك وخدماتك مع 30+ دولة",
+  "description": "أول منصة مقايضة ذكية متوافقة شرعياً — قيّم وقايض سلعك وخدماتك مع مصر والسعودية",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0d14",

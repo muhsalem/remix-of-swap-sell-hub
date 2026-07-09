@@ -10,23 +10,9 @@
 //  1. COUNTRY DATABASE (30 Countries)
 // ─────────────────────────────────────────────────────
 const COUNTRIES = {
-  // ── Arab Countries ──
+  // ── Launch Markets (Phase 1) ──
   EG: { code:'EG', nameEn:'Egypt', nameAr:'مصر', currency:'EGP', symbol:'ج.م', exchangeRate:48.5, pppFactor:0.25, costOfLivingIndex:22, avgMonthlyIncome:250, inflationRate:0.28, flag:'🇪🇬' },
   SA: { code:'SA', nameEn:'Saudi Arabia', nameAr:'السعودية', currency:'SAR', symbol:'ر.س', exchangeRate:3.75, pppFactor:0.65, costOfLivingIndex:42, avgMonthlyIncome:2500, inflationRate:0.025, flag:'🇸🇦' },
-  AE: { code:'AE', nameEn:'UAE', nameAr:'الإمارات', currency:'AED', symbol:'د.إ', exchangeRate:3.67, pppFactor:0.70, costOfLivingIndex:55, avgMonthlyIncome:3500, inflationRate:0.03, flag:'🇦🇪' },
-  KW: { code:'KW', nameEn:'Kuwait', nameAr:'الكويت', currency:'KWD', symbol:'د.ك', exchangeRate:0.31, pppFactor:0.75, costOfLivingIndex:48, avgMonthlyIncome:3000, inflationRate:0.035, flag:'🇰🇼' },
-  QA: { code:'QA', nameEn:'Qatar', nameAr:'قطر', currency:'QAR', symbol:'ر.ق', exchangeRate:3.64, pppFactor:0.72, costOfLivingIndex:55, avgMonthlyIncome:3200, inflationRate:0.028, flag:'🇶🇦' },
-  BH: { code:'BH', nameEn:'Bahrain', nameAr:'البحرين', currency:'BHD', symbol:'د.ب', exchangeRate:0.38, pppFactor:0.65, costOfLivingIndex:48, avgMonthlyIncome:2200, inflationRate:0.02, flag:'🇧🇭' },
-  OM: { code:'OM', nameEn:'Oman', nameAr:'عُمان', currency:'OMR', symbol:'ر.ع', exchangeRate:0.385, pppFactor:0.60, costOfLivingIndex:45, avgMonthlyIncome:2000, inflationRate:0.025, flag:'🇴🇲' },
-  JO: { code:'JO', nameEn:'Jordan', nameAr:'الأردن', currency:'JOD', symbol:'د.أ', exchangeRate:0.71, pppFactor:0.45, costOfLivingIndex:38, avgMonthlyIncome:700, inflationRate:0.03, flag:'🇯🇴' },
-  LB: { code:'LB', nameEn:'Lebanon', nameAr:'لبنان', currency:'LBP', symbol:'ل.ل', exchangeRate:89500, pppFactor:0.20, costOfLivingIndex:42, avgMonthlyIncome:300, inflationRate:1.80, flag:'🇱🇧' },
-  IQ: { code:'IQ', nameEn:'Iraq', nameAr:'العراق', currency:'IQD', symbol:'د.ع', exchangeRate:1310, pppFactor:0.30, costOfLivingIndex:32, avgMonthlyIncome:500, inflationRate:0.05, flag:'🇮🇶' },
-  LY: { code:'LY', nameEn:'Libya', nameAr:'ليبيا', currency:'LYD', symbol:'د.ل', exchangeRate:4.85, pppFactor:0.35, costOfLivingIndex:35, avgMonthlyIncome:600, inflationRate:0.04, flag:'🇱🇾' },
-  TN: { code:'TN', nameEn:'Tunisia', nameAr:'تونس', currency:'TND', symbol:'د.ت', exchangeRate:3.12, pppFactor:0.35, costOfLivingIndex:30, avgMonthlyIncome:400, inflationRate:0.08, flag:'🇹🇳' },
-  MA: { code:'MA', nameEn:'Morocco', nameAr:'المغرب', currency:'MAD', symbol:'د.م', exchangeRate:10.1, pppFactor:0.35, costOfLivingIndex:32, avgMonthlyIncome:450, inflationRate:0.05, flag:'🇲🇦' },
-  DZ: { code:'DZ', nameEn:'Algeria', nameAr:'الجزائر', currency:'DZD', symbol:'د.ج', exchangeRate:135, pppFactor:0.30, costOfLivingIndex:28, avgMonthlyIncome:350, inflationRate:0.07, flag:'🇩🇿' },
-  SD: { code:'SD', nameEn:'Sudan', nameAr:'السودان', currency:'SDG', symbol:'ج.س', exchangeRate:601, pppFactor:0.15, costOfLivingIndex:20, avgMonthlyIncome:150, inflationRate:0.65, flag:'🇸🇩' },
-  SY: { code:'SY', nameEn:'Syria', nameAr:'سوريا', currency:'SYP', symbol:'ل.س', exchangeRate:13000, pppFactor:0.15, costOfLivingIndex:18, avgMonthlyIncome:100, inflationRate:0.70, flag:'🇸🇾' },
 };
 
 // ─────────────────────────────────────────────────────

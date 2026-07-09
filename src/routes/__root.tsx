@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { trackPageview } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -147,11 +148,18 @@ function AuthListener() {
   const router = useRouter();
   const qc = useQueryClient();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      qc.invalidateQueries();
+      if (event !== "SIGNED_OUT") qc.invalidateQueries();
     });
-    return () => subscription.unsubscribe();
+    // Pageview tracking on every route change
+    const unsub = router.subscribe("onResolved", ({ toLocation }) => {
+      trackPageview(toLocation.pathname + toLocation.search);
+    });
+    // First load
+    trackPageview(window.location.pathname + window.location.search);
+    return () => { subscription.unsubscribe(); unsub(); };
   }, [router, qc]);
   return null;
 }

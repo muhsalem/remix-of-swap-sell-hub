@@ -156,16 +156,14 @@ const IMPORT_DUTIES = {
 //  3b. COUNTRY PROXIMITY REGIONS
 // ─────────────────────────────────────────────────────
 const COUNTRY_REGIONS = {
-  gulf:        ['SA','AE','KW','QA','BH','OM'],
-  levant:      ['JO','LB','IQ','LY','SY'],
-  north_africa:['EG','TN','MA','DZ','SD'],
+  gulf:        ['SA'],
+  north_africa:['EG'],
 };
 
 // adjacency: which regions are "close" to each other
 const REGION_ADJACENCY = {
-  gulf:        ['levant','north_africa'],
-  levant:      ['gulf','north_africa'],
-  north_africa:['levant','gulf'],
+  gulf:        ['north_africa'],
+  north_africa:['gulf'],
 };
 
 function getCountryRegion(code) {

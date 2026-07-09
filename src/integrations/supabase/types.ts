@@ -86,6 +86,60 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_log: {
+        Row: {
+          accepted_at: string
+          context: string
+          country_code: string
+          doc_type: string
+          doc_version: string
+          id: string
+          listing_id: string | null
+          offer_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          context: string
+          country_code: string
+          doc_type: string
+          doc_version: string
+          id?: string
+          listing_id?: string | null
+          offer_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          context?: string
+          country_code?: string
+          doc_type?: string
+          doc_version?: string
+          id?: string
+          listing_id?: string | null
+          offer_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_log_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_log_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "trade_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           created_at: string

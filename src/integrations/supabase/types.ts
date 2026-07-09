@@ -800,6 +800,44 @@ export type Database = {
           },
         ]
       }
+      shipment_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_at: string
+          id: string
+          location: string | null
+          offer_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_at?: string
+          id?: string
+          location?: string | null
+          offer_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_at?: string
+          id?: string
+          location?: string | null
+          offer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_events_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "trade_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           canceled_at: string | null
@@ -844,6 +882,7 @@ export type Database = {
           anchor_expires_at: string | null
           anchor_price_sar: number | null
           cash_balance: number | null
+          country_code: string | null
           created_at: string
           delivery_confirmed_by_from: boolean
           delivery_confirmed_by_to: boolean
@@ -853,6 +892,7 @@ export type Database = {
           expected_delivery: string | null
           fairness_score: number | null
           fee_paid_at: string | null
+          from_city: string | null
           from_user: string
           id: string
           meetup_at: string | null
@@ -861,8 +901,13 @@ export type Database = {
           offered_listing: string
           receipt_url: string | null
           requested_listing: string
+          shipment_booked_at: string | null
+          shipment_weight_kg: number | null
           shipping_carrier: string | null
+          shipping_cost_sar: number | null
+          shipping_provider: string | null
           status: Database["public"]["Enums"]["offer_status"]
+          to_city: string | null
           to_user: string
           tracking_number: string | null
           updated_at: string
@@ -871,6 +916,7 @@ export type Database = {
           anchor_expires_at?: string | null
           anchor_price_sar?: number | null
           cash_balance?: number | null
+          country_code?: string | null
           created_at?: string
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
@@ -880,6 +926,7 @@ export type Database = {
           expected_delivery?: string | null
           fairness_score?: number | null
           fee_paid_at?: string | null
+          from_city?: string | null
           from_user: string
           id?: string
           meetup_at?: string | null
@@ -888,8 +935,13 @@ export type Database = {
           offered_listing: string
           receipt_url?: string | null
           requested_listing: string
+          shipment_booked_at?: string | null
+          shipment_weight_kg?: number | null
           shipping_carrier?: string | null
+          shipping_cost_sar?: number | null
+          shipping_provider?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
+          to_city?: string | null
           to_user: string
           tracking_number?: string | null
           updated_at?: string
@@ -898,6 +950,7 @@ export type Database = {
           anchor_expires_at?: string | null
           anchor_price_sar?: number | null
           cash_balance?: number | null
+          country_code?: string | null
           created_at?: string
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
@@ -907,6 +960,7 @@ export type Database = {
           expected_delivery?: string | null
           fairness_score?: number | null
           fee_paid_at?: string | null
+          from_city?: string | null
           from_user?: string
           id?: string
           meetup_at?: string | null
@@ -915,8 +969,13 @@ export type Database = {
           offered_listing?: string
           receipt_url?: string | null
           requested_listing?: string
+          shipment_booked_at?: string | null
+          shipment_weight_kg?: number | null
           shipping_carrier?: string | null
+          shipping_cost_sar?: number | null
+          shipping_provider?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
+          to_city?: string | null
           to_user?: string
           tracking_number?: string | null
           updated_at?: string

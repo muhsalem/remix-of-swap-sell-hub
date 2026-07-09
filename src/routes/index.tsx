@@ -278,15 +278,19 @@ function Index() {
                   {c}
                 </CatChip>
               ))}
-              <button
-                type="button"
-                onClick={() => setShowFilters((v) => !v)}
-                aria-expanded={showFilters}
-                aria-controls="market-filters"
-                className="ms-auto inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:border-primary/40 transition"
-              >
-                <SlidersHorizontal className="size-3.5" aria-hidden /> فلاتر متقدمة
-              </button>
+              <div className="ms-auto flex items-center gap-2">
+                <CountrySwitcher />
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((v) => !v)}
+                  aria-expanded={showFilters}
+                  aria-controls="market-filters"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border border-border hover:border-primary/40 transition"
+                >
+                  <SlidersHorizontal className="size-3.5" aria-hidden /> فلاتر متقدمة
+                </button>
+              </div>
+
               {matchMode && (
                 <button
                   onClick={() => matchM.reset()}

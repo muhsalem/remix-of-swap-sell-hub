@@ -14,22 +14,102 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * ========================================================================== */
 
 // SAR base pricing; UI converts via LocalPrice.
-const CITY_ZONES: Record<string, { country: "SA" | "EG"; zone: number; name_ar: string }> = {
-  // Saudi Arabia (SAR base)
-  RUH: { country: "SA", zone: 1, name_ar: "الرياض" },
-  JED: { country: "SA", zone: 2, name_ar: "جدة" },
-  DMM: { country: "SA", zone: 2, name_ar: "الدمام" },
-  MKK: { country: "SA", zone: 2, name_ar: "مكة المكرمة" },
-  MED: { country: "SA", zone: 2, name_ar: "المدينة المنورة" },
-  ABH: { country: "SA", zone: 3, name_ar: "أبها" },
-  TBK: { country: "SA", zone: 3, name_ar: "تبوك" },
-  // Egypt (EGP → converted via ~ 1 SAR = 13 EGP; we store in SAR)
-  CAI: { country: "EG", zone: 1, name_ar: "القاهرة" },
-  GIZ: { country: "EG", zone: 1, name_ar: "الجيزة" },
-  ALX: { country: "EG", zone: 2, name_ar: "الإسكندرية" },
-  MNS: { country: "EG", zone: 2, name_ar: "المنصورة" },
-  ASW: { country: "EG", zone: 3, name_ar: "أسوان" },
-  LXR: { country: "EG", zone: 3, name_ar: "الأقصر" },
+const CITY_ZONES: Record<string, { country: "SA" | "EG"; zone: number; name_ar: string; region_ar: string }> = {
+  // ═══════════════ SAUDI ARABIA — 13 مناطق إدارية ═══════════════
+  // Zone 1 = مركزية (الرياض)، Zone 2 = مدن رئيسية، Zone 3 = أطراف
+  // منطقة الرياض
+  RUH: { country: "SA", zone: 1, name_ar: "الرياض", region_ar: "الرياض" },
+  DIR: { country: "SA", zone: 2, name_ar: "الدرعية", region_ar: "الرياض" },
+  KHR: { country: "SA", zone: 2, name_ar: "الخرج", region_ar: "الرياض" },
+  MJM: { country: "SA", zone: 3, name_ar: "المجمعة", region_ar: "الرياض" },
+  DWD: { country: "SA", zone: 3, name_ar: "الدوادمي", region_ar: "الرياض" },
+  // منطقة مكة المكرمة
+  MKK: { country: "SA", zone: 2, name_ar: "مكة المكرمة", region_ar: "مكة المكرمة" },
+  JED: { country: "SA", zone: 2, name_ar: "جدة", region_ar: "مكة المكرمة" },
+  TIF: { country: "SA", zone: 2, name_ar: "الطائف", region_ar: "مكة المكرمة" },
+  RAB: { country: "SA", zone: 3, name_ar: "رابغ", region_ar: "مكة المكرمة" },
+  QUN: { country: "SA", zone: 3, name_ar: "القنفذة", region_ar: "مكة المكرمة" },
+  // منطقة المدينة المنورة
+  MED: { country: "SA", zone: 2, name_ar: "المدينة المنورة", region_ar: "المدينة المنورة" },
+  YNB: { country: "SA", zone: 3, name_ar: "ينبع", region_ar: "المدينة المنورة" },
+  ULA: { country: "SA", zone: 3, name_ar: "العُلا", region_ar: "المدينة المنورة" },
+  BDR: { country: "SA", zone: 3, name_ar: "بدر", region_ar: "المدينة المنورة" },
+  // المنطقة الشرقية
+  DMM: { country: "SA", zone: 2, name_ar: "الدمام", region_ar: "الشرقية" },
+  KHO: { country: "SA", zone: 2, name_ar: "الخبر", region_ar: "الشرقية" },
+  DHR: { country: "SA", zone: 2, name_ar: "الظهران", region_ar: "الشرقية" },
+  JUB: { country: "SA", zone: 3, name_ar: "الجبيل", region_ar: "الشرقية" },
+  AHS: { country: "SA", zone: 3, name_ar: "الأحساء", region_ar: "الشرقية" },
+  QTF: { country: "SA", zone: 3, name_ar: "القطيف", region_ar: "الشرقية" },
+  HFR: { country: "SA", zone: 3, name_ar: "حفر الباطن", region_ar: "الشرقية" },
+  // منطقة القصيم
+  BUR: { country: "SA", zone: 3, name_ar: "بريدة", region_ar: "القصيم" },
+  UNZ: { country: "SA", zone: 3, name_ar: "عنيزة", region_ar: "القصيم" },
+  RSS: { country: "SA", zone: 3, name_ar: "الرس", region_ar: "القصيم" },
+  // منطقة عسير
+  ABH: { country: "SA", zone: 3, name_ar: "أبها", region_ar: "عسير" },
+  KMS: { country: "SA", zone: 3, name_ar: "خميس مشيط", region_ar: "عسير" },
+  NMS: { country: "SA", zone: 3, name_ar: "النماص", region_ar: "عسير" },
+  BSH: { country: "SA", zone: 3, name_ar: "بيشة", region_ar: "عسير" },
+  // منطقة تبوك
+  TBK: { country: "SA", zone: 3, name_ar: "تبوك", region_ar: "تبوك" },
+  DBA: { country: "SA", zone: 3, name_ar: "ضباء", region_ar: "تبوك" },
+  NEO: { country: "SA", zone: 3, name_ar: "نيوم", region_ar: "تبوك" },
+  // منطقة حائل
+  HAL: { country: "SA", zone: 3, name_ar: "حائل", region_ar: "حائل" },
+  BQA: { country: "SA", zone: 3, name_ar: "بقعاء", region_ar: "حائل" },
+  // منطقة الحدود الشمالية
+  ARR: { country: "SA", zone: 3, name_ar: "عرعر", region_ar: "الحدود الشمالية" },
+  RFH: { country: "SA", zone: 3, name_ar: "رفحاء", region_ar: "الحدود الشمالية" },
+  // منطقة جازان
+  JZN: { country: "SA", zone: 3, name_ar: "جازان", region_ar: "جازان" },
+  SBY: { country: "SA", zone: 3, name_ar: "صبيا", region_ar: "جازان" },
+  // منطقة نجران
+  NJR: { country: "SA", zone: 3, name_ar: "نجران", region_ar: "نجران" },
+  SHR: { country: "SA", zone: 3, name_ar: "شرورة", region_ar: "نجران" },
+  // منطقة الباحة
+  BHA: { country: "SA", zone: 3, name_ar: "الباحة", region_ar: "الباحة" },
+  BLJ: { country: "SA", zone: 3, name_ar: "بلجرشي", region_ar: "الباحة" },
+  // منطقة الجوف
+  SKK: { country: "SA", zone: 3, name_ar: "سكاكا", region_ar: "الجوف" },
+  QRT: { country: "SA", zone: 3, name_ar: "القريات", region_ar: "الجوف" },
+
+  // ═══════════════ EGYPT — 27 محافظة ═══════════════
+  // القاهرة الكبرى (Zone 1)
+  CAI: { country: "EG", zone: 1, name_ar: "القاهرة", region_ar: "القاهرة" },
+  GIZ: { country: "EG", zone: 1, name_ar: "الجيزة", region_ar: "الجيزة" },
+  QLY: { country: "EG", zone: 1, name_ar: "بنها", region_ar: "القليوبية" },
+  SXO: { country: "EG", zone: 1, name_ar: "السادس من أكتوبر", region_ar: "الجيزة" },
+  // الإسكندرية والدلتا (Zone 2)
+  ALX: { country: "EG", zone: 2, name_ar: "الإسكندرية", region_ar: "الإسكندرية" },
+  MNS: { country: "EG", zone: 2, name_ar: "المنصورة", region_ar: "الدقهلية" },
+  TNT: { country: "EG", zone: 2, name_ar: "طنطا", region_ar: "الغربية" },
+  MHL: { country: "EG", zone: 2, name_ar: "المحلة الكبرى", region_ar: "الغربية" },
+  ZAG: { country: "EG", zone: 2, name_ar: "الزقازيق", region_ar: "الشرقية" },
+  DAM: { country: "EG", zone: 2, name_ar: "دمنهور", region_ar: "البحيرة" },
+  KFS: { country: "EG", zone: 2, name_ar: "كفر الشيخ", region_ar: "كفر الشيخ" },
+  SHB: { country: "EG", zone: 2, name_ar: "شبين الكوم", region_ar: "المنوفية" },
+  DMT: { country: "EG", zone: 2, name_ar: "دمياط", region_ar: "دمياط" },
+  // قناة السويس (Zone 2)
+  PSD: { country: "EG", zone: 2, name_ar: "بورسعيد", region_ar: "بورسعيد" },
+  ISM: { country: "EG", zone: 2, name_ar: "الإسماعيلية", region_ar: "الإسماعيلية" },
+  SUZ: { country: "EG", zone: 2, name_ar: "السويس", region_ar: "السويس" },
+  // سيناء (Zone 3)
+  ARS: { country: "EG", zone: 3, name_ar: "العريش", region_ar: "شمال سيناء" },
+  SSH: { country: "EG", zone: 3, name_ar: "شرم الشيخ", region_ar: "جنوب سيناء" },
+  // الصعيد (Zone 3)
+  BNS: { country: "EG", zone: 3, name_ar: "بني سويف", region_ar: "بني سويف" },
+  FYM: { country: "EG", zone: 3, name_ar: "الفيوم", region_ar: "الفيوم" },
+  MNY: { country: "EG", zone: 3, name_ar: "المنيا", region_ar: "المنيا" },
+  ASY: { country: "EG", zone: 3, name_ar: "أسيوط", region_ar: "أسيوط" },
+  SHG: { country: "EG", zone: 3, name_ar: "سوهاج", region_ar: "سوهاج" },
+  QNA: { country: "EG", zone: 3, name_ar: "قنا", region_ar: "قنا" },
+  LXR: { country: "EG", zone: 3, name_ar: "الأقصر", region_ar: "الأقصر" },
+  ASW: { country: "EG", zone: 3, name_ar: "أسوان", region_ar: "أسوان" },
+  // البحر الأحمر والصحراء (Zone 3)
+  HRG: { country: "EG", zone: 3, name_ar: "الغردقة", region_ar: "البحر الأحمر" },
+  KHA: { country: "EG", zone: 3, name_ar: "الخارجة", region_ar: "الوادي الجديد" },
+  MRS: { country: "EG", zone: 3, name_ar: "مرسى مطروح", region_ar: "مطروح" },
 };
 
 export const listShippingCities = createServerFn({ method: "GET" }).handler(async () => {

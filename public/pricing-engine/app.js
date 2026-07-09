@@ -30,7 +30,7 @@ const BARTER_CATEGORIES = {
     }
   },
   vehicles: {
-    labelEn:'Vehicles', labelAr:'مركبات', icon:'🚗', globalFactor:0.55,
+    labelEn:'Vehicles', labelAr:'مركبات', icon:'🚗', globalFactor:0.75,
     subcategories: {
       cars:         { labelEn:'Cars',        labelAr:'سيارات',       basePrice:22000, deprRate:0.08, liquidity:0.75 },
       motorcycles:  { labelEn:'Motorcycles', labelAr:'دراجات نارية', basePrice:3500,  deprRate:0.10, liquidity:0.65 },
@@ -38,7 +38,7 @@ const BARTER_CATEGORIES = {
     }
   },
   real_estate: {
-    labelEn:'Real Estate', labelAr:'عقارات', icon:'🏗️', globalFactor:0.15,
+    labelEn:'Real Estate', labelAr:'عقارات', icon:'🏗️', globalFactor:1.00,
     subcategories: {
       apartments:  { labelEn:'Apartments',  labelAr:'شقق سكنية',    basePrice:50000, deprRate:-0.03, liquidity:0.30 },
       land:        { labelEn:'Land',         labelAr:'أراضي',        basePrice:30000, deprRate:-0.05, liquidity:0.20 },
@@ -83,7 +83,7 @@ const BARTER_CATEGORIES = {
     subcategories: {
       paintings:  { labelEn:'Paintings',        labelAr:'لوحات فنية',       basePrice:500,  deprRate:-0.05, liquidity:0.25 },
       handmade:   { labelEn:'Handmade Crafts',  labelAr:'مصنوعات يدوية',   basePrice:100,  deprRate:0.10, liquidity:0.50 },
-      antiques:   { labelEn:'Antiques',         labelAr:'تحف وأنتيكات',    basePrice:1000, deprRate:-0.08, liquidity:0.20 },
+      antiques:   { labelEn:'Antiques',         labelAr:'تحف وأنتيكات',    basePrice:400,  deprRate:-0.06, liquidity:0.20 },
     }
   },
   digital: {
@@ -96,7 +96,7 @@ const BARTER_CATEGORIES = {
   },
   // ── SERVICE-TYPE CATEGORIES ──
   services: {
-    labelEn:'Professional Services', labelAr:'خدمات مهنية', icon:'🛠️', globalFactor:0.20, isService:true,
+    labelEn:'Professional Services', labelAr:'خدمات مهنية', icon:'🛠️', globalFactor:0.65, isService:true,
     subcategories: {
       development:  { labelEn:'Software Dev',       labelAr:'برمجة وتطوير',     hourlyRate:50, liquidity:0.50 },
       design:       { labelEn:'Graphic Design',      labelAr:'تصميم غرافيك',     hourlyRate:35, liquidity:0.60 },
@@ -106,12 +106,12 @@ const BARTER_CATEGORIES = {
     }
   },
   home_services: {
-    labelEn:'Home Services', labelAr:'خدمات منزلية', icon:'🔧', globalFactor:0.10, isService:true,
+    labelEn:'Home Services', labelAr:'خدمات منزلية', icon:'🔧', globalFactor:0.15, isService:true,
     subcategories: {
       plumbing:    { labelEn:'Plumbing',       labelAr:'سباكة',           hourlyRate:25, liquidity:0.75 },
       electrical:  { labelEn:'Electrical',     labelAr:'كهرباء',          hourlyRate:30, liquidity:0.70 },
       painting:    { labelEn:'Painting',       labelAr:'نقاشة ودهانات',   hourlyRate:20, liquidity:0.72 },
-      cleaning:    { labelEn:'Cleaning',       labelAr:'تنظيف',           hourlyRate:15, liquidity:0.85 },
+      cleaning:    { labelEn:'Cleaning',       labelAr:'تنظيف',           hourlyRate:20, liquidity:0.85 },
       ac_repair:   { labelEn:'AC Repair',      labelAr:'صيانة تكييف',     hourlyRate:35, liquidity:0.68 },
     }
   },
@@ -124,7 +124,7 @@ const BARTER_CATEGORIES = {
     }
   },
   health_beauty: {
-    labelEn:'Health & Beauty', labelAr:'صحة وجمال', icon:'💊', globalFactor:0.40, isService:true,
+    labelEn:'Health & Beauty', labelAr:'صحة وجمال', icon:'💊', globalFactor:0.35, isService:true,
     subcategories: {
       medical_svc:  { labelEn:'Medical Services',  labelAr:'خدمات طبية',    hourlyRate:60, liquidity:0.35 },
       beauty_svc:   { labelEn:'Beauty Services',   labelAr:'خدمات تجميل',   hourlyRate:25, liquidity:0.70 },
@@ -407,7 +407,11 @@ class BarterEngine {
 
     if (depr < 0) {
       // APPRECIATION model (real estate, antiques, art, jewelry, livestock)
-      deprVal = inflAdj * Math.pow(1 + Math.abs(depr), age);
+      // Cap effective age at 30y and add asymptotic damping to prevent runaway growth for antiques.
+      const effAge = Math.min(age, 30);
+      deprVal = inflAdj * Math.pow(1 + Math.abs(depr), effAge);
+      const maxMult = 4; // hard cap: no item appreciates more than 4× base
+      if (deprVal > inflAdj * maxMult) deprVal = inflAdj * maxMult;
     } else if (depr > 0.5) {
       // RAPID DECAY model (perishables, dairy, produce)
       deprVal = inflAdj * Math.exp(-depr * age * 12); // monthly decay

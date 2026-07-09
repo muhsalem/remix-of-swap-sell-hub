@@ -13,6 +13,8 @@ import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
+import { CountrySwitcher } from "@/components/CountrySwitcher";
+
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 import { addWishlistAlert } from "@/lib/wishlist.functions";
 import { supabase } from "@/integrations/supabase/client";

@@ -30,7 +30,7 @@ const BARTER_CATEGORIES = {
     }
   },
   vehicles: {
-    labelEn:'Vehicles', labelAr:'مركبات', icon:'🚗', globalFactor:0.55,
+    labelEn:'Vehicles', labelAr:'مركبات', icon:'🚗', globalFactor:0.75,
     subcategories: {
       cars:         { labelEn:'Cars',        labelAr:'سيارات',       basePrice:22000, deprRate:0.08, liquidity:0.75 },
       motorcycles:  { labelEn:'Motorcycles', labelAr:'دراجات نارية', basePrice:3500,  deprRate:0.10, liquidity:0.65 },
@@ -38,7 +38,7 @@ const BARTER_CATEGORIES = {
     }
   },
   real_estate: {
-    labelEn:'Real Estate', labelAr:'عقارات', icon:'🏗️', globalFactor:0.15,
+    labelEn:'Real Estate', labelAr:'عقارات', icon:'🏗️', globalFactor:1.00,
     subcategories: {
       apartments:  { labelEn:'Apartments',  labelAr:'شقق سكنية',    basePrice:50000, deprRate:-0.03, liquidity:0.30 },
       land:        { labelEn:'Land',         labelAr:'أراضي',        basePrice:30000, deprRate:-0.05, liquidity:0.20 },

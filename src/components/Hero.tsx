@@ -114,20 +114,22 @@ export function Hero() {
                   فتح كامل ↗
                 </Link>
               </div>
-              <div className="relative w-full h-[560px] overflow-hidden bg-background">
+              <div className="relative w-full aspect-[1280/1120] bg-background">
                 <iframe
                   src="/pricing-engine/index.html"
                   title="محرك التسعير — نسخة مصغرة"
                   loading="lazy"
-                  className="absolute top-0 right-0 border-0"
+                  className="absolute top-0 right-0 border-0 origin-top-right"
                   style={{
                     width: "1280px",
                     height: "1120px",
-                    transform: "scale(0.44)",
-                    transformOrigin: "top right",
+                    transform: "scale(var(--mini-scale, 0.5))",
+                    // Fluid scale: fills the parent (~640px on lg screens) → 640/1280 = 0.5
+                    ["--mini-scale" as any]: "calc(100% / 1280 * 1)",
                   }}
                 />
               </div>
+
             </div>
             <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent rounded-full shadow-lg text-xs font-bold">
               <Sparkles className="size-4" /> تسعير عادل بالـ AI

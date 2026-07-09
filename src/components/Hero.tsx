@@ -114,7 +114,7 @@ export function Hero() {
                   فتح كامل ↗
                 </Link>
               </div>
-              <div className="relative w-full h-[560px] overflow-hidden bg-background">
+              <div className="relative w-full aspect-[1280/1120] overflow-hidden bg-background">
                 <iframe
                   src="/pricing-engine/index.html"
                   title="محرك التسعير — نسخة مصغرة"
@@ -123,11 +123,13 @@ export function Hero() {
                   style={{
                     width: "1280px",
                     height: "1120px",
-                    transform: "scale(0.44)",
+                    transform: "scale(0.5)",
                     transformOrigin: "top right",
                   }}
                 />
               </div>
+
+
             </div>
             <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent rounded-full shadow-lg text-xs font-bold">
               <Sparkles className="size-4" /> تسعير عادل بالـ AI

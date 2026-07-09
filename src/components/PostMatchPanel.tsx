@@ -192,6 +192,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const fn = useServerFn(getFeeStatus);
   const payFn = useServerFn(payPlatformFee);
   const pricingFn = useServerFn(getPricing);
+  const consentFn = useServerFn(logConsent);
   const { data, isLoading } = useQuery({
     queryKey: ["fee-status", offer.id],
     queryFn: () => fn({ data: { offer_id: offer.id } }),
@@ -200,10 +201,25 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const diOn = pricing?.diEnabled ?? false;
   const [diAmt, setDiAmt] = useState(0);
   const [cashAmt, setCashAmt] = useState(0);
+  const [payConsent, setPayConsent] = useState(false);
   const { country } = useUserCurrency();
 
   const pay = useMutation({
-    mutationFn: () => payFn({ data: { offer_id: offer.id, di_amount: diOn ? diAmt : 0, cash_amount: cashAmt } }),
+    mutationFn: async () => {
+      const res = await payFn({ data: { offer_id: offer.id, di_amount: diOn ? diAmt : 0, cash_amount: cashAmt } });
+      try {
+        await consentFn({
+          data: {
+            country_code: (country === "EG" ? "EG" : "SA") as "SA" | "EG",
+            context: "complete_order",
+            docs: ["terms", "privacy", "fees", "refund"],
+            offer_id: offer.id,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+          },
+        });
+      } catch (e) { console.warn("consent log failed", e); }
+      return res;
+    },
     onSuccess: () => {
       toast.success("تم دفع العمولة ✅");
       qc.invalidateQueries({ queryKey: ["fee-status", offer.id] });

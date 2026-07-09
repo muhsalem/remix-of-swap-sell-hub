@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getOffer, respondToOffer, sendMessage, submitReview } from "@/lib/offers.functions";
 import { openDispute, listOfferDisputes } from "@/lib/disputes.functions";
 import { ShipmentPanel } from "@/components/ShipmentPanel";
+import { ServiceDeliveryPanel } from "@/components/ServiceDeliveryPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";

@@ -155,10 +155,17 @@ function NewOfferPage() {
               cash={cash}
             />
 
+            <div className="mt-4 mb-3">
+              <ConsentCheckbox checked={consent} onChange={setConsent} context="create_offer" />
+            </div>
+
             <button
-              onClick={() => m.mutate()}
-              disabled={m.isPending}
-              className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50"
+              onClick={() => {
+                if (!consent) { toast.error("يجب الموافقة على الشروط أولاً"); return; }
+                m.mutate();
+              }}
+              disabled={m.isPending || !consent}
+              className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-bold hover:bg-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {m.isPending ? "جاري الإرسال..." : "تأكيد وإرسال عرض المقايضة"}
             </button>

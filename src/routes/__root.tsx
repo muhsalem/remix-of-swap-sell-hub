@@ -153,9 +153,9 @@ function AuthListener() {
       router.invalidate();
       if (event !== "SIGNED_OUT") qc.invalidateQueries();
     });
-    // Pageview tracking on every route change
+    // Pageview tracking on every route change (search is an object in TSR)
     const unsub = router.subscribe("onResolved", ({ toLocation }) => {
-      trackPageview(toLocation.pathname + toLocation.search);
+      trackPageview(toLocation.href ?? toLocation.pathname);
     });
     // First load
     trackPageview(window.location.pathname + window.location.search);

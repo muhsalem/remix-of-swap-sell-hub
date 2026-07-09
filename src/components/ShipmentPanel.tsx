@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Truck, Package, CheckCircle2, MapPin, Clock, Loader2 } from "lucide-react";
+import { Truck, Package, CheckCircle2, MapPin, Clock, Loader2, AlertTriangle } from "lucide-react";
 import {
   quoteShipping,
   bookShipment,
@@ -211,6 +211,32 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       </optgroup>
     ));
 
+  // ── Smart validation + suggestions ──────────────────────────────────
+  const fromCity = cities.find((c: any) => c.code === from);
+  const toCity = cities.find((c: any) => c.code === to);
+  type Issue = { code: "no_from" | "no_to" | "bad_from" | "bad_to" | "cross_border" | "bad_weight" | "bad_value" | "same_city"; msg: string; suggest?: { code: string; name_ar: string; region_ar: string }[] };
+  let issue: Issue | null = null;
+  if (!from) issue = { code: "no_from", msg: "اختر مدينة المنشأ." };
+  else if (!fromCity) issue = { code: "bad_from", msg: `الرمز \"${from}\" غير مدعوم — اختر من القائمة.` };
+  else if (!to) issue = { code: "no_to", msg: "اختر مدينة الوجهة." };
+  else if (!toCity) issue = { code: "bad_to", msg: `الرمز \"${to}\" غير مدعوم — اختر من القائمة.` };
+  else if (fromCity.country !== toCity.country) {
+    const same = cities
+      .filter((c: any) => c.country === fromCity.country && c.code !== fromCity.code)
+      .sort((a: any, b: any) => (a.region_ar === fromCity.region_ar ? -1 : 1))
+      .slice(0, 4);
+    issue = {
+      code: "cross_border",
+      msg: `الشحن الدولي غير مفعّل. المنشأ في ${fromCity.country === "SA" ? "🇸🇦 السعودية" : "🇪🇬 مصر"} والوجهة في ${toCity.country === "SA" ? "🇸🇦 السعودية" : "🇪🇬 مصر"}. اختر وجهة داخل نفس البلد:`,
+      suggest: same,
+    };
+  } else if (from === to) issue = { code: "same_city", msg: "مدينة المنشأ والوجهة متطابقتان — اختر وجهة مختلفة." };
+  else if (!Number.isFinite(weight) || weight <= 0) issue = { code: "bad_weight", msg: "الوزن يجب أن يكون أكبر من صفر." };
+  else if (weight > 200) issue = { code: "bad_weight", msg: "الحد الأقصى للوزن 200 كجم." };
+  else if (!Number.isFinite(declared) || declared < 0) issue = { code: "bad_value", msg: "القيمة المُعلنة يجب ألا تقل عن صفر." };
+  else if (declared > 500000) issue = { code: "bad_value", msg: "الحد الأقصى للقيمة المُعلنة 500,000 ر.س." };
+
+
   return (
     <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
       <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
@@ -267,13 +293,36 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
         </label>
       </div>
 
+      {issue && issue.code !== "no_from" && issue.code !== "no_to" && (
+        <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+          <AlertTriangle className="size-3.5 mt-0.5 shrink-0 text-amber-600" />
+          <div className="flex-1">
+            <div>{issue.msg}</div>
+            {issue.suggest && issue.suggest.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {issue.suggest.map((s) => (
+                  <button
+                    key={s.code}
+                    onClick={() => { setTo(s.code); setQuote(null); }}
+                    className="px-2 py-0.5 rounded-full bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 font-bold"
+                  >
+                    {s.name_ar} <span className="opacity-60 font-normal">· {s.region_ar}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => q.mutate()}
-        disabled={!from || !to || !weight || q.isPending}
+        disabled={!!issue || q.isPending}
         className="w-full px-3 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold disabled:opacity-50 mb-2"
       >
         {q.isPending ? "جاري الحساب…" : "احسب سعر الشحن"}
       </button>
+
 
       {quote && (
         <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1">

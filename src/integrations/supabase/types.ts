@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          country: string | null
+          created_at: string
+          device: string | null
+          event_name: string
+          id: string
+          meta: Json | null
+          path: string | null
+          referrer: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          event_name: string
+          id?: string
+          meta?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          event_name?: string
+          id?: string
+          meta?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -292,6 +331,13 @@ export type Database = {
             foreignKeyName: "listings_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
+            referencedRelation: "leaderboard_weekly"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "listings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -510,6 +556,9 @@ export type Database = {
           company_kyc_notes: string | null
           contact_phone: string | null
           created_at: string
+          kyc_ai_at: string | null
+          kyc_ai_report: Json | null
+          kyc_ai_score: number | null
           updated_at: string
           user_id: string
           whatsapp: string | null
@@ -520,6 +569,9 @@ export type Database = {
           company_kyc_notes?: string | null
           contact_phone?: string | null
           created_at?: string
+          kyc_ai_at?: string | null
+          kyc_ai_report?: Json | null
+          kyc_ai_score?: number | null
           updated_at?: string
           user_id: string
           whatsapp?: string | null
@@ -530,11 +582,21 @@ export type Database = {
           company_kyc_notes?: string | null
           contact_phone?: string | null
           created_at?: string
+          kyc_ai_at?: string | null
+          kyc_ai_report?: Json | null
+          kyc_ai_score?: number | null
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_private_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "leaderboard_weekly"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "profiles_private_user_id_profiles_fkey"
             columns: ["user_id"]
@@ -622,6 +684,7 @@ export type Database = {
           referred_user: string | null
           referrer_id: string
           reward_di: number
+          reward_pending: boolean
           rewarded: boolean
         }
         Insert: {
@@ -632,6 +695,7 @@ export type Database = {
           referred_user?: string | null
           referrer_id: string
           reward_di?: number
+          reward_pending?: boolean
           rewarded?: boolean
         }
         Update: {
@@ -642,6 +706,7 @@ export type Database = {
           referred_user?: string | null
           referrer_id?: string
           reward_di?: number
+          reward_pending?: boolean
           rewarded?: boolean
         }
         Relationships: []
@@ -861,6 +926,13 @@ export type Database = {
             foreignKeyName: "trade_offers_from_user_fkey"
             columns: ["from_user"]
             isOneToOne: false
+            referencedRelation: "leaderboard_weekly"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "trade_offers_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -877,6 +949,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_offers_to_user_fkey"
+            columns: ["to_user"]
+            isOneToOne: false
+            referencedRelation: "leaderboard_weekly"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "trade_offers_to_user_fkey"
@@ -1023,11 +1102,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard_weekly: {
+        Row: {
+          avatar_url: string | null
+          badges_count: number | null
+          display_name: string | null
+          rating: number | null
+          total_trades: number | null
+          user_id: string | null
+          verified_badge: boolean | null
+          weekly_trades: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          badges_count?: never
+          display_name?: string | null
+          rating?: never
+          total_trades?: never
+          user_id?: string | null
+          verified_badge?: boolean | null
+          weekly_trades?: never
+        }
+        Update: {
+          avatar_url?: string | null
+          badges_count?: never
+          display_name?: string | null
+          rating?: never
+          total_trades?: never
+          user_id?: string | null
+          verified_badge?: boolean | null
+          weekly_trades?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       di_balance: { Args: { _user_id: string }; Returns: number }
       expire_promotions: { Args: never; Returns: undefined }
+      get_follow_counts: {
+        Args: { _user: string }
+        Returns: {
+          followers: number
+          following: number
+        }[]
+      }
       get_peer_contact: {
         Args: { _offer_id: string }
         Returns: {
@@ -1035,6 +1153,13 @@ export type Database = {
           display_name: string
           user_id: string
           whatsapp: string
+        }[]
+      }
+      get_public_reviews: {
+        Args: { _limit?: number; _user: string }
+        Returns: {
+          created_at: string
+          rating: number
         }[]
       }
       has_role: {

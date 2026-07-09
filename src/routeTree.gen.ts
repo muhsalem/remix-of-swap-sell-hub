@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
 import { Route as AuthenticatedNewListingRouteImport } from './routes/_authenticated/new-listing'
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -75,6 +77,11 @@ const PremiumRoute = PremiumRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DigitalCurrencyRoute = DigitalCurrencyRouteImport.update({
@@ -152,6 +159,11 @@ const AuthenticatedMyListingsRoute = AuthenticatedMyListingsRouteImport.update({
   path: '/my-listings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
   id: '/disputes',
   path: '/disputes',
@@ -214,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -225,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -247,6 +261,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -258,6 +273,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/disputes': typeof AuthenticatedDisputesRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
   '/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -282,6 +298,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/digital-currency': typeof DigitalCurrencyRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
   '/premium': typeof PremiumRoute
   '/pricing-engine': typeof PricingEngineRoute
@@ -293,6 +310,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
@@ -317,6 +335,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -328,6 +347,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/disputes'
+    | '/kyc'
     | '/my-listings'
     | '/new-listing'
     | '/offers'
@@ -350,6 +370,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -361,6 +382,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/disputes'
+    | '/kyc'
     | '/my-listings'
     | '/new-listing'
     | '/offers'
@@ -384,6 +406,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/digital-currency'
+    | '/leaderboard'
     | '/mcp'
     | '/premium'
     | '/pricing-engine'
@@ -395,6 +418,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/disputes'
+    | '/_authenticated/kyc'
     | '/_authenticated/my-listings'
     | '/_authenticated/new-listing'
     | '/_authenticated/offers'
@@ -419,6 +443,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   McpRoute: typeof McpRoute
   PremiumRoute: typeof PremiumRoute
   PricingEngineRoute: typeof PricingEngineRoute
@@ -485,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/digital-currency': {
@@ -592,6 +624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyListingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/disputes': {
       id: '/_authenticated/disputes'
       path: '/disputes'
@@ -692,6 +731,7 @@ const AuthenticatedOffersRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
@@ -704,6 +744,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
@@ -722,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
+  LeaderboardRoute: LeaderboardRoute,
   McpRoute: McpRoute,
   PremiumRoute: PremiumRoute,
   PricingEngineRoute: PricingEngineRoute,

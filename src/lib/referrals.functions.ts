@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 function genCode(seed: string) {
-  // Short, readable, deterministic-ish code from user id
   const base = seed.replace(/-/g, "").toUpperCase();
   return "BD-" + base.slice(0, 4) + base.slice(-2);
 }
@@ -28,6 +27,11 @@ export const getOrCreateMyReferral = createServerFn({ method: "POST" })
     return { code, reward_di: 25 };
   });
 
+/**
+ * Redeem a referral code. Reward is NOT paid immediately; it is marked pending
+ * and paid via a DB trigger after the referred user completes their first trade.
+ * This prevents fake-signup abuse.
+ */
 export const redeemReferral = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ code: z.string().min(3).max(40) }).parse(d))
@@ -44,14 +48,14 @@ export const redeemReferral = createServerFn({ method: "POST" })
 
     const { error } = await supabase
       .from("referrals")
-      .update({ referred_user: userId, rewarded: true, redeemed_at: new Date().toISOString() })
+      // reward_pending: paid by trg_referral_reward after first completed trade
+      .update({ referred_user: userId, reward_pending: true } as never)
       .eq("id", ref.id);
     if (error) throw new Error(error.message);
 
-    // Reward both with DI (ignore if wallet_ledger has stricter rules; admin can adjust)
-    await supabase.from("wallet_ledger").insert([
-      { user_id: ref.referrer_id, amount_di: ref.reward_di, entry_type: "trade_completed", note: `إحالة ناجحة (${ref.code})` },
-      { user_id: userId,           amount_di: ref.reward_di, entry_type: "trade_completed", note: `مكافأة تسجيل عبر ${ref.code}` },
-    ]);
-    return { ok: true, reward_di: ref.reward_di };
+    return {
+      ok: true,
+      reward_di: ref.reward_di,
+      message: "تم ربط الإحالة — المكافأة تُصرف بعد أول صفقة مكتملة.",
+    };
   });

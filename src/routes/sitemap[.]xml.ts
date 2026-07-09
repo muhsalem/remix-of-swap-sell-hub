@@ -8,6 +8,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const staticPaths = [
           "",
           "/about",
+          "/leaderboard",
           "/pricing-engine",
           "/premium",
           "/digital-currency",

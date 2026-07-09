@@ -83,7 +83,7 @@ const BARTER_CATEGORIES = {
     subcategories: {
       paintings:  { labelEn:'Paintings',        labelAr:'لوحات فنية',       basePrice:500,  deprRate:-0.05, liquidity:0.25 },
       handmade:   { labelEn:'Handmade Crafts',  labelAr:'مصنوعات يدوية',   basePrice:100,  deprRate:0.10, liquidity:0.50 },
-      antiques:   { labelEn:'Antiques',         labelAr:'تحف وأنتيكات',    basePrice:1000, deprRate:-0.08, liquidity:0.20 },
+      antiques:   { labelEn:'Antiques',         labelAr:'تحف وأنتيكات',    basePrice:400,  deprRate:-0.06, liquidity:0.20 },
     }
   },
   digital: {
@@ -111,12 +111,12 @@ const BARTER_CATEGORIES = {
       plumbing:    { labelEn:'Plumbing',       labelAr:'سباكة',           hourlyRate:25, liquidity:0.75 },
       electrical:  { labelEn:'Electrical',     labelAr:'كهرباء',          hourlyRate:30, liquidity:0.70 },
       painting:    { labelEn:'Painting',       labelAr:'نقاشة ودهانات',   hourlyRate:20, liquidity:0.72 },
-      cleaning:    { labelEn:'Cleaning',       labelAr:'تنظيف',           hourlyRate:15, liquidity:0.85 },
+      cleaning:    { labelEn:'Cleaning',       labelAr:'تنظيف',           hourlyRate:20, liquidity:0.85 },
       ac_repair:   { labelEn:'AC Repair',      labelAr:'صيانة تكييف',     hourlyRate:35, liquidity:0.68 },
     }
   },
   education: {
-    labelEn:'Education & Training', labelAr:'تعليم وتدريب', icon:'🎓', globalFactor:0.25, isService:true,
+    labelEn:'Education & Training', labelAr:'تعليم وتدريب', icon:'🎓', globalFactor:0.15, isService:true,
     subcategories: {
       academic:      { labelEn:'Academic Tutoring',      labelAr:'دروس أكاديمية',  hourlyRate:25, liquidity:0.70 },
       languages:     { labelEn:'Language Classes',       labelAr:'دورات لغات',     hourlyRate:30, liquidity:0.75 },
@@ -410,7 +410,7 @@ class BarterEngine {
       // Cap effective age at 30y and add asymptotic damping to prevent runaway growth for antiques.
       const effAge = Math.min(age, 30);
       deprVal = inflAdj * Math.pow(1 + Math.abs(depr), effAge);
-      const maxMult = 8; // hard cap: no item appreciates more than 8× base
+      const maxMult = 4; // hard cap: no item appreciates more than 4× base
       if (deprVal > inflAdj * maxMult) deprVal = inflAdj * maxMult;
     } else if (depr > 0.5) {
       // RAPID DECAY model (perishables, dairy, produce)

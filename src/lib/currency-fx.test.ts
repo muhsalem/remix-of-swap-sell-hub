@@ -16,7 +16,9 @@ const target = new EventTarget();
   dispatchEvent: target.dispatchEvent.bind(target),
 });
 (globalThis as any).localStorage = new MemStorage();
-(globalThis as any).navigator = { language: "ar-SA" };
+const navStub = { language: "ar-SA" };
+Object.defineProperty(globalThis, "navigator", { value: navStub, configurable: true, writable: true });
+const setLang = (l: string) => { navStub.language = l; };
 
 import {
   FX_VS_SAR,

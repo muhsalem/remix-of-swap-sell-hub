@@ -28,7 +28,7 @@ export const Route = createFileRoute("/listings/$id")({
   head: ({ loaderData, params }) => {
     const l = loaderData?.listing;
     if (!l) return { meta: [{ title: "عرض غير موجود — بادل" }] };
-    const desc = `للمقايضة: ${l.title} — مطلوب: ${l.wants} — السعر السوقي ${Number(l.market_price).toLocaleString()} ر.س.`;
+    const desc = `للمقايضة: ${l.title} — مطلوب: ${l.wants} — السعر السوقي ${formatSAR(Number(l.market_price))}.`;
     const ogImagePath = l.images?.[0];
     const ogImage = ogImagePath
       ? supabase.storage.from("listing-images").getPublicUrl(ogImagePath).data.publicUrl

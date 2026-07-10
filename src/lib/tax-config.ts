@@ -1,6 +1,9 @@
 // Single source of truth for country-specific taxes & platform economics.
 // Used by the checkout FeeBlock, the pricing engine, and any receipt UI.
 
+import { formatAmount } from "./format-price";
+
+
 export type TaxCountry = "SA" | "EG" | "AE" | "KW" | "QA" | "BH" | "OM" | "JO" | "OTHER";
 
 export interface TaxProfile {

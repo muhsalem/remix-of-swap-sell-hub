@@ -111,6 +111,8 @@ export function computeFee(dealValueSar: number, currency: string | null | undef
 function round2(n: number) { return Math.round(n * 100) / 100; }
 
 export function fmtLocal(n: number, profile: TaxProfile): string {
-  const digits = n < 10 ? 2 : 0;
-  return `${n.toLocaleString(undefined, { maximumFractionDigits: digits })} ${profile.symbol}`;
+  // Delegate to the shared formatter so LocalPrice / OfferPreviewPanel /
+  // PostMatchPanel all render the same digits and grouping for the same input.
+  const { formatAmount } = require("./format-price") as typeof import("./format-price");
+  return `${formatAmount(n)} ${profile.symbol}`;
 }

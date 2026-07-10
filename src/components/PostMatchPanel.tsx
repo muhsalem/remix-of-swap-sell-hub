@@ -270,7 +270,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
           </div>
         )}
         {diOn && (
-          <div className="flex justify-between pt-1"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI</b></div>
+          <div className="flex justify-between pt-1"><span>رصيد DI لديك:</span><b>{formatAmount(data.diBalance, 2)} DI</b></div>
         )}
       </div>
 

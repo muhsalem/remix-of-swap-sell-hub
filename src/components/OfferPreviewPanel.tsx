@@ -1,5 +1,6 @@
 import { ArrowLeftRight, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
+import { formatSAR } from "@/lib/format-price";
 
 type Item = {
   title: string;

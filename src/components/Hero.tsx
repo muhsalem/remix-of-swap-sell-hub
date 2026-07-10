@@ -5,6 +5,7 @@ import { ArrowLeftRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { getPublicStats, getMyStats } from "@/lib/stats.functions";
 import { LocalPrice } from "@/components/LocalPrice";
+import { MiniPricingEngine } from "@/components/MiniPricingEngine";
 
 const publicStatsQ = queryOptions({
   queryKey: ["public-stats"],
@@ -100,38 +101,8 @@ export function Hero() {
           </div>
 
           <div className="hidden lg:block relative">
-            <div className="relative rounded-3xl overflow-hidden border border-border shadow-2xl bg-card">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-stone-soft">
-                <div className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-rose-400" />
-                  <span className="size-2.5 rounded-full bg-amber-400" />
-                  <span className="size-2.5 rounded-full bg-emerald-400" />
-                </div>
-                <span className="text-[11px] font-mono text-muted-foreground">
-                  pricing-engine · نسخة مصغرة
-                </span>
-                <Link to="/pricing-engine" className="text-[11px] font-bold text-primary hover:underline">
-                  فتح كامل ↗
-                </Link>
-              </div>
-              <div className="relative w-full aspect-[1280/1120] overflow-hidden bg-background">
-                <iframe
-                  src="/pricing-engine/index.html"
-                  title="محرك التسعير — نسخة مصغرة"
-                  loading="lazy"
-                  className="absolute top-0 right-0 border-0"
-                  style={{
-                    width: "1280px",
-                    height: "1120px",
-                    transform: "scale(0.5)",
-                    transformOrigin: "top right",
-                  }}
-                />
-              </div>
-
-
-            </div>
-            <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent rounded-full shadow-lg text-xs font-bold">
+            <MiniPricingEngine />
+            <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-3 py-2 bg-accent text-accent-foreground rounded-full shadow-lg text-xs font-bold">
               <Sparkles className="size-4" /> تسعير عادل بالـ AI
             </div>
           </div>

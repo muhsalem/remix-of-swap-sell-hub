@@ -61,7 +61,7 @@ export function OfferPreviewPanel({
             <span className="font-mono text-xs opacity-80">عدالة {fairness}%</span>
           </div>
           <div className="text-xs mt-1 opacity-90 font-bold">
-            الفرق: {diff >= 0 ? "+" : ""}{diff.toLocaleString()} ر.س ({pct.toFixed(0)}% من قيمة الطرف الآخر)
+            الفرق: {diff >= 0 ? "+" : ""}{formatSAR(diff)} ({pct.toFixed(0)}% من قيمة الطرف الآخر)
           </div>
         </div>
       </div>

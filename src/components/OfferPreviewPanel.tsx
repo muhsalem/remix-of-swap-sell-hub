@@ -49,7 +49,7 @@ export function OfferPreviewPanel({
 
       <div className="grid grid-cols-3 gap-3 text-center">
         <Stat label="قيمة عرضك" value={<LocalPrice sar={myVal} />} />
-        <Stat label="نقد للموازنة" value={`${(Number(cash) || 0).toLocaleString()} ر.س`} />
+        <Stat label="نقد للموازنة" value={formatSAR(Number(cash) || 0)} />
         <Stat label="قيمة الطرف الآخر" value={<LocalPrice sar={tgtVal} />} />
       </div>
 

@@ -34,10 +34,11 @@ export function OfferPreviewPanel({
 
   const suggestion =
     diff < 0
-      ? `أضف نقداً للموازنة: ≈ ${Math.abs(diff).toLocaleString()} ر.س`
+      ? `أضف نقداً للموازنة: ≈ ${formatSAR(Math.abs(diff))}`
       : diff > 0
-        ? `أنت تدفع زيادة بقيمة ≈ ${diff.toLocaleString()} ر.س — يمكنك تقليل النقد أو طلب موازنة من الطرف الآخر`
+        ? `أنت تدفع زيادة بقيمة ≈ ${formatSAR(diff)} — يمكنك تقليل النقد أو طلب موازنة من الطرف الآخر`
         : `التوازن مثالي — يمكنك الإرسال مباشرة`;
+
 
   return (
     <div className="bg-card rounded-3xl ring-1 ring-black/5 p-6 mb-6 space-y-4">

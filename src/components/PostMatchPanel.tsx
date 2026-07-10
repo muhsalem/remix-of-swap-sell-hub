@@ -266,7 +266,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
         </div>
         {profile.code !== "SA" && (
           <div className="text-[10px] text-muted-foreground pt-1">
-            ≈ {fee.totalSar.toFixed(2)} ر.س (يُخصم من الرصيد الداخلي بالريال ثم يُحوَّل)
+            ≈ {formatSAR(fee.totalSar)} (يُخصم من الرصيد الداخلي بالريال ثم يُحوَّل)
           </div>
         )}
         {diOn && (

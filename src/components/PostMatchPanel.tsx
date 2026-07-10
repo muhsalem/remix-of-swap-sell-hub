@@ -11,6 +11,7 @@ import { logConsent } from "@/lib/consent.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserCurrency } from "@/components/LocalPrice";
 import { computeFee, fmtLocal } from "@/lib/tax-config";
+import { formatSAR, formatAmount } from "@/lib/format-price";
 import { ConsentCheckbox } from "@/components/ConsentCheckbox";
 
 type Props = { offer: any; userId: string; qc: ReturnType<typeof useQueryClient> };
@@ -265,11 +266,11 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
         </div>
         {profile.code !== "SA" && (
           <div className="text-[10px] text-muted-foreground pt-1">
-            ≈ {fee.totalSar.toFixed(2)} ر.س (يُخصم من الرصيد الداخلي بالريال ثم يُحوَّل)
+            ≈ {formatSAR(fee.totalSar)} (يُخصم من الرصيد الداخلي بالريال ثم يُحوَّل)
           </div>
         )}
         {diOn && (
-          <div className="flex justify-between pt-1"><span>رصيد DI لديك:</span><b>{data.diBalance.toFixed(2)} DI</b></div>
+          <div className="flex justify-between pt-1"><span>رصيد DI لديك:</span><b>{formatAmount(data.diBalance, 2)} DI</b></div>
         )}
       </div>
 
@@ -278,9 +279,9 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
           <CheckCircle2 className="size-4" /> العمولة مدفوعة — يمكنكم إكمال الصفقة
           {data.fee && (
             <span className="text-[10px] font-normal text-muted-foreground mr-auto">
-              {Number(data.fee.paid_di) > 0 && `${Number(data.fee.paid_di).toFixed(1)} DI`}
+              {Number(data.fee.paid_di) > 0 && `${formatAmount(Number(data.fee.paid_di), 1)} DI`}
               {Number(data.fee.paid_di) > 0 && Number(data.fee.paid_cash_sar) > 0 && " + "}
-              {Number(data.fee.paid_cash_sar) > 0 && `${Number(data.fee.paid_cash_sar).toFixed(0)} ر.س`}
+              {Number(data.fee.paid_cash_sar) > 0 && formatSAR(Number(data.fee.paid_cash_sar))}
             </span>
           )}
         </div>

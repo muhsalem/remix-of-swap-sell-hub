@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FX_VS_SAR, loadCountry } from "@/lib/currency-fx";
+import { formatAmount, formatSAR } from "@/lib/format-price";
 
 /**
  * Auto-displays a SAR amount in the user's local currency, based on their
@@ -40,17 +41,17 @@ export function LocalPrice({
   const { country, fx } = useUserCurrency();
   const n = Number(sar) || 0;
   const local = n * fx.perSAR;
-  const digits = fractionDigits ?? (local < 10 ? 2 : 0);
-  const txt = local.toLocaleString(undefined, { maximumFractionDigits: digits });
+  const txt = formatAmount(local, fractionDigits);
   return (
     <span
       className={className}
-      title={country !== "SAR" ? `≈ ${n.toLocaleString()} ر.س` : undefined}
+      title={country !== "SAR" ? `≈ ${formatSAR(n)}` : undefined}
     >
       {txt} <span className="opacity-80 font-extrabold">{fx.symbol}</span>
       {showOriginal && country !== "SAR" && (
-        <span className="text-[10px] opacity-60 mr-1">({n.toLocaleString()} ر.س)</span>
+        <span className="text-[10px] opacity-60 mr-1">({formatSAR(n)})</span>
       )}
     </span>
   );
 }
+

@@ -9,6 +9,7 @@ import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
+import { formatSAR } from "@/lib/format-price";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
 import { MarketReferencePrice } from "@/components/MarketReferencePrice";
 
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/listings/$id")({
   head: ({ loaderData, params }) => {
     const l = loaderData?.listing;
     if (!l) return { meta: [{ title: "عرض غير موجود — بادل" }] };
-    const desc = `للمقايضة: ${l.title} — مطلوب: ${l.wants} — السعر السوقي ${Number(l.market_price).toLocaleString()} ر.س.`;
+    const desc = `للمقايضة: ${l.title} — مطلوب: ${l.wants} — السعر السوقي ${formatSAR(Number(l.market_price))}.`;
     const ogImagePath = l.images?.[0];
     const ogImage = ogImagePath
       ? supabase.storage.from("listing-images").getPublicUrl(ogImagePath).data.publicUrl

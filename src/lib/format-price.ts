@@ -16,7 +16,8 @@ export function priceDigits(n: number): number {
 
 /** Plain grouped number, no currency symbol. */
 export function formatAmount(n: number | string, fractionDigits?: number): string {
-  const v = Number(n) || 0;
+  const raw = Number(n);
+  const v = Number.isFinite(raw) ? raw : 0;
   const digits = fractionDigits ?? priceDigits(v);
   return v.toLocaleString(LOCALE, {
     minimumFractionDigits: digits,

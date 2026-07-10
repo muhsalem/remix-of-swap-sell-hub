@@ -279,9 +279,9 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
           <CheckCircle2 className="size-4" /> العمولة مدفوعة — يمكنكم إكمال الصفقة
           {data.fee && (
             <span className="text-[10px] font-normal text-muted-foreground mr-auto">
-              {Number(data.fee.paid_di) > 0 && `${Number(data.fee.paid_di).toFixed(1)} DI`}
+              {Number(data.fee.paid_di) > 0 && `${formatAmount(Number(data.fee.paid_di), 1)} DI`}
               {Number(data.fee.paid_di) > 0 && Number(data.fee.paid_cash_sar) > 0 && " + "}
-              {Number(data.fee.paid_cash_sar) > 0 && `${Number(data.fee.paid_cash_sar).toFixed(0)} ر.س`}
+              {Number(data.fee.paid_cash_sar) > 0 && formatSAR(Number(data.fee.paid_cash_sar))}
             </span>
           )}
         </div>

@@ -51,3 +51,53 @@ describe("formatSAR", () => {
     expect(formatSAR(-1234)).toBe("-1,234 ر.س");
   });
 });
+
+describe("edge cases", () => {
+  it("formats very large numbers with correct grouping", () => {
+    expect(formatAmount(1_000_000_000)).toBe("1,000,000,000");
+    expect(formatAmount(9_999_999_999_999)).toBe("9,999,999,999,999");
+    expect(formatSAR(1_234_567_890)).toBe("1,234,567,890 ر.س");
+  });
+
+  it("formats very large negatives with sign preserved", () => {
+    expect(formatAmount(-1_000_000)).toBe("-1,000,000");
+    expect(formatAmount(-9_876_543_210)).toBe("-9,876,543,210");
+    expect(formatSAR(-1_000_000_000)).toBe("-1,000,000,000 ر.س");
+  });
+
+  it("handles very small decimals below the 2-digit threshold", () => {
+    // priceDigits stays at 2 for < 10, so tiny values round to 2 decimals
+    expect(formatAmount(0.001)).toBe("0.00");
+    expect(formatAmount(0.009)).toBe("0.01");
+    expect(formatAmount(-0.004)).toBe("-0.00");
+  });
+
+  it("respects extreme explicit fractionDigits overrides", () => {
+    expect(formatAmount(1.23456789, 6)).toBe("1.234568");
+    expect(formatAmount(0.000001, 8)).toBe("0.00000100");
+    expect(formatAmount(1234.5, 4)).toBe("1,234.5000");
+  });
+
+  it("handles JS numeric boundaries without throwing", () => {
+    expect(() => formatAmount(Number.MAX_SAFE_INTEGER)).not.toThrow();
+    expect(formatAmount(Number.MAX_SAFE_INTEGER)).toBe(
+      Number.MAX_SAFE_INTEGER.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+    );
+    expect(formatAmount(Number.MIN_SAFE_INTEGER)).toBe(
+      Number.MIN_SAFE_INTEGER.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+    );
+  });
+
+  it("coerces non-finite values (NaN / Infinity) to 0", () => {
+    expect(formatAmount(NaN)).toBe("0");
+    expect(formatAmount(Infinity)).toBe("0");
+    expect(formatAmount(-Infinity)).toBe("0");
+    expect(formatSAR(NaN)).toBe("0 ر.س");
+  });
+
+  it("handles numeric strings with decimals and whitespace-ish inputs", () => {
+    expect(formatAmount("1234.5")).toBe("1,235"); // rounded, ≥10 → 0 digits
+    expect(formatAmount("0.5")).toBe("0.50");
+    expect(formatAmount("")).toBe("0");
+  });
+});

@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
+import { MarketReferencePrice } from "@/components/MarketReferencePrice";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -127,6 +128,11 @@ function ListingPage() {
               <div className="font-display text-3xl font-extrabold text-primary">
                 <LocalPrice sar={l.market_price} showOriginal />
               </div>
+              <MarketReferencePrice
+                category={l.category}
+                title={l.title}
+                listingPriceSar={Number(l.market_price)}
+              />
             </div>
 
 

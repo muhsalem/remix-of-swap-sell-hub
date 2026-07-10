@@ -397,6 +397,45 @@ export type Database = {
           },
         ]
       }
+      market_price_cache: {
+        Row: {
+          category: string
+          country: string
+          fetched_at: string
+          id: string
+          price_max_sar: number | null
+          price_min_sar: number | null
+          price_sar: number
+          source: string
+          title_key: string
+          ttl_minutes: number
+        }
+        Insert: {
+          category: string
+          country?: string
+          fetched_at?: string
+          id?: string
+          price_max_sar?: number | null
+          price_min_sar?: number | null
+          price_sar: number
+          source?: string
+          title_key: string
+          ttl_minutes?: number
+        }
+        Update: {
+          category?: string
+          country?: string
+          fetched_at?: string
+          id?: string
+          price_max_sar?: number | null
+          price_min_sar?: number | null
+          price_sar?: number
+          source?: string
+          title_key?: string
+          ttl_minutes?: number
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string

@@ -81,12 +81,12 @@ describe("currency conversion SAR ↔ EGP", () => {
 
 describe("country persistence", () => {
   it("detectCountry defaults to SAR for ar-SA", () => {
-    (globalThis as any).navigator.language = "ar-SA";
+    setLang("ar-SA");
     expect(detectCountry()).toBe("SAR");
   });
 
   it("detectCountry returns EGP for ar-EG locale", () => {
-    (globalThis as any).navigator.language = "ar-EG";
+    setLang("ar-EG");
     expect(detectCountry()).toBe("EGP");
   });
 
@@ -101,7 +101,7 @@ describe("country persistence", () => {
 
   it("loadCountry ignores invalid stored values and falls back to detection", () => {
     localStorage.setItem(COUNTRY_STORAGE_KEY, "USD");
-    (globalThis as any).navigator.language = "ar-SA";
+    setLang("ar-SA");
     expect(loadCountry()).toBe("SAR");
   });
 });

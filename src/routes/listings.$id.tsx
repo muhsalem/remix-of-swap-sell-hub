@@ -128,6 +128,11 @@ function ListingPage() {
               <div className="font-display text-3xl font-extrabold text-primary">
                 <LocalPrice sar={l.market_price} showOriginal />
               </div>
+              <MarketReferencePrice
+                category={l.category}
+                title={l.title}
+                listingPriceSar={Number(l.market_price)}
+              />
             </div>
 
 

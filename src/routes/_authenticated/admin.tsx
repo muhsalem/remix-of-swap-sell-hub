@@ -36,6 +36,7 @@ function AdminDashboard() {
       <div className="flex items-center justify-between mb-8 flex-wrap gap-2">
         <h1 className="font-display text-3xl font-extrabold">لوحة المشرف</h1>
         <div className="flex gap-3 text-sm">
+          <Link to="/admin/finance" className="text-primary font-bold hover:underline">لوحة المالية →</Link>
           <Link to="/admin/monitoring" className="text-primary font-bold hover:underline">المراقبة والضمان →</Link>
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
           <Link to="/admin/shipping-cities" className="text-primary font-bold hover:underline">مدن الشحن →</Link>

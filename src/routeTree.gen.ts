@@ -41,6 +41,7 @@ import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
+import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -210,6 +211,12 @@ const AuthenticatedAdminMonitoringRoute =
     path: '/monitoring',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminFinanceRoute =
+  AuthenticatedAdminFinanceRouteImport.update({
+    id: '/finance',
+    path: '/finance',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminDisputesRoute =
   AuthenticatedAdminDisputesRouteImport.update({
     id: '/disputes',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -295,6 +303,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -333,6 +342,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
+    | '/admin/finance'
     | '/admin/monitoring'
     | '/admin/shipping-cities'
     | '/offer/$listingId'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
+    | '/admin/finance'
     | '/admin/monitoring'
     | '/admin/shipping-cities'
     | '/offer/$listingId'
@@ -444,6 +456,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/disputes'
+    | '/_authenticated/admin/finance'
     | '/_authenticated/admin/monitoring'
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/offer/$listingId'
@@ -700,6 +713,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMonitoringRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/finance': {
+      id: '/_authenticated/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/disputes': {
       id: '/_authenticated/admin/disputes'
       path: '/disputes'
@@ -726,12 +746,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminDisputesRoute: typeof AuthenticatedAdminDisputesRoute
+  AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRoute
   AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
   AuthenticatedAdminShippingCitiesRoute: typeof AuthenticatedAdminShippingCitiesRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminDisputesRoute: AuthenticatedAdminDisputesRoute,
+  AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRoute,
   AuthenticatedAdminMonitoringRoute: AuthenticatedAdminMonitoringRoute,
   AuthenticatedAdminShippingCitiesRoute: AuthenticatedAdminShippingCitiesRoute,
 }

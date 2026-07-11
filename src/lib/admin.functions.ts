@@ -211,6 +211,95 @@ export const listErrorLogs = createServerFn({ method: "GET" })
     return { logs: data ?? [] };
   });
 
+export const getFinanceMetrics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const now = Date.now();
+    const d30 = new Date(now - 30 * 24 * 3600 * 1000).toISOString();
+    const d60 = new Date(now - 60 * 24 * 3600 * 1000).toISOString();
+
+    const [{ data: subs }, { data: fees }, { data: completed }, { data: allOffers }, { data: disputes }] = await Promise.all([
+      supabase.from("subscriptions").select("tier,status,price_sar,started_at,canceled_at,renews_at"),
+      supabase.from("platform_fees").select("amount_sar,status,paid_at,created_at"),
+      supabase.from("trade_offers").select("cash_balance,updated_at,created_at").eq("status", "completed"),
+      supabase.from("trade_offers").select("id,status,created_at"),
+      supabase.from("disputes").select("status,created_at,updated_at"),
+    ]);
+
+    // MRR — active subscriptions monthly price
+    const activeSubs = (subs ?? []).filter((s: any) => s.status === "active");
+    const mrr = activeSubs.reduce((sum: number, s: any) => sum + Number(s.price_sar ?? 0), 0);
+    const merchantSubs = activeSubs.filter((s: any) => s.tier === "merchant").length;
+    const storeSubs = activeSubs.filter((s: any) => s.tier === "store").length;
+
+    // GMV
+    const gmvAll = (completed ?? []).reduce((s: number, o: any) => s + Number(o.cash_balance ?? 0), 0);
+    const gmv30 = (completed ?? []).filter((o: any) => o.updated_at >= d30).reduce((s: number, o: any) => s + Number(o.cash_balance ?? 0), 0);
+    const gmvPrev30 = (completed ?? []).filter((o: any) => o.updated_at >= d60 && o.updated_at < d30).reduce((s: number, o: any) => s + Number(o.cash_balance ?? 0), 0);
+    const gmvGrowth = gmvPrev30 > 0 ? Math.round(((gmv30 - gmvPrev30) / gmvPrev30) * 100) : null;
+
+    // Fees / take rate
+    const feesAll = (fees ?? []).reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const feesPaid = (fees ?? []).filter((f: any) => f.status === "paid").reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const feesDue = (fees ?? []).filter((f: any) => f.status === "due").reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const fees30 = (fees ?? []).filter((f: any) => f.status === "paid" && f.paid_at && f.paid_at >= d30).reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+    const takeRate = gmvAll > 0 ? +((feesAll / gmvAll) * 100).toFixed(2) : 0;
+    const takeRate30 = gmv30 > 0 ? +((fees30 / gmv30) * 100).toFixed(2) : 0;
+
+    // Disputes
+    const dOpen = (disputes ?? []).filter((d: any) => d.status === "open").length;
+    const dResolved = (disputes ?? []).filter((d: any) => d.status === "resolved").length;
+    const dRejected = (disputes ?? []).filter((d: any) => d.status === "rejected").length;
+    const closed = (disputes ?? []).filter((d: any) => d.status !== "open" && d.updated_at && d.created_at);
+    const avgResolutionHrs = closed.length
+      ? Math.round(
+          closed.reduce((sum: number, d: any) => sum + (new Date(d.updated_at).getTime() - new Date(d.created_at).getTime()), 0)
+            / closed.length / 3600000
+        )
+      : 0;
+    const offersCount = allOffers?.length ?? 0;
+    const disputeRate = offersCount > 0 ? +(((disputes?.length ?? 0) / offersCount) * 100).toFixed(2) : 0;
+
+    // Daily trend last 30d
+    const trend: { date: string; gmv: number; fees: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const day = new Date(now - i * 24 * 3600 * 1000);
+      const key = day.toISOString().slice(0, 10);
+      const dayGmv = (completed ?? []).filter((o: any) => o.updated_at?.slice(0, 10) === key).reduce((s: number, o: any) => s + Number(o.cash_balance ?? 0), 0);
+      const dayFees = (fees ?? []).filter((f: any) => f.paid_at?.slice(0, 10) === key).reduce((s: number, f: any) => s + Number(f.amount_sar ?? 0), 0);
+      trend.push({ date: key, gmv: Math.round(dayGmv), fees: Math.round(dayFees) });
+    }
+
+    return {
+      mrr: Math.round(mrr),
+      arr: Math.round(mrr * 12),
+      activeSubs: activeSubs.length,
+      merchantSubs,
+      storeSubs,
+      gmvAll: Math.round(gmvAll),
+      gmv30: Math.round(gmv30),
+      gmvGrowth,
+      feesAll: Math.round(feesAll),
+      feesPaid: Math.round(feesPaid),
+      feesDue: Math.round(feesDue),
+      fees30: Math.round(fees30),
+      takeRate,
+      takeRate30,
+      disputes: {
+        open: dOpen,
+        resolved: dResolved,
+        rejected: dRejected,
+        total: disputes?.length ?? 0,
+        avgResolutionHrs,
+        disputeRate,
+      },
+      trend,
+    };
+  });
+
 export const listEscrowHolds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

@@ -76,10 +76,10 @@ def create_listing(owner_id: str) -> str:
 
 async def sign_in(page: Page, email: str, password: str, label: str):
     await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
-    await page.get_by_placeholder("you@example.com").fill(email)
-    await page.get_by_placeholder("••••••••").fill(password)
-    await page.get_by_role("button", name="دخول").click()
-    await page.wait_for_url(f"{BASE_URL}/**", timeout=10_000)
+    await page.locator("input[type=email]").fill(email)
+    await page.locator("input[type=password]").fill(password)
+    await page.get_by_role("button", name="تسجيل الدخول").click()
+    await page.wait_for_url(lambda u: "/auth" not in u, timeout=15_000)
     await page.screenshot(path=str(SCREENSHOTS / f"01_signin_{label}.png"))
 
 

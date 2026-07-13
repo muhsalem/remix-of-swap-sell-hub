@@ -133,6 +133,7 @@ async def main():
     a_id = create_user(**USER_A)
     b_id = create_user(**USER_B)
     listing_id = create_listing(a_id)
+    create_listing(b_id, title_suffix=" (B)")  # buyer needs a listing to offer
     print(f"  A={a_id[:8]}  B={b_id[:8]}  listing={listing_id[:8]}")
 
     async with async_playwright() as pw:

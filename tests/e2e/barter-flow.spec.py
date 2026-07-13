@@ -77,6 +77,7 @@ def create_listing(owner_id: str, title_suffix: str = "") -> str:
 
 async def sign_in(page: Page, email: str, password: str, label: str):
     await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
+    await page.evaluate("localStorage.setItem('badel_onboarding_v1', '1')")
     await page.locator("input[type=email]").fill(email)
     await page.locator("input[type=password]").fill(password)
     await page.get_by_role("button", name="تسجيل الدخول").click()

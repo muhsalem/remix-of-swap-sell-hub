@@ -85,12 +85,13 @@ async def sign_in(page: Page, email: str, password: str, label: str):
 
 async def send_offer(page: Page, listing_id: str):
     await page.goto(f"{BASE_URL}/offer/{listing_id}", wait_until="domcontentloaded")
-    # cash-top-up field (partial cash barter)
-    cash = page.get_by_label("مبلغ نقدي")
-    if await cash.count():
-        await cash.first.fill("300")
+    # select buyer's own listing (first card)
+    await page.locator("h2:has-text('اختر عرضك') ~ div button").first.click()
+    await page.locator("input[type=number]").first.fill("300")
+    # accept consent checkbox
+    await page.locator("input[type=checkbox]").last.check()
     await page.screenshot(path=str(SCREENSHOTS / "02_offer_form.png"))
-    await page.get_by_role("button", name="إرسال العرض").click()
+    await page.get_by_role("button", name=lambda s: "تأكيد وإرسال" in (s or "")).click()
     await page.wait_for_url("**/offers/**", timeout=15_000)
 
 

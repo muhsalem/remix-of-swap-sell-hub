@@ -6,6 +6,7 @@ E2E — المسار السعيد الكامل للمقايضة الثنائية
     python3 tests/e2e/barter-flow.spec.py
 """
 import asyncio
+import re
 import json
 import os
 import time
@@ -91,7 +92,7 @@ async def send_offer(page: Page, listing_id: str):
     # accept consent checkbox
     await page.locator("input[type=checkbox]").last.check()
     await page.screenshot(path=str(SCREENSHOTS / "02_offer_form.png"))
-    await page.get_by_role("button", name=lambda s: "تأكيد وإرسال" in (s or "")).click()
+    await page.get_by_role("button", name=re.compile("تأكيد وإرسال")).click()
     await page.wait_for_url("**/offers/**", timeout=15_000)
 
 
@@ -106,8 +107,8 @@ async def accept_offer(page: Page):
 
 async def pay_platform_fee(page: Page):
     # buyer pays fee → escrow
-    await page.get_by_role("checkbox", name=lambda s: "الشروط" in (s or "")).check()
-    await page.get_by_role("button", name=lambda s: (s or "").startswith("دفع")).click()
+    await page.get_by_role("checkbox", name=re.compile("الشروط")).check()
+    await page.get_by_role("button", name=re.compile("^دفع")).click()
     await page.wait_for_selector("text=العمولة مدفوعة", timeout=15_000)
     await page.screenshot(path=str(SCREENSHOTS / "04_fee_paid.png"))
 

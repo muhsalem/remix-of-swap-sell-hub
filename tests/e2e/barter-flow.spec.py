@@ -65,6 +65,7 @@ def create_listing(owner_id: str) -> str:
         "market_price": 2500,
         "city": "الرياض",
         "listing_type": "item",
+        "wants": "لابتوب أو كاش",
         "images": [],
         "status": "active",
     })

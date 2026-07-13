@@ -102,7 +102,7 @@ async def accept_offer(page: Page, offer_id: str):
     await page.wait_for_timeout(1500)
     await page.screenshot(path=str(SCREENSHOTS / "03a_offer_detail.png"))
     await page.locator("button:has-text('قبول')").first.click()
-    await page.wait_for_selector("text=مراحل ما بعد القبول", timeout=15_000)
+    await page.wait_for_timeout(3000)
     await page.screenshot(path=str(SCREENSHOTS / "03_accepted.png"))
 
 

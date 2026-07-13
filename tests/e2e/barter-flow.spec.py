@@ -55,10 +55,10 @@ def create_user(email: str, password: str, name: str) -> str:
     return u["id"]
 
 
-def create_listing(owner_id: str) -> str:
+def create_listing(owner_id: str, title_suffix: str = "") -> str:
     row = admin("/rest/v1/listings", body={
         "owner_id": owner_id,
-        "title": f"هاتف Pixel 8 اختبار {SUFFIX}",
+        "title": f"هاتف Pixel 8 اختبار {SUFFIX}{title_suffix}",
         "description": "إعلان اختبار E2E — قابل للشحن.",
         "category": "phones",
         "condition": "excellent",

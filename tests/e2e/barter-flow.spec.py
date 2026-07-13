@@ -2,6 +2,10 @@
 E2E — المسار السعيد الكامل للمقايضة الثنائية مع الشحن والضمان.
 لا يشمل: سيناريو النزاع، ولا المقايضة الثلاثية.
 
+كل خطوة حرجة → screenshot تحت /tmp/browser/barter/
+    NN_<step>[_<label>].png            → لقطة نجاح
+    NN_<step>_ERROR[_<label>].png      → لقطة فشل قبل رفع الاستثناء
+
 التشغيل:
     python3 tests/e2e/barter-flow.spec.py
 """
@@ -9,7 +13,6 @@ import asyncio
 import re
 import json
 import os
-import time
 import uuid
 from pathlib import Path
 
@@ -22,10 +25,37 @@ SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
 SCREENSHOTS = Path("/tmp/browser/barter")
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
+# ابدأ من مجلد نظيف حتى لا تختلط لقطات التشغيلات السابقة
+for old in SCREENSHOTS.glob("*.png"):
+    old.unlink()
 
 SUFFIX = uuid.uuid4().hex[:6]
 USER_A = {"email": f"seller_{SUFFIX}@e2e.test", "password": "TestPass!234", "name": "بائع E2E"}
 USER_B = {"email": f"buyer_{SUFFIX}@e2e.test",  "password": "TestPass!234", "name": "مشتري E2E"}
+
+_STEP = {"n": 0}
+
+
+async def snap(page: Page, name: str, label: str | None = None) -> None:
+    """لقطة مرقمة تلقائيًا للتحقق البصري في كل خطوة حرجة."""
+    _STEP["n"] += 1
+    tag = f"{_STEP['n']:02d}_{name}" + (f"_{label}" if label else "")
+    path = SCREENSHOTS / f"{tag}.png"
+    try:
+        await page.screenshot(path=str(path))
+        print(f"  📸 {tag}.png")
+    except Exception as e:
+        print(f"  ⚠ snap({tag}) failed: {type(e).__name__}: {e}")
+
+
+async def step(page: Page, name: str, coro, label: str | None = None):
+    """يشغّل خطوة UI ويضمن لقطة (نجاح أو خطأ) قبل الاستمرار."""
+    try:
+        await coro
+        await snap(page, name, label)
+    except Exception as e:
+        await snap(page, f"{name}_ERROR", label)
+        raise
 
 
 # ---------- Admin helpers (service role) ----------
@@ -78,74 +108,73 @@ def create_listing(owner_id: str, title_suffix: str = "") -> str:
 async def sign_in(page: Page, email: str, password: str, label: str):
     await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
     await page.evaluate("localStorage.setItem('badel_onboarding_v1', '1')")
+    await snap(page, "auth_page", label)
     await page.locator("input[type=email]").fill(email)
     await page.locator("input[type=password]").fill(password)
+    await snap(page, "auth_filled", label)
     await page.get_by_role("button", name="تسجيل الدخول").click()
     await page.wait_for_url(lambda u: "/auth" not in u, timeout=15_000)
-    await page.screenshot(path=str(SCREENSHOTS / f"01_signin_{label}.png"))
+    await snap(page, "signed_in_home", label)
 
 
 async def send_offer(page: Page, listing_id: str):
     await page.goto(f"{BASE_URL}/offer/{listing_id}", wait_until="domcontentloaded")
-    # select buyer's own listing (first card)
+    await snap(page, "offer_form_empty", "buyer")
     await page.locator("h2:has-text('اختر عرضك') ~ div button").first.click()
     await page.locator("input[type=number]").first.fill("300")
-    # accept consent checkbox
     await page.locator("input[type=checkbox]").last.check()
-    await page.screenshot(path=str(SCREENSHOTS / "02_offer_form.png"))
+    await snap(page, "offer_form_filled", "buyer")
     await page.get_by_role("button", name=re.compile("تأكيد وإرسال")).click()
     await page.wait_for_url("**/offers/**", timeout=15_000)
+    await snap(page, "offer_submitted", "buyer")
 
 
 async def accept_offer(page: Page, offer_id: str):
     await page.goto(f"{BASE_URL}/offers/{offer_id}", wait_until="domcontentloaded")
     await page.wait_for_timeout(1500)
-    await page.screenshot(path=str(SCREENSHOTS / "03a_offer_detail.png"))
+    await snap(page, "offer_detail_before_accept", "seller")
     await page.locator("button:has-text('قبول')").first.click()
     await page.wait_for_timeout(3000)
-    await page.screenshot(path=str(SCREENSHOTS / "03_accepted.png"))
+    await snap(page, "offer_accepted", "seller")
 
 
 async def pay_platform_fee(page: Page):
-    # buyer pays fee → escrow
     await page.get_by_role("checkbox", name=re.compile("الشروط")).check()
+    await snap(page, "fee_consent_checked", "buyer")
     await page.get_by_role("button", name=re.compile("^دفع")).click()
     await page.wait_for_selector("text=العمولة مدفوعة", timeout=15_000)
-    await page.screenshot(path=str(SCREENSHOTS / "04_fee_paid.png"))
+    await snap(page, "fee_paid", "buyer")
 
 
 async def add_shipping(page: Page):
     await page.get_by_label("شركة الشحن").fill("SMSA")
     await page.get_by_label("رقم التتبع").fill(f"TRK{SUFFIX.upper()}")
+    await snap(page, "shipping_form_filled", "seller")
     await page.get_by_role("button", name="حفظ بيانات الشحن").click()
     await page.wait_for_selector("text=تم حفظ الشحن", timeout=10_000)
-    await page.screenshot(path=str(SCREENSHOTS / "05_shipping_added.png"))
+    await snap(page, "shipping_saved", "seller")
 
 
 async def confirm_delivery(page: Page, label: str):
     await page.get_by_role("button", name="تأكيد الاستلام").click()
     await page.wait_for_timeout(1500)
-    await page.screenshot(path=str(SCREENSHOTS / f"06_delivery_{label}.png"))
+    await snap(page, "delivery_confirmed", label)
 
-
-# ---------- Main ----------
 
 # ---------- Main ----------
 
 async def before_all():
-    """Seed users + listings via supabaseAdmin (service role).
-    يعادل beforeAll: يُشغَّل مرة واحدة قبل أي تفاعل UI."""
+    """Seed users + listings via supabaseAdmin (service role)."""
     print(f"→ [beforeAll] seeding via supabaseAdmin (suffix={SUFFIX})")
     a_id = create_user(**USER_A)
     b_id = create_user(**USER_B)
     listing_id = create_listing(a_id)
-    create_listing(b_id, title_suffix=" (B)")  # buyer يحتاج إعلان للمقايضة
+    create_listing(b_id, title_suffix=" (B)")
     print(f"  ✓ userA={a_id[:8]}  userB={b_id[:8]}  listing={listing_id[:8]}")
     return {"a_id": a_id, "b_id": b_id, "listing_id": listing_id}
 
 
 async def open_session(browser, user: dict, label: str):
-    """Context معزول لكل مستخدم + تسجيل دخول UI."""
     ctx: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
     page = await ctx.new_page()
     await sign_in(page, user["email"], user["password"], label)
@@ -158,43 +187,41 @@ async def main():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
 
-        # جلستان متوازيتان — كل مستخدم في context مستقل
         (ctx_a, page_a), (ctx_b, page_b) = await asyncio.gather(
             open_session(browser, USER_A, "seller"),
             open_session(browser, USER_B, "buyer"),
         )
         print("✓ both sessions signed-in in isolated contexts")
 
-        # المشتري (B) يرسل عرض المقايضة
+        # المشتري يرسل العرض
         await send_offer(page_b, seeded["listing_id"])
         offer_id = page_b.url.rsplit("/", 1)[-1]
         print(f"✓ offer sent → {offer_id[:8]}")
 
-        # البائع (A) يقبل العرض
+        # البائع يقبل
         await accept_offer(page_a, offer_id)
         print("✓ offer accepted")
 
-        # ---- Post-accept steps (best-effort UI drive) ----
-        # These panels (fee/shipping/delivery) render only for parties
-        # and use bespoke inputs; each step is wrapped so a selector
-        # mismatch doesn't lose earlier screenshots.
-        for label, coro in [
-            ("pay_fee (buyer)",  pay_platform_fee(page_b)),
-            ("shipping (seller)", add_shipping(page_a)),
-            ("deliver (seller)",  confirm_delivery(page_a, "seller")),
-            ("deliver (buyer)",   confirm_delivery(page_b, "buyer")),
-        ]:
+        # ---- Post-accept steps (best-effort) ----
+        post_steps = [
+            ("pay_fee",  page_b, pay_platform_fee(page_b),         "buyer"),
+            ("shipping", page_a, add_shipping(page_a),              "seller"),
+            ("deliver",  page_a, confirm_delivery(page_a, "seller"), "seller"),
+            ("deliver",  page_b, confirm_delivery(page_b, "buyer"),  "buyer"),
+        ]
+        for name, pg, coro, label in post_steps:
             try:
-                await page_b.reload() if "buyer" in label else await page_a.reload()
+                await pg.reload()
                 await coro
-                print(f"✓ {label}")
+                print(f"✓ {name} ({label})")
             except Exception as e:
-                print(f"⚠ {label} skipped: {type(e).__name__}: {str(e)[:120]}")
+                await snap(pg, f"{name}_SKIPPED", label)
+                print(f"⚠ {name} ({label}) skipped: {type(e).__name__}: {str(e)[:120]}")
 
-        # ---- Final visual snapshot ----
-        await page_b.reload()
-        await page_b.screenshot(path=str(SCREENSHOTS / "07_final_state.png"))
-        print(f"→ screenshots: {SCREENSHOTS}")
+        # لقطة نهائية للطرفين
+        await page_a.reload(); await snap(page_a, "final_state", "seller")
+        await page_b.reload(); await snap(page_b, "final_state", "buyer")
+        print(f"→ screenshots: {SCREENSHOTS} ({_STEP['n']} shots)")
 
         await browser.close()
 

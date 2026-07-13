@@ -57,16 +57,14 @@ def create_user(email: str, password: str, name: str) -> str:
 
 def create_listing(owner_id: str) -> str:
     row = admin("/rest/v1/listings", body={
-        "user_id": owner_id,
+        "owner_id": owner_id,
         "title": f"هاتف Pixel 8 اختبار {SUFFIX}",
         "description": "إعلان اختبار E2E — قابل للشحن.",
         "category": "phones",
         "condition": "excellent",
-        "estimated_price_sar": 2500,
-        "country": "SA",
+        "market_price": 2500,
         "city": "الرياض",
-        "kind": "good",
-        "shippable": True,
+        "listing_type": "good",
         "images": [],
         "status": "active",
     })

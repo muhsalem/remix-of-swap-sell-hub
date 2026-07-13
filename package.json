@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:e2e": "python3 tests/e2e/barter-flow.spec.py"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

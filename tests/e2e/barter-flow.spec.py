@@ -130,30 +130,47 @@ async def confirm_delivery(page: Page, label: str):
 
 # ---------- Main ----------
 
-async def main():
-    print(f"→ seeding users (suffix={SUFFIX})")
+# ---------- Main ----------
+
+async def before_all():
+    """Seed users + listings via supabaseAdmin (service role).
+    يعادل beforeAll: يُشغَّل مرة واحدة قبل أي تفاعل UI."""
+    print(f"→ [beforeAll] seeding via supabaseAdmin (suffix={SUFFIX})")
     a_id = create_user(**USER_A)
     b_id = create_user(**USER_B)
     listing_id = create_listing(a_id)
-    create_listing(b_id, title_suffix=" (B)")  # buyer needs a listing to offer
-    print(f"  A={a_id[:8]}  B={b_id[:8]}  listing={listing_id[:8]}")
+    create_listing(b_id, title_suffix=" (B)")  # buyer يحتاج إعلان للمقايضة
+    print(f"  ✓ userA={a_id[:8]}  userB={b_id[:8]}  listing={listing_id[:8]}")
+    return {"a_id": a_id, "b_id": b_id, "listing_id": listing_id}
+
+
+async def open_session(browser, user: dict, label: str):
+    """Context معزول لكل مستخدم + تسجيل دخول UI."""
+    ctx: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
+    page = await ctx.new_page()
+    await sign_in(page, user["email"], user["password"], label)
+    return ctx, page
+
+
+async def main():
+    seeded = await before_all()
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
 
-        # ---- Buyer (B) session ----
-        ctx_b: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
-        page_b = await ctx_b.new_page()
-        await sign_in(page_b, USER_B["email"], USER_B["password"], "buyer")
-        await send_offer(page_b, listing_id)
-        # extract offer_id from URL
+        # جلستان متوازيتان — كل مستخدم في context مستقل
+        (ctx_a, page_a), (ctx_b, page_b) = await asyncio.gather(
+            open_session(browser, USER_A, "seller"),
+            open_session(browser, USER_B, "buyer"),
+        )
+        print("✓ both sessions signed-in in isolated contexts")
+
+        # المشتري (B) يرسل عرض المقايضة
+        await send_offer(page_b, seeded["listing_id"])
         offer_id = page_b.url.rsplit("/", 1)[-1]
         print(f"✓ offer sent → {offer_id[:8]}")
 
-        # ---- Seller (A) session ----
-        ctx_a = await browser.new_context(viewport={"width": 1280, "height": 1800})
-        page_a = await ctx_a.new_page()
-        await sign_in(page_a, USER_A["email"], USER_A["password"], "seller")
+        # البائع (A) يقبل العرض
         await accept_offer(page_a, offer_id)
         print("✓ offer accepted")
 

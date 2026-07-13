@@ -64,7 +64,7 @@ def create_listing(owner_id: str) -> str:
         "condition": "excellent",
         "market_price": 2500,
         "city": "الرياض",
-        "listing_type": "good",
+        "listing_type": "item",
         "images": [],
         "status": "active",
     })

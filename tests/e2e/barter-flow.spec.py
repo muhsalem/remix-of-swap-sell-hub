@@ -96,12 +96,10 @@ async def send_offer(page: Page, listing_id: str):
     await page.wait_for_url("**/offers/**", timeout=15_000)
 
 
-async def accept_offer(page: Page):
-    # user A opens their inbox
-    await page.goto(f"{BASE_URL}/offers", wait_until="domcontentloaded")
-    await page.get_by_role("link", name="عرض التفاصيل").first.click()
-    await page.get_by_role("button", name="قبول العرض").click()
-    await page.wait_for_selector("text=مراحل ما بعد القبول", timeout=10_000)
+async def accept_offer(page: Page, offer_id: str):
+    await page.goto(f"{BASE_URL}/offers/{offer_id}", wait_until="domcontentloaded")
+    await page.get_by_role("button", name=re.compile(r"^\s*قبول\s*$")).click()
+    await page.wait_for_selector("text=مراحل ما بعد القبول", timeout=15_000)
     await page.screenshot(path=str(SCREENSHOTS / "03_accepted.png"))
 
 

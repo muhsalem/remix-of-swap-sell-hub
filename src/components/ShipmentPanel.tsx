@@ -169,6 +169,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
             <button
               onClick={() => confirm.mutate()}
               disabled={!!myConfirmed || confirm.isPending}
+              data-testid="shipment-confirm-button"
               className="w-full px-3 py-2 bg-foreground text-background rounded-full text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="size-4" />

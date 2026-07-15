@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { trackPageview } from "@/lib/analytics";
+import { detectCountryServer } from "@/lib/geo.functions";
+import { hasSavedCountry, saveCountry } from "@/lib/currency-fx";
 
 function NotFoundComponent() {
   return (
@@ -159,6 +161,16 @@ function AuthListener() {
     });
     // First load
     trackPageview(window.location.pathname + window.location.search);
+    // Auto-detect visitor country from edge headers (once, only if user hasn't chosen)
+    if (!hasSavedCountry()) {
+      detectCountryServer()
+        .then((r) => {
+          if (!hasSavedCountry() && (r?.country === "SAR" || r?.country === "EGP")) {
+            saveCountry(r.country);
+          }
+        })
+        .catch(() => { /* silent — fallback to locale/timezone detection */ });
+    }
     return () => { subscription.unsubscribe(); unsub(); };
   }, [router, qc]);
   return null;

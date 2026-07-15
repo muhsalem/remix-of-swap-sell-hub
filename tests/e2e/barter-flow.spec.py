@@ -324,13 +324,32 @@ async def main():
             RESULTS["failed"] = {"stage": "main", "error": f"{type(e).__name__}: {str(e)[:200]}"}
             raise
         finally:
+            failed = RESULTS["failed"] is not None
             for ctx, label in ((ctx_a, "seller"), (ctx_b, "buyer")):
-                if ctx is not None:
-                    try:
-                        await ctx.tracing.stop(path=str(TRACES / f"{label}.zip"))
-                        print(f"  🎬 trace → traces/{label}.zip")
-                    except Exception as e:
-                        print(f"  ⚠ trace stop ({label}) failed: {e}")
+                if ctx is None:
+                    continue
+                # 1) traces — احفظ عند الفشل فقط، تجاهل عند النجاح
+                try:
+                    if failed:
+                        trace_path = TRACES / f"{label}.zip"
+                        await ctx.tracing.stop(path=str(trace_path))
+                        print(f"  🎬 trace saved (failure) → traces/{label}.zip")
+                    else:
+                        await ctx.tracing.stop()
+                except Exception as e:
+                    print(f"  ⚠ trace stop ({label}) failed: {e}")
+                # 2) close context أولاً حتى يُطبع فيديو WebM على القرص
+                try:
+                    await ctx.close()
+                except Exception as e:
+                    print(f"  ⚠ ctx.close ({label}) failed: {e}")
+                # 3) videos — احتفظ عند الفشل، احذف عند النجاح لتوفير المساحة
+                vdir = VIDEOS / label
+                if not failed and vdir.exists():
+                    shutil.rmtree(vdir, ignore_errors=True)
+                elif failed and vdir.exists():
+                    for v in vdir.glob("*.webm"):
+                        print(f"  🎥 video kept (failure) → videos/{label}/{v.name}")
             write_summary()
             if browser is not None:
                 await browser.close()

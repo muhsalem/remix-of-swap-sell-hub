@@ -242,7 +242,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const missingLocal = Math.max(0, (fee.totalSar - totalCoveredSar) * profile.perSAR);
 
   return (
-    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="fee-block">
       <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
         <Wallet className="size-4 text-primary" /> عمولة المنصة ({Math.round(profile.feeRate * 100)}%)
         <span className="mr-auto text-[10px] font-normal text-muted-foreground">
@@ -275,7 +275,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
       </div>
 
       {data.paid ? (
-        <div className="flex items-center gap-2 text-xs text-emerald-600 font-bold">
+        <div className="flex items-center gap-2 text-xs text-emerald-600 font-bold" data-testid="fee-paid">
           <CheckCircle2 className="size-4" /> العمولة مدفوعة — يمكنكم إكمال الصفقة
           {data.fee && (
             <span className="text-[10px] font-normal text-muted-foreground mr-auto">
@@ -286,7 +286,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
           )}
         </div>
       ) : !data.isInitiator ? (
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className="text-xs text-muted-foreground flex items-center gap-2" data-testid="fee-waiting">
           <Lock className="size-3.5" /> بانتظار دفع المبادر للعمولة
         </div>
       ) : (
@@ -298,6 +298,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
               </label>
               <input type="number" min={0} max={data.diBalance} step={0.1} value={diAmt}
                 onChange={(e) => setDiAmt(Math.max(0, Number(e.target.value)))}
+                data-testid="fee-di-input"
                 className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
             </div>
           )}
@@ -307,21 +308,25 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
             </label>
             <input type="number" min={0} step={0.5} value={cashAmt}
               onChange={(e) => setCashAmt(Math.max(0, Number(e.target.value)))}
+              data-testid="fee-cash-input"
               className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
               placeholder={`أدخل المبلغ بالريال (${profile.symbol} ≈ ${(1 / profile.perSAR).toFixed(2)} ر.س)`} />
           </div>
-          <div className={`text-[11px] text-center font-bold ${enough ? "text-emerald-600" : "text-destructive"}`}>
+          <div className={`text-[11px] text-center font-bold ${enough ? "text-emerald-600" : "text-destructive"}`} data-testid="fee-coverage">
             {enough
               ? `✓ التغطية كافية (${fmtLocal(totalCoveredSar * profile.perSAR, profile)})`
               : `ينقص ${fmtLocal(missingLocal, profile)}`}
           </div>
-          <ConsentCheckbox checked={payConsent} onChange={setPayConsent} context="payment" />
+          <div data-testid="fee-consent-wrap">
+            <ConsentCheckbox checked={payConsent} onChange={setPayConsent} context="payment" />
+          </div>
           <button
             onClick={() => {
               if (!payConsent) { toast.error("يجب الموافقة على الشروط قبل الدفع"); return; }
               pay.mutate();
             }}
             disabled={!enough || pay.isPending || !payConsent}
+            data-testid="fee-pay-button"
             className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed">
             دفع {fmtLocal(totalLocal, profile)} الآن
           </button>

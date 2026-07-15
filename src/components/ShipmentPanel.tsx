@@ -95,7 +95,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
     const events = trackQ.data?.events ?? [];
     const shipInfo: any = trackQ.data?.offer;
     return (
-      <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+      <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel-tracking">
         <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
           <Truck className="size-4 text-primary" /> تتبع الشحنة
           <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200">
@@ -107,7 +107,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <div className="flex items-center gap-2">
             <Package className="size-3.5 text-muted-foreground" />
             <span className="text-muted-foreground">رقم التتبع:</span>
-            <b className="font-mono">{offer.tracking_number}</b>
+            <b className="font-mono" data-testid="shipment-tracking-number">{offer.tracking_number}</b>
           </div>
           {shipInfo?.from_city && (
             <div className="flex items-center gap-2">
@@ -169,6 +169,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
             <button
               onClick={() => confirm.mutate()}
               disabled={!!myConfirmed || confirm.isPending}
+              data-testid="shipment-confirm-button"
               className="w-full px-3 py-2 bg-foreground text-background rounded-full text-xs font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="size-4" />
@@ -204,7 +205,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
 
 
   return (
-    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel">
       <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
         <Truck className="size-4 text-primary" /> حجز الشحن (Sandbox)
         <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200">
@@ -215,12 +216,14 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <div className="grid grid-cols-2 gap-2 mb-2">
         <CityPicker
           label="من مدينة"
+          testId="city-picker-from"
           value={from}
           onChange={(v) => { setFrom(v); setQuote(null); }}
           cities={cities}
         />
         <CityPicker
           label="إلى مدينة"
+          testId="city-picker-to"
           value={to}
           onChange={(v) => { setTo(v); setQuote(null); }}
           cities={cities}
@@ -236,6 +239,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <input
             type="number" min={0.1} step={0.5} value={weight}
             onChange={(e) => { setWeight(Number(e.target.value)); setQuote(null); }}
+            data-testid="shipment-weight-input"
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           />
         </label>
@@ -244,10 +248,12 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <input
             type="number" min={0} step={50} value={declared}
             onChange={(e) => { setDeclared(Number(e.target.value)); setQuote(null); }}
+            data-testid="shipment-declared-input"
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           />
         </label>
       </div>
+
 
       {issue && issue.code !== "no_from" && issue.code !== "no_to" && (
         <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
@@ -274,6 +280,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <button
         onClick={() => q.mutate()}
         disabled={!!issue || q.isPending}
+        data-testid="shipment-quote-button"
         className="w-full px-3 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold disabled:opacity-50 mb-2"
       >
         {q.isPending ? "جاري الحساب…" : "احسب سعر الشحن"}
@@ -281,7 +288,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
 
 
       {quote && (
-        <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1">
+        <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1" data-testid="shipment-quote-summary">
           <div className="flex justify-between"><span>الأساس</span><span><LocalPrice sar={quote.base_sar} /></span></div>
           <div className="flex justify-between"><span>وزن {quote.weight_kg} × {quote.per_kg_sar} ر.س/كجم</span><span><LocalPrice sar={quote.per_kg_sar * quote.weight_kg} /></span></div>
           {quote.zone_fee_sar > 0 && <div className="flex justify-between"><span>رسوم المنطقة</span><span><LocalPrice sar={quote.zone_fee_sar} /></span></div>}
@@ -289,7 +296,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           {quote.insurance_sar > 0 && <div className="flex justify-between"><span>تأمين</span><span><LocalPrice sar={quote.insurance_sar} /></span></div>}
           <div className="flex justify-between"><span>ضريبة القيمة المضافة</span><span><LocalPrice sar={quote.vat_sar} /></span></div>
           <div className="flex justify-between font-extrabold text-sm pt-1 border-t border-border">
-            <span>الإجمالي</span><span className="text-primary"><LocalPrice sar={quote.total_sar} /></span>
+            <span>الإجمالي</span><span className="text-primary" data-testid="shipment-quote-total"><LocalPrice sar={quote.total_sar} /></span>
           </div>
           <div className="text-[10px] text-muted-foreground text-center pt-1">
             التسليم المتوقع خلال ~{quote.eta_hours} ساعة
@@ -300,6 +307,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <button
         onClick={() => book.mutate()}
         disabled={!quote || book.isPending}
+        data-testid="shipment-book-button"
         className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50"
       >
         {book.isPending ? "جاري الحجز…" : "احجز الشحنة وأنشئ رقم تتبع"}
@@ -317,12 +325,14 @@ type CityRow = { code: string; name_ar: string; region_ar: string; country: stri
 
 function CityPicker({
   label,
+  testId,
   value,
   onChange,
   cities,
   restrictCountry,
 }: {
   label: string;
+  testId?: string;
   value: string;
   onChange: (code: string) => void;
   cities: CityRow[];
@@ -376,11 +386,12 @@ function CityPicker({
   const flag = (co: string) => (co === "SA" ? "🇸🇦" : co === "EG" ? "🇪🇬" : "🌍");
 
   return (
-    <div className="text-[11px] text-muted-foreground" ref={ref}>
+    <div className="text-[11px] text-muted-foreground" ref={ref} data-testid={testId}>
       <div>{label}</div>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        data-testid={testId ? `${testId}-trigger` : undefined}
         className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none flex items-center justify-between gap-1 text-start"
       >
         <span className={selected ? "text-foreground font-medium truncate" : "text-muted-foreground"}>
@@ -399,8 +410,10 @@ function CityPicker({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث بالمدينة أو المنطقة…"
+                data-testid={testId ? `${testId}-search` : undefined}
                 className="w-full ps-7 pe-7 py-1.5 rounded-lg bg-stone-soft border border-border text-xs outline-none"
               />
+
               {query && (
                 <button
                   type="button"
@@ -451,6 +464,7 @@ function CityPicker({
                             setOpen(false);
                             setQuery("");
                           }}
+                          data-testid={testId ? `${testId}-option-${c.code}` : undefined}
                           className={`w-full text-start px-2 py-1.5 rounded-md text-xs hover:bg-primary/5 ${
                             c.code === value ? "bg-primary/10 text-primary font-bold" : ""
                           }`}

@@ -127,7 +127,7 @@ async def sign_in(page: Page, email: str, password: str, label: str):
     await snap(page, "auth_page", label)
 
     await email_input.fill(email)
-    await pass_input.fill(pass_input and password)
+    await pass_input.fill(password)
     # assert: القيم اتكتبت فعلاً
     await expect(email_input).to_have_value(email)
     await snap(page, "auth_filled", label)

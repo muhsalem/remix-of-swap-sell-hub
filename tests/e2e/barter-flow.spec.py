@@ -17,7 +17,10 @@ import uuid
 from pathlib import Path
 
 import requests
-from playwright.async_api import async_playwright, Page, BrowserContext
+from playwright.async_api import async_playwright, Page, BrowserContext, expect
+
+# Default assertion timeout (ms) قبل كل لقطة حرجة
+expect.set_options(timeout=10_000)
 
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 SUPABASE_URL = os.environ["SUPABASE_URL"]

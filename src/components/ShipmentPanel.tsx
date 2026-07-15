@@ -462,6 +462,7 @@ function CityPicker({
                             setOpen(false);
                             setQuery("");
                           }}
+                          data-testid={testId ? `${testId}-option-${c.code}` : undefined}
                           className={`w-full text-start px-2 py-1.5 rounded-md text-xs hover:bg-primary/5 ${
                             c.code === value ? "bg-primary/10 text-primary font-bold" : ""
                           }`}

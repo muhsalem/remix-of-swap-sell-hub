@@ -56,16 +56,26 @@ jobs:
           echo "✗ dev server did not start"; tail -50 /tmp/dev.log; exit 1
 
       - name: Run E2E (bun run test:e2e)
+        id: e2e
         run: bun run test:e2e
 
-      - name: Upload screenshots
+      - name: Append summary to GitHub step summary
+        if: always()
+        run: |
+          if [ -f /tmp/browser/barter/summary.md ]; then
+            cat /tmp/browser/barter/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠ no summary.md produced by the test run" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload full browser artifacts (screenshots + traces + summary)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-screenshots
+          name: e2e-barter-${{ github.run_id }}
           path: /tmp/browser/barter/
-          if-no-files-found: ignore
-          retention-days: 7
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Stop dev server
         if: always()

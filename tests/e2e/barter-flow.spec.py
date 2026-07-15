@@ -13,6 +13,7 @@ import asyncio
 import re
 import json
 import os
+import shutil
 import uuid
 from pathlib import Path
 
@@ -25,10 +26,14 @@ SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
 SCREENSHOTS = Path("/tmp/browser/barter")
 TRACES = SCREENSHOTS / "traces"
+VIDEOS = SCREENSHOTS / "videos"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
-TRACES.mkdir(parents=True, exist_ok=True)
-# ابدأ من مجلد نظيف حتى لا تختلط نتائج التشغيلات السابقة
-for old in list(SCREENSHOTS.glob("*.png")) + list(TRACES.glob("*.zip")):
+# مجلد نظيف لكل تشغيل — يشمل traces + videos + summary
+for sub in (TRACES, VIDEOS):
+    if sub.exists():
+        shutil.rmtree(sub)
+    sub.mkdir(parents=True, exist_ok=True)
+for old in SCREENSHOTS.glob("*.png"):
     old.unlink()
 for name in ("summary.md", "summary.json"):
     p = SCREENSHOTS / name
@@ -236,7 +241,13 @@ async def before_all():
 
 
 async def open_session(browser, user: dict, label: str):
-    ctx: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
+    video_dir = VIDEOS / label
+    video_dir.mkdir(parents=True, exist_ok=True)
+    ctx: BrowserContext = await browser.new_context(
+        viewport={"width": 1280, "height": 1800},
+        record_video_dir=str(video_dir),
+        record_video_size={"width": 1280, "height": 800},
+    )
     await ctx.tracing.start(name=label, screenshots=True, snapshots=True, sources=True)
     page = await ctx.new_page()
     await sign_in(page, user["email"], user["password"], label)
@@ -313,13 +324,32 @@ async def main():
             RESULTS["failed"] = {"stage": "main", "error": f"{type(e).__name__}: {str(e)[:200]}"}
             raise
         finally:
+            failed = RESULTS["failed"] is not None
             for ctx, label in ((ctx_a, "seller"), (ctx_b, "buyer")):
-                if ctx is not None:
-                    try:
-                        await ctx.tracing.stop(path=str(TRACES / f"{label}.zip"))
-                        print(f"  🎬 trace → traces/{label}.zip")
-                    except Exception as e:
-                        print(f"  ⚠ trace stop ({label}) failed: {e}")
+                if ctx is None:
+                    continue
+                # 1) traces — احفظ عند الفشل فقط، تجاهل عند النجاح
+                try:
+                    if failed:
+                        trace_path = TRACES / f"{label}.zip"
+                        await ctx.tracing.stop(path=str(trace_path))
+                        print(f"  🎬 trace saved (failure) → traces/{label}.zip")
+                    else:
+                        await ctx.tracing.stop()
+                except Exception as e:
+                    print(f"  ⚠ trace stop ({label}) failed: {e}")
+                # 2) close context أولاً حتى يُطبع فيديو WebM على القرص
+                try:
+                    await ctx.close()
+                except Exception as e:
+                    print(f"  ⚠ ctx.close ({label}) failed: {e}")
+                # 3) videos — احتفظ عند الفشل، احذف عند النجاح لتوفير المساحة
+                vdir = VIDEOS / label
+                if not failed and vdir.exists():
+                    shutil.rmtree(vdir, ignore_errors=True)
+                elif failed and vdir.exists():
+                    for v in vdir.glob("*.webm"):
+                        print(f"  🎥 video kept (failure) → videos/{label}/{v.name}")
             write_summary()
             if browser is not None:
                 await browser.close()

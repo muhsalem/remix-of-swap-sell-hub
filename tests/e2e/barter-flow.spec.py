@@ -24,16 +24,23 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
 SCREENSHOTS = Path("/tmp/browser/barter")
+TRACES = SCREENSHOTS / "traces"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
-# ابدأ من مجلد نظيف حتى لا تختلط لقطات التشغيلات السابقة
-for old in SCREENSHOTS.glob("*.png"):
+TRACES.mkdir(parents=True, exist_ok=True)
+# ابدأ من مجلد نظيف حتى لا تختلط نتائج التشغيلات السابقة
+for old in list(SCREENSHOTS.glob("*.png")) + list(TRACES.glob("*.zip")):
     old.unlink()
+for name in ("summary.md", "summary.json"):
+    p = SCREENSHOTS / name
+    if p.exists():
+        p.unlink()
 
 SUFFIX = uuid.uuid4().hex[:6]
 USER_A = {"email": f"seller_{SUFFIX}@e2e.test", "password": "TestPass!234", "name": "بائع E2E"}
 USER_B = {"email": f"buyer_{SUFFIX}@e2e.test",  "password": "TestPass!234", "name": "مشتري E2E"}
 
 _STEP = {"n": 0}
+RESULTS: dict = {"passed": [], "skipped": [], "failed": None}
 
 
 async def snap(page: Page, name: str, label: str | None = None) -> None:

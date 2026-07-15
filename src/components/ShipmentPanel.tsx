@@ -384,11 +384,12 @@ function CityPicker({
   const flag = (co: string) => (co === "SA" ? "🇸🇦" : co === "EG" ? "🇪🇬" : "🌍");
 
   return (
-    <div className="text-[11px] text-muted-foreground" ref={ref}>
+    <div className="text-[11px] text-muted-foreground" ref={ref} data-testid={testId}>
       <div>{label}</div>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        data-testid={testId ? `${testId}-trigger` : undefined}
         className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none flex items-center justify-between gap-1 text-start"
       >
         <span className={selected ? "text-foreground font-medium truncate" : "text-muted-foreground"}>
@@ -407,8 +408,10 @@ function CityPicker({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث بالمدينة أو المنطقة…"
+                data-testid={testId ? `${testId}-search` : undefined}
                 className="w-full ps-7 pe-7 py-1.5 rounded-lg bg-stone-soft border border-border text-xs outline-none"
               />
+
               {query && (
                 <button
                   type="button"

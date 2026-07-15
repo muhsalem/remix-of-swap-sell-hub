@@ -280,6 +280,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <button
         onClick={() => q.mutate()}
         disabled={!!issue || q.isPending}
+        data-testid="shipment-quote-button"
         className="w-full px-3 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold disabled:opacity-50 mb-2"
       >
         {q.isPending ? "جاري الحساب…" : "احسب سعر الشحن"}
@@ -287,7 +288,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
 
 
       {quote && (
-        <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1">
+        <div className="text-xs bg-stone-soft rounded-xl p-3 mb-2 space-y-1" data-testid="shipment-quote-summary">
           <div className="flex justify-between"><span>الأساس</span><span><LocalPrice sar={quote.base_sar} /></span></div>
           <div className="flex justify-between"><span>وزن {quote.weight_kg} × {quote.per_kg_sar} ر.س/كجم</span><span><LocalPrice sar={quote.per_kg_sar * quote.weight_kg} /></span></div>
           {quote.zone_fee_sar > 0 && <div className="flex justify-between"><span>رسوم المنطقة</span><span><LocalPrice sar={quote.zone_fee_sar} /></span></div>}
@@ -295,7 +296,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           {quote.insurance_sar > 0 && <div className="flex justify-between"><span>تأمين</span><span><LocalPrice sar={quote.insurance_sar} /></span></div>}
           <div className="flex justify-between"><span>ضريبة القيمة المضافة</span><span><LocalPrice sar={quote.vat_sar} /></span></div>
           <div className="flex justify-between font-extrabold text-sm pt-1 border-t border-border">
-            <span>الإجمالي</span><span className="text-primary"><LocalPrice sar={quote.total_sar} /></span>
+            <span>الإجمالي</span><span className="text-primary" data-testid="shipment-quote-total"><LocalPrice sar={quote.total_sar} /></span>
           </div>
           <div className="text-[10px] text-muted-foreground text-center pt-1">
             التسليم المتوقع خلال ~{quote.eta_hours} ساعة
@@ -306,6 +307,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <button
         onClick={() => book.mutate()}
         disabled={!quote || book.isPending}
+        data-testid="shipment-book-button"
         className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50"
       >
         {book.isPending ? "جاري الحجز…" : "احجز الشحنة وأنشئ رقم تتبع"}

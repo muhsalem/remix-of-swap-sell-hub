@@ -13,6 +13,7 @@ import asyncio
 import re
 import json
 import os
+import shutil
 import uuid
 from pathlib import Path
 
@@ -25,10 +26,14 @@ SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
 SCREENSHOTS = Path("/tmp/browser/barter")
 TRACES = SCREENSHOTS / "traces"
+VIDEOS = SCREENSHOTS / "videos"
 SCREENSHOTS.mkdir(parents=True, exist_ok=True)
-TRACES.mkdir(parents=True, exist_ok=True)
-# ابدأ من مجلد نظيف حتى لا تختلط نتائج التشغيلات السابقة
-for old in list(SCREENSHOTS.glob("*.png")) + list(TRACES.glob("*.zip")):
+# مجلد نظيف لكل تشغيل — يشمل traces + videos + summary
+for sub in (TRACES, VIDEOS):
+    if sub.exists():
+        shutil.rmtree(sub)
+    sub.mkdir(parents=True, exist_ok=True)
+for old in SCREENSHOTS.glob("*.png"):
     old.unlink()
 for name in ("summary.md", "summary.json"):
     p = SCREENSHOTS / name

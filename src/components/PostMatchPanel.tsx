@@ -242,7 +242,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
   const missingLocal = Math.max(0, (fee.totalSar - totalCoveredSar) * profile.perSAR);
 
   return (
-    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="fee-block">
       <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
         <Wallet className="size-4 text-primary" /> عمولة المنصة ({Math.round(profile.feeRate * 100)}%)
         <span className="mr-auto text-[10px] font-normal text-muted-foreground">

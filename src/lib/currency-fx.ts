@@ -49,10 +49,26 @@ export const COUNTRY_STORAGE_KEY = "badel:country";
 
 export function detectCountry(): string {
   if (typeof navigator === "undefined") return "SAR";
-  const lang = (navigator.language || "ar-SA").toLowerCase();
+  const langs = [
+    navigator.language || "",
+    ...(Array.isArray((navigator as any).languages) ? (navigator as any).languages : []),
+  ].join(",").toLowerCase();
   // Launch scope: Saudi Arabia + Egypt only. Everything else defaults to SAR.
-  if (lang.includes("-eg") || lang.startsWith("ar-eg")) return "EGP";
+  if (/(^|[,\-_])eg([,\-_]|$)|ar-eg|egypt/i.test(langs)) return "EGP";
+  // Timezone hint (Cairo / Africa/Cairo)
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (/cairo/i.test(tz)) return "EGP";
+  } catch { /* ignore */ }
   return "SAR";
+}
+
+export function hasSavedCountry(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem(COUNTRY_STORAGE_KEY);
+    return saved === "SAR" || saved === "EGP";
+  } catch { return false; }
 }
 
 export function loadCountry(): string {

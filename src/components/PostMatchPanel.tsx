@@ -298,6 +298,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
               </label>
               <input type="number" min={0} max={data.diBalance} step={0.1} value={diAmt}
                 onChange={(e) => setDiAmt(Math.max(0, Number(e.target.value)))}
+                data-testid="fee-di-input"
                 className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none" />
             </div>
           )}
@@ -307,21 +308,25 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
             </label>
             <input type="number" min={0} step={0.5} value={cashAmt}
               onChange={(e) => setCashAmt(Math.max(0, Number(e.target.value)))}
+              data-testid="fee-cash-input"
               className="w-full px-3 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
               placeholder={`أدخل المبلغ بالريال (${profile.symbol} ≈ ${(1 / profile.perSAR).toFixed(2)} ر.س)`} />
           </div>
-          <div className={`text-[11px] text-center font-bold ${enough ? "text-emerald-600" : "text-destructive"}`}>
+          <div className={`text-[11px] text-center font-bold ${enough ? "text-emerald-600" : "text-destructive"}`} data-testid="fee-coverage">
             {enough
               ? `✓ التغطية كافية (${fmtLocal(totalCoveredSar * profile.perSAR, profile)})`
               : `ينقص ${fmtLocal(missingLocal, profile)}`}
           </div>
-          <ConsentCheckbox checked={payConsent} onChange={setPayConsent} context="payment" />
+          <div data-testid="fee-consent-wrap">
+            <ConsentCheckbox checked={payConsent} onChange={setPayConsent} context="payment" />
+          </div>
           <button
             onClick={() => {
               if (!payConsent) { toast.error("يجب الموافقة على الشروط قبل الدفع"); return; }
               pay.mutate();
             }}
             disabled={!enough || pay.isPending || !payConsent}
+            data-testid="fee-pay-button"
             className="w-full px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed">
             دفع {fmtLocal(totalLocal, profile)} الآن
           </button>

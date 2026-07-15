@@ -118,56 +118,110 @@ def create_listing(owner_id: str, title_suffix: str = "") -> str:
 async def sign_in(page: Page, email: str, password: str, label: str):
     await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
     await page.evaluate("localStorage.setItem('badel_onboarding_v1', '1')")
+    # assert: نموذج الدخول ظاهر
+    email_input = page.locator("input[type=email]")
+    pass_input = page.locator("input[type=password]")
+    submit_btn = page.get_by_role("button", name="تسجيل الدخول")
+    await expect(email_input).to_be_visible()
+    await expect(submit_btn).to_be_enabled()
     await snap(page, "auth_page", label)
-    await page.locator("input[type=email]").fill(email)
-    await page.locator("input[type=password]").fill(password)
+
+    await email_input.fill(email)
+    await pass_input.fill(pass_input and password)
+    # assert: القيم اتكتبت فعلاً
+    await expect(email_input).to_have_value(email)
     await snap(page, "auth_filled", label)
-    await page.get_by_role("button", name="تسجيل الدخول").click()
+
+    await submit_btn.click()
     await page.wait_for_url(lambda u: "/auth" not in u, timeout=15_000)
+    # assert: الجلسة بدأت — توكن Supabase موجود في localStorage
+    await expect.poll(
+        lambda: page.evaluate(
+            "Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'))"
+        ),
+        timeout=10_000,
+    ).to_be_truthy()
     await snap(page, "signed_in_home", label)
 
 
 async def send_offer(page: Page, listing_id: str):
     await page.goto(f"{BASE_URL}/offer/{listing_id}", wait_until="domcontentloaded")
+    # assert: صفحة العرض حمّلت وعنوان الاختيار ظاهر
+    await expect(page.locator("h2:has-text('اختر عرضك')")).to_be_visible()
     await snap(page, "offer_form_empty", "buyer")
+
     await page.locator("h2:has-text('اختر عرضك') ~ div button").first.click()
-    await page.locator("input[type=number]").first.fill("300")
-    await page.locator("input[type=checkbox]").last.check()
+    amount = page.locator("input[type=number]").first
+    consent = page.locator("input[type=checkbox]").last
+    await amount.fill("300")
+    await consent.check()
+    # assert: القيمة والموافقة تمّت
+    await expect(amount).to_have_value("300")
+    await expect(consent).to_be_checked()
+    submit = page.get_by_role("button", name=re.compile("تأكيد وإرسال"))
+    await expect(submit).to_be_enabled()
     await snap(page, "offer_form_filled", "buyer")
-    await page.get_by_role("button", name=re.compile("تأكيد وإرسال")).click()
+
+    await submit.click()
     await page.wait_for_url("**/offers/**", timeout=15_000)
+    # assert: URL يحوي معرّف عرض صالح
+    assert re.search(r"/offers/[0-9a-f-]{8,}", page.url), f"unexpected URL: {page.url}"
     await snap(page, "offer_submitted", "buyer")
 
 
 async def accept_offer(page: Page, offer_id: str):
     await page.goto(f"{BASE_URL}/offers/{offer_id}", wait_until="domcontentloaded")
-    await page.wait_for_timeout(1500)
+    accept_btn = page.locator("button:has-text('قبول')").first
+    # assert: زر القبول ظهر وقابل للنقر (بديل عن wait_for_timeout)
+    await expect(accept_btn).to_be_visible()
+    await expect(accept_btn).to_be_enabled()
     await snap(page, "offer_detail_before_accept", "seller")
-    await page.locator("button:has-text('قبول')").first.click()
-    await page.wait_for_timeout(3000)
+
+    await accept_btn.click()
+    # assert: الحالة انتقلت (اختفى زر القبول أو ظهرت إشارة القبول)
+    await expect(accept_btn).to_be_hidden(timeout=15_000)
     await snap(page, "offer_accepted", "seller")
 
 
 async def pay_platform_fee(page: Page):
-    await page.get_by_role("checkbox", name=re.compile("الشروط")).check()
+    fee_block = page.get_by_test_id("fee-block")
+    await expect(fee_block).to_be_visible()
+    consent = page.get_by_role("checkbox", name=re.compile("الشروط"))
+    await consent.check()
+    await expect(consent).to_be_checked()
     await snap(page, "fee_consent_checked", "buyer")
-    await page.get_by_role("button", name=re.compile("^دفع")).click()
-    await page.wait_for_selector("text=العمولة مدفوعة", timeout=15_000)
+
+    pay_btn = page.get_by_test_id("fee-pay-button")
+    await expect(pay_btn).to_be_enabled()
+    await pay_btn.click()
+    # assert: تحول إلى حالة "مدفوعة"
+    await expect(page.get_by_test_id("fee-paid")).to_be_visible(timeout=15_000)
     await snap(page, "fee_paid", "buyer")
 
 
 async def add_shipping(page: Page):
+    panel = page.get_by_test_id("shipment-panel")
+    await expect(panel).to_be_visible()
     await page.get_by_label("شركة الشحن").fill("SMSA")
-    await page.get_by_label("رقم التتبع").fill(f"TRK{SUFFIX.upper()}")
+    tracking = page.get_by_label("رقم التتبع")
+    await tracking.fill(f"TRK{SUFFIX.upper()}")
+    await expect(tracking).to_have_value(f"TRK{SUFFIX.upper()}")
+    save = page.get_by_role("button", name="حفظ بيانات الشحن")
+    await expect(save).to_be_enabled()
     await snap(page, "shipping_form_filled", "seller")
-    await page.get_by_role("button", name="حفظ بيانات الشحن").click()
-    await page.wait_for_selector("text=تم حفظ الشحن", timeout=10_000)
+
+    await save.click()
+    await expect(page.get_by_text("تم حفظ الشحن")).to_be_visible(timeout=10_000)
     await snap(page, "shipping_saved", "seller")
 
 
 async def confirm_delivery(page: Page, label: str):
-    await page.get_by_role("button", name="تأكيد الاستلام").click()
-    await page.wait_for_timeout(1500)
+    btn = page.get_by_role("button", name="تأكيد الاستلام")
+    await expect(btn).to_be_visible()
+    await expect(btn).to_be_enabled()
+    await btn.click()
+    # assert: الزر اختفى أو حالة الاستلام تسجّلت
+    await expect(btn).to_be_hidden(timeout=10_000)
     await snap(page, "delivery_confirmed", label)
 
 

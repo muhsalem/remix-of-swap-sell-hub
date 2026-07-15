@@ -323,12 +323,14 @@ type CityRow = { code: string; name_ar: string; region_ar: string; country: stri
 
 function CityPicker({
   label,
+  testId,
   value,
   onChange,
   cities,
   restrictCountry,
 }: {
   label: string;
+  testId?: string;
   value: string;
   onChange: (code: string) => void;
   cities: CityRow[];

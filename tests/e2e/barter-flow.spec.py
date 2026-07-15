@@ -241,7 +241,13 @@ async def before_all():
 
 
 async def open_session(browser, user: dict, label: str):
-    ctx: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
+    video_dir = VIDEOS / label
+    video_dir.mkdir(parents=True, exist_ok=True)
+    ctx: BrowserContext = await browser.new_context(
+        viewport={"width": 1280, "height": 1800},
+        record_video_dir=str(video_dir),
+        record_video_size={"width": 1280, "height": 800},
+    )
     await ctx.tracing.start(name=label, screenshots=True, snapshots=True, sources=True)
     page = await ctx.new_page()
     await sign_in(page, user["email"], user["password"], label)

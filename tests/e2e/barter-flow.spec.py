@@ -183,54 +183,92 @@ async def before_all():
 
 async def open_session(browser, user: dict, label: str):
     ctx: BrowserContext = await browser.new_context(viewport={"width": 1280, "height": 1800})
+    await ctx.tracing.start(name=label, screenshots=True, snapshots=True, sources=True)
     page = await ctx.new_page()
     await sign_in(page, user["email"], user["password"], label)
     return ctx, page
 
 
+def write_summary():
+    total_steps = _STEP["n"]
+    md = ["# E2E — Barter Flow Summary", ""]
+    md.append(f"- Suffix: `{SUFFIX}`")
+    md.append(f"- Base URL: `{BASE_URL}`")
+    md.append(f"- Screenshots: **{total_steps}**")
+    md.append(f"- Passed steps: **{len(RESULTS['passed'])}** — {', '.join(RESULTS['passed']) or '—'}")
+    md.append(f"- Skipped steps: **{len(RESULTS['skipped'])}**")
+    for s in RESULTS["skipped"]:
+        md.append(f"  - ⚠ `{s['name']}` ({s['label']}): {s['error']}")
+    if RESULTS["failed"]:
+        md.append(f"- ❌ Failed: `{RESULTS['failed']['stage']}` — {RESULTS['failed']['error']}")
+    else:
+        md.append("- ✅ Fatal error: none")
+    (SCREENSHOTS / "summary.md").write_text("\n".join(md), encoding="utf-8")
+    (SCREENSHOTS / "summary.json").write_text(
+        json.dumps({"suffix": SUFFIX, "screenshots": total_steps, **RESULTS}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print("\n".join(md))
+
+
 async def main():
     seeded = await before_all()
+    ctx_a = ctx_b = browser = None
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
+        try:
+            (ctx_a, page_a), (ctx_b, page_b) = await asyncio.gather(
+                open_session(browser, USER_A, "seller"),
+                open_session(browser, USER_B, "buyer"),
+            )
+            print("✓ both sessions signed-in in isolated contexts")
+            RESULTS["passed"].append("sign_in")
 
-        (ctx_a, page_a), (ctx_b, page_b) = await asyncio.gather(
-            open_session(browser, USER_A, "seller"),
-            open_session(browser, USER_B, "buyer"),
-        )
-        print("✓ both sessions signed-in in isolated contexts")
+            await send_offer(page_b, seeded["listing_id"])
+            offer_id = page_b.url.rsplit("/", 1)[-1]
+            print(f"✓ offer sent → {offer_id[:8]}")
+            RESULTS["passed"].append("send_offer")
 
-        # المشتري يرسل العرض
-        await send_offer(page_b, seeded["listing_id"])
-        offer_id = page_b.url.rsplit("/", 1)[-1]
-        print(f"✓ offer sent → {offer_id[:8]}")
+            await accept_offer(page_a, offer_id)
+            print("✓ offer accepted")
+            RESULTS["passed"].append("accept_offer")
 
-        # البائع يقبل
-        await accept_offer(page_a, offer_id)
-        print("✓ offer accepted")
+            post_steps = [
+                ("pay_fee",  page_b, pay_platform_fee(page_b),         "buyer"),
+                ("shipping", page_a, add_shipping(page_a),              "seller"),
+                ("deliver",  page_a, confirm_delivery(page_a, "seller"), "seller"),
+                ("deliver",  page_b, confirm_delivery(page_b, "buyer"),  "buyer"),
+            ]
+            for name, pg, coro, label in post_steps:
+                try:
+                    await pg.reload()
+                    await coro
+                    print(f"✓ {name} ({label})")
+                    RESULTS["passed"].append(f"{name}:{label}")
+                except Exception as e:
+                    await snap(pg, f"{name}_SKIPPED", label)
+                    msg = f"{type(e).__name__}: {str(e)[:120]}"
+                    print(f"⚠ {name} ({label}) skipped: {msg}")
+                    RESULTS["skipped"].append({"name": name, "label": label, "error": msg})
 
-        # ---- Post-accept steps (best-effort) ----
-        post_steps = [
-            ("pay_fee",  page_b, pay_platform_fee(page_b),         "buyer"),
-            ("shipping", page_a, add_shipping(page_a),              "seller"),
-            ("deliver",  page_a, confirm_delivery(page_a, "seller"), "seller"),
-            ("deliver",  page_b, confirm_delivery(page_b, "buyer"),  "buyer"),
-        ]
-        for name, pg, coro, label in post_steps:
-            try:
-                await pg.reload()
-                await coro
-                print(f"✓ {name} ({label})")
-            except Exception as e:
-                await snap(pg, f"{name}_SKIPPED", label)
-                print(f"⚠ {name} ({label}) skipped: {type(e).__name__}: {str(e)[:120]}")
-
-        # لقطة نهائية للطرفين
-        await page_a.reload(); await snap(page_a, "final_state", "seller")
-        await page_b.reload(); await snap(page_b, "final_state", "buyer")
-        print(f"→ screenshots: {SCREENSHOTS} ({_STEP['n']} shots)")
-
-        await browser.close()
+            await page_a.reload(); await snap(page_a, "final_state", "seller")
+            await page_b.reload(); await snap(page_b, "final_state", "buyer")
+            print(f"→ screenshots: {SCREENSHOTS} ({_STEP['n']} shots)")
+        except Exception as e:
+            RESULTS["failed"] = {"stage": "main", "error": f"{type(e).__name__}: {str(e)[:200]}"}
+            raise
+        finally:
+            for ctx, label in ((ctx_a, "seller"), (ctx_b, "buyer")):
+                if ctx is not None:
+                    try:
+                        await ctx.tracing.stop(path=str(TRACES / f"{label}.zip"))
+                        print(f"  🎬 trace → traces/{label}.zip")
+                    except Exception as e:
+                        print(f"  ⚠ trace stop ({label}) failed: {e}")
+            write_summary()
+            if browser is not None:
+                await browser.close()
 
 
 if __name__ == "__main__":

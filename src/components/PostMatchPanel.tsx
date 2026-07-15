@@ -275,7 +275,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
       </div>
 
       {data.paid ? (
-        <div className="flex items-center gap-2 text-xs text-emerald-600 font-bold">
+        <div className="flex items-center gap-2 text-xs text-emerald-600 font-bold" data-testid="fee-paid">
           <CheckCircle2 className="size-4" /> العمولة مدفوعة — يمكنكم إكمال الصفقة
           {data.fee && (
             <span className="text-[10px] font-normal text-muted-foreground mr-auto">
@@ -286,7 +286,7 @@ function FeeBlock({ offer, qc }: { offer: any; qc: any }) {
           )}
         </div>
       ) : !data.isInitiator ? (
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className="text-xs text-muted-foreground flex items-center gap-2" data-testid="fee-waiting">
           <Lock className="size-3.5" /> بانتظار دفع المبادر للعمولة
         </div>
       ) : (

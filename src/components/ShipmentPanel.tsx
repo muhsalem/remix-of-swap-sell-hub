@@ -95,7 +95,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
     const events = trackQ.data?.events ?? [];
     const shipInfo: any = trackQ.data?.offer;
     return (
-      <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+      <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel-tracking">
         <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
           <Truck className="size-4 text-primary" /> تتبع الشحنة
           <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200">
@@ -107,7 +107,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <div className="flex items-center gap-2">
             <Package className="size-3.5 text-muted-foreground" />
             <span className="text-muted-foreground">رقم التتبع:</span>
-            <b className="font-mono">{offer.tracking_number}</b>
+            <b className="font-mono" data-testid="shipment-tracking-number">{offer.tracking_number}</b>
           </div>
           {shipInfo?.from_city && (
             <div className="flex items-center gap-2">

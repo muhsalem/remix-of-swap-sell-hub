@@ -205,7 +205,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
 
 
   return (
-    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4">
+    <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel">
       <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
         <Truck className="size-4 text-primary" /> حجز الشحن (Sandbox)
         <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full ring-1 ring-emerald-200">
@@ -216,12 +216,14 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
       <div className="grid grid-cols-2 gap-2 mb-2">
         <CityPicker
           label="من مدينة"
+          testId="city-picker-from"
           value={from}
           onChange={(v) => { setFrom(v); setQuote(null); }}
           cities={cities}
         />
         <CityPicker
           label="إلى مدينة"
+          testId="city-picker-to"
           value={to}
           onChange={(v) => { setTo(v); setQuote(null); }}
           cities={cities}
@@ -237,6 +239,7 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <input
             type="number" min={0.1} step={0.5} value={weight}
             onChange={(e) => { setWeight(Number(e.target.value)); setQuote(null); }}
+            data-testid="shipment-weight-input"
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           />
         </label>
@@ -245,10 +248,12 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           <input
             type="number" min={0} step={50} value={declared}
             onChange={(e) => { setDeclared(Number(e.target.value)); setQuote(null); }}
+            data-testid="shipment-declared-input"
             className="mt-1 w-full px-2 py-2 rounded-xl bg-stone-soft border border-border text-xs outline-none"
           />
         </label>
       </div>
+
 
       {issue && issue.code !== "no_from" && issue.code !== "no_to" && (
         <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">

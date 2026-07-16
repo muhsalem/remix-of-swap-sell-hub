@@ -522,10 +522,31 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "error" && (
               <>
-                <CloudOff className="size-4 text-red-600 shrink-0" aria-hidden />
-                <span className="text-red-700 font-bold">
-                  تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
-                </span>
+                <CloudOff className="size-4 text-red-600 shrink-0 mt-0.5" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <div className="text-red-700 font-bold">
+                    تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
+                  </div>
+                  {lastError && (
+                    <div className="mt-1 text-[11px] text-red-700/90 leading-relaxed">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-800 font-bold me-1">
+                        {lastError.kind === "network"
+                          ? "خطأ شبكة"
+                          : lastError.kind === "server"
+                          ? `خطأ الخادم${lastError.status ? ` (${lastError.status})` : ""}`
+                          : "خطأ غير معروف"}
+                      </span>
+                      <span>{lastError.message}</span>
+                      <span className="block text-red-700/70 mt-0.5">
+                        وقت الفشل:{" "}
+                        <time dateTime={lastError.at.toISOString()}>
+                          {lastError.at.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+                        </time>
+                        {" · "}المرحلة: {lastError.stage === "fetch" ? "قراءة التفضيل" : "حفظ التفضيل"}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {syncStatus === "offline" && (

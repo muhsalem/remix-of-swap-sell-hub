@@ -60,6 +60,7 @@ async def _restore_session(context: BrowserContext, page):
       localStorage.removeItem('badel:country-confirmed');
       localStorage.removeItem('badel:pref-sync-queue');
       localStorage.setItem('badel_onboarding_v1', '1');
+      localStorage.setItem('badel:cookie-consent', JSON.stringify({ choice: 'all', at: Date.now() }));
     }""")
 
 

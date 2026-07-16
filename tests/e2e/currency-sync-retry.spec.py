@@ -428,6 +428,89 @@ async def _test_attempts_exhausted(browser):
     print("✓ Attempts exhausted: 5/5 message shown, no automatic retry re-armed")
 
 
+async def _test_status_transitions_ordered(browser):
+    """يتحقق أن زر "إعادة المحاولة" ينقل حالة المودال بالترتيب الصحيح
+    عبر السيناريوهات الثلاثة (طابور → فشل → نجاح) مع التقاط طابع
+    زمني بعد كل سيناريو للتوثيق:
+      1) حفظ أثناء الأوفلاين → "غير متصل|طابور المزامنة"   (T1)
+      2) عودة الاتصال + الخادم يفشل + retry → "تعذّر حفظ"   (T2)
+      3) استرداد الخادم + retry → "تمّت المزامنة بنجاح"    (T3)
+    """
+    from datetime import datetime, timezone
+
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+
+    server_state = {"mode": "pass"}  # "pass" | "fail"
+
+    async def controlled(route: Route):
+        if "setPreferredCountry" in route.request.url and server_state["mode"] == "fail":
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"forced_failure"}')
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", controlled)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    status = dialog.locator("[role=status]")
+    timeline: list[tuple[str, str]] = []
+
+    def stamp(label: str):
+        ts = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+        timeline.append((label, ts))
+        print(f"  · {label}  @ {ts}")
+
+    # --- 1) طابور/أوفلاين ---
+    await ctx.set_offline(True)
+    await _click_save(dialog)
+    await expect(status).to_contain_text(
+        re.compile("غير متصل|طابور المزامنة"), timeout=10_000
+    )
+    retry_btn = _retry_button(dialog)
+    await expect(retry_btn).to_be_visible()
+    await page.screenshot(path=str(OUT / "seq_01_queued.png"))
+    stamp("queued/offline")
+
+    # --- 2) online + الخادم يفشل → retry ينقل إلى syncing ثم error ---
+    await ctx.set_offline(False)
+    server_state["mode"] = "fail"
+    await retry_btn.click()
+    await expect(status).to_contain_text(
+        re.compile("جاري المزامنة|تعذّر حفظ التفضيل"), timeout=10_000
+    )
+    await expect(status).to_contain_text("تعذّر حفظ التفضيل", timeout=10_000)
+    await expect(retry_btn).to_be_visible()
+    await page.screenshot(path=str(OUT / "seq_02_error.png"))
+    stamp("error (server failing)")
+
+    # --- 3) استرداد الخادم → retry → saved مع <time datetime> ---
+    server_state["mode"] = "pass"
+    await retry_btn.click()
+    await expect(status).to_contain_text("تمّت المزامنة بنجاح", timeout=10_000)
+    saved_time = status.locator("time[datetime]")
+    await expect(saved_time).to_be_visible()
+    saved_dt = await saved_time.get_attribute("datetime")
+    assert saved_dt, "expected time[datetime] on saved status"
+    await page.screenshot(path=str(OUT / "seq_03_saved.png"))
+    stamp(f"saved (datetime={saved_dt})")
+
+    # الطوابع الزمنية تصاعدية والترتيب المنطقي للحالات صحيح.
+    ts_values = [t for _, t in timeline]
+    assert ts_values == sorted(ts_values), f"status timeline not monotonic: {timeline}"
+    labels = [lbl for lbl, _ in timeline]
+    assert (
+        labels[0].startswith("queued")
+        and labels[1].startswith("error")
+        and labels[2].startswith("saved")
+    ), f"bad order: {labels}"
+
+    await ctx.close()
+    print(f"✓ Status transitions ordered (queued→error→saved) with {len(timeline)} timestamps")
+
+
 async def main():
     _require_auth()
     async with async_playwright() as pw:
@@ -438,9 +521,10 @@ async def main():
             await _test_retry_incomplete_when_still_failing(browser)
             await _test_attempts_and_countdown(browser)
             await _test_attempts_exhausted(browser)
+            await _test_status_transitions_ordered(browser)
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition states.")
 
 
 if __name__ == "__main__":

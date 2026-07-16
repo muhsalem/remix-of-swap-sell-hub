@@ -6,6 +6,7 @@ import { queuePreferredCountry, flushPrefSyncQueue, getPendingPrefSync, MAX_PREF
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react";
+import { formatArabicCountdown } from "@/lib/format-arabic-duration";
 import {
   Dialog,
   DialogContent,
@@ -649,15 +650,7 @@ export function CountryDetectedBanner() {
               ? anchorRef.current.remainingAtAnchor - (tickPerf - anchorRef.current.anchorPerf)
               : null;
             const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
-            const mm = secs !== null ? Math.floor(secs / 60) : 0;
-            const ss = secs !== null ? secs % 60 : 0;
-            const countdown = secs === null
-              ? null
-              : secs === 0
-              ? "الآن…"
-              : mm > 0
-              ? `${mm} د ${ss.toString().padStart(2, "0")} ث`
-              : `${ss} ث`;
+            const countdown = formatArabicCountdown(secs);
             const exhausted = attempts >= max && !pendingEntry.nextRetryAt;
             return (
               <div

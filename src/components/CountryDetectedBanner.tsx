@@ -77,6 +77,8 @@ export function CountryDetectedBanner() {
     stage: "fetch" | "save";
     at: Date;
   } | null>(null);
+  const [pendingEntry, setPendingEntry] = useState<QueueEntry | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();

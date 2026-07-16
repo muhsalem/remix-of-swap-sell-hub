@@ -9,17 +9,22 @@ import { formatAmount, formatSAR } from "@/lib/format-price";
  */
 export function useUserCurrency() {
   const [country, setCountry] = useState<string>("SAR");
+  // Bump on FX updates so components re-render with fresh perSAR values.
+  const [, setFxTick] = useState(0);
   useEffect(() => {
     setCountry(loadCountry());
     const onStorage = (e: StorageEvent) => {
       if (e.key === "badel:country") setCountry(loadCountry());
     };
     const onCustom = () => setCountry(loadCountry());
+    const onFx = () => setFxTick((t) => t + 1);
     window.addEventListener("storage", onStorage);
     window.addEventListener("badel:country-changed", onCustom as EventListener);
+    window.addEventListener("badel:fx-updated", onFx as EventListener);
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("badel:country-changed", onCustom as EventListener);
+      window.removeEventListener("badel:fx-updated", onFx as EventListener);
     };
   }, []);
   const fx = FX_VS_SAR[country] ?? FX_VS_SAR.SAR;

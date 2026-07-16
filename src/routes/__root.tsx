@@ -153,6 +153,8 @@ function AuthListener() {
   const router = useRouter();
   const qc = useQueryClient();
   useEffect(() => {
+    // Start live FX auto-refresh (cache-first, backoff on outage, broadcast on update).
+    void import("@/lib/fx-live-init").then((m) => m.initFxLive());
     // Pull profile-stored country preference; fall back to pushing local choice up.
     const syncCountry = async () => {
       try {

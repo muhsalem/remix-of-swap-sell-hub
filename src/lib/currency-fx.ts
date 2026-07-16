@@ -45,6 +45,13 @@ export function saveCachedFx(perSAR: Record<string, number>, fetchedAt: number) 
   try { localStorage.setItem(FX_CACHE_KEY, JSON.stringify({ perSAR, fetchedAt })); } catch { /* ignore */ }
 }
 
+/** Fire a same-tab event so subscribed price components re-render. */
+export function notifyFxUpdated(meta: { source: string; fetchedAt: number }) {
+  if (typeof window === "undefined") return;
+  try { window.dispatchEvent(new CustomEvent("badel:fx-updated", { detail: meta })); } catch { /* ignore */ }
+}
+
+
 export const COUNTRY_STORAGE_KEY = "badel:country";
 
 export function detectCountry(): string {

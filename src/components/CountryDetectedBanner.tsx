@@ -6,6 +6,7 @@ import { queuePreferredCountry, flushPrefSyncQueue, getPendingPrefSync, MAX_PREF
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react";
+import { formatArabicCountdown } from "@/lib/format-arabic-duration";
 import {
   Dialog,
   DialogContent,

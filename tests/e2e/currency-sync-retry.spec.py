@@ -512,6 +512,72 @@ async def _test_status_transitions_ordered(browser):
 
 
 async def main():
+async def _test_readable_failure_reason(browser):
+    """يتحقق أن مودال حالة المزامنة يعرض سبب الفشل المقروء بعد كل
+    محاولة فاشلة، ويميّز بين "خطأ الخادم" و"خطأ شبكة" مع طابع زمني
+    ومرحلة (قراءة/حفظ) لكل فشل، وأن الطابع الزمني يتحدّث بعد كل محاولة.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+
+    mode = {"kind": "server"}  # "server" | "network" | "pass"
+
+    async def controlled(route: Route):
+        if "setPreferredCountry" not in route.request.url:
+            await route.continue_()
+            return
+        if mode["kind"] == "server":
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"forced_server_failure"}')
+        elif mode["kind"] == "network":
+            await route.abort("failed")
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", controlled)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    status = dialog.locator("[role=status]")
+
+    # --- 1) خطأ خادم 500 ---
+    await _click_save(dialog)
+    await expect(status).to_contain_text("تعذّر حفظ التفضيل", timeout=10_000)
+    badge = status.get_by_text(re.compile("خطأ الخادم"))
+    await expect(badge).to_be_visible()
+    await expect(badge).to_contain_text("500")
+    fail_time_1 = status.locator("time[datetime]")
+    await expect(fail_time_1).to_be_visible()
+    dt1 = await fail_time_1.get_attribute("datetime")
+    assert dt1, "expected time[datetime] on first failure"
+    # مرحلة "حفظ التفضيل" يجب أن تظهر
+    await expect(status).to_contain_text(re.compile("المرحلة:\\s*حفظ التفضيل"))
+    await page.screenshot(path=str(OUT / "reason_01_server.png"))
+
+    # --- 2) خطأ شبكة عبر route.abort ---
+    mode["kind"] = "network"
+    retry_btn = _retry_button(dialog)
+    # ضمان طابع زمني مختلف (الدقة بالدقيقة في نص العرض، لكن datetime بالميلي ثانية).
+    await page.wait_for_timeout(1100)
+    await retry_btn.click()
+
+    await expect(status).to_contain_text("تعذّر حفظ التفضيل", timeout=10_000)
+    net_badge = status.get_by_text(re.compile(r"^\s*خطأ شبكة\s*$"))
+    await expect(net_badge).to_be_visible()
+    # يجب ألا تبقى شارة "خطأ الخادم" ظاهرة بعد التبديل
+    await expect(status.get_by_text(re.compile("خطأ الخادم"))).to_have_count(0)
+
+    fail_time_2 = status.locator("time[datetime]")
+    dt2 = await fail_time_2.get_attribute("datetime")
+    assert dt2 and dt2 != dt1, f"failure timestamp must update after each attempt (dt1={dt1!r}, dt2={dt2!r})"
+    await page.screenshot(path=str(OUT / "reason_02_network.png"))
+
+    await ctx.close()
+    print(f"✓ Readable failure reason: server(500)@{dt1} → network@{dt2} (badges + stage + timestamps updated)")
+
+
+async def main():
     _require_auth()
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
@@ -522,9 +588,10 @@ async def main():
             await _test_attempts_and_countdown(browser)
             await _test_attempts_exhausted(browser)
             await _test_status_transitions_ordered(browser)
+            await _test_readable_failure_reason(browser)
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason states.")
 
 
 if __name__ == "__main__":

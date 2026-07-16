@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { TERMS_VERSION } from "./legal.$doc";
+import badelLogo from "@/assets/badel-logo.png";
 
 function isSafeRelativePath(p: unknown): p is string {
   return typeof p === "string" && /^\/[^/\\]/.test(p) && !p.startsWith("//");

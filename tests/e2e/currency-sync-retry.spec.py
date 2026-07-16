@@ -451,10 +451,29 @@ async def _test_retry_button_toggles_with_schedule(browser):
     ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
     page = await ctx.new_page()
     await _restore_session(ctx, page)
+
+    # اعتراض دائم لأي محاولة حفظ حتى تنتقل الحالة إلى "error" ويظهر زر الإعادة.
+    async def force_fail(route: Route):
+        url = route.request.url
+        if "setPreferredCountry" in url:
+            await route.fulfill(
+                status=500,
+                content_type="application/json",
+                body=json.dumps({"error": "forced_failure_for_test"}),
+            )
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", force_fail)
     await page.reload(wait_until="domcontentloaded")
 
     dialog = await _open_modal(page)
+    await _click_save(dialog)
+
+    status_line = dialog.locator("[role=status]")
+    await expect(status_line).to_contain_text(re.compile("تعذّر حفظ التفضيل"), timeout=10_000)
     btn = _retry_button(dialog)
+    await expect(btn).to_be_visible(timeout=5_000)
 
     # (1) جدولة قريبة → الزر يجب أن يكون مُفعَّلاً.
     await page.evaluate(

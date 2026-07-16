@@ -84,24 +84,39 @@ export function CountryDetectedBanner() {
 
     // Check sign-in status and fetch server-side preference to display last-sync info.
     (async () => {
+      const t0 = performance.now();
       try {
         const { data } = await supabase.auth.getUser();
         if (!data.user) {
           setSignedIn(false);
           setSyncStatus("guest");
+          void track("sync_pref_fetch", { stage: "guest", signed_in: false });
           return;
         }
         setSignedIn(true);
         setSyncStatus("syncing");
+        void track("sync_pref_fetch", { stage: "start", signed_in: true });
         const res = await getPreferredCountry();
+        const duration_ms = Math.round(performance.now() - t0);
         setLastSyncedAt(new Date());
         setSyncStatus("saved");
+        void track("sync_pref_fetch", {
+          stage: "success",
+          signed_in: true,
+          has_server_pref: !!res?.country,
+          server_country: res?.country ?? null,
+          duration_ms,
+        });
         if (res?.country && FX_VS_SAR[res.country as SupportedCode]) {
-          // Reflect server preference in selection if present.
           setSelected(res.country as SupportedCode);
         }
-      } catch {
+      } catch (err) {
         setSyncStatus("error");
+        void track("sync_pref_fetch", {
+          stage: "error",
+          duration_ms: Math.round(performance.now() - t0),
+          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        });
       }
     })();
 

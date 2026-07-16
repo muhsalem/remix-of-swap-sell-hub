@@ -210,6 +210,23 @@ export function CountryDetectedBanner() {
     return () => window.clearTimeout(t);
   }, [visible, modalOpen, detected, source]);
 
+  // Track pending queue entry (attempts + next retry) while the modal is open.
+  useEffect(() => {
+    if (!modalOpen) return;
+    const read = () => setPendingEntry(getPendingPrefSync());
+    read();
+    const tick = window.setInterval(() => {
+      read();
+      setNow(Date.now());
+    }, 1000);
+    const onSync = () => read();
+    window.addEventListener("badel:pref-sync", onSync as EventListener);
+    return () => {
+      window.clearInterval(tick);
+      window.removeEventListener("badel:pref-sync", onSync as EventListener);
+    };
+  }, [modalOpen]);
+
   if (!visible) return null;
 
   const fx = FX_VS_SAR[detected];

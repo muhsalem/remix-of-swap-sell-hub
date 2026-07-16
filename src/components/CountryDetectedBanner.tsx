@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
-import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
+import { getPreferredCountry } from "@/lib/currency-pref.functions";
+import { queuePreferredCountry } from "@/lib/pref-sync-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2 } from "lucide-react";
@@ -34,7 +35,9 @@ export function CountryDetectedBanner() {
   const [selected, setSelected] = useState<SupportedCode>("SAR");
   const [source, setSource] = useState<string>("client-fallback");
   const [signedIn, setSignedIn] = useState<boolean>(false);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "saved" | "error" | "guest">("idle");
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "saved" | "error" | "guest" | "queued" | "offline"
+  >("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -196,21 +199,37 @@ export function CountryDetectedBanner() {
         source,
       });
       try {
-        await setPreferredCountry({ data: { country: selected } });
+        const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+        const res = await queuePreferredCountry(selected);
         const duration_ms = Math.round(performance.now() - t0);
-        const now = new Date();
-        setLastSyncedAt(now);
-        setSyncStatus("saved");
-        void track("sync_pref_save", {
-          stage: "success",
-          country: selected,
-          duration_ms,
-          last_synced_at: now.toISOString(),
-        });
-        window.setTimeout(() => {
-          setModalOpen(false);
-          setVisible(false);
-        }, 900);
+        if (res.synced) {
+          const now = new Date();
+          setLastSyncedAt(now);
+          setSyncStatus("saved");
+          void track("sync_pref_save", {
+            stage: "success",
+            country: selected,
+            duration_ms,
+            last_synced_at: now.toISOString(),
+          });
+          window.setTimeout(() => {
+            setModalOpen(false);
+            setVisible(false);
+          }, 900);
+        } else {
+          // Kept in the offline queue — will retry automatically.
+          setSyncStatus(online ? "queued" : "offline");
+          void track("sync_pref_save", {
+            stage: "queued",
+            country: selected,
+            online,
+            duration_ms,
+          });
+          window.setTimeout(() => {
+            setModalOpen(false);
+            setVisible(false);
+          }, 1400);
+        }
         return;
       } catch (err) {
         setSyncStatus("error");
@@ -404,6 +423,22 @@ export function CountryDetectedBanner() {
                 <CloudOff className="size-4 text-red-600 shrink-0" aria-hidden />
                 <span className="text-red-700 font-bold">
                   تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
+                </span>
+              </>
+            )}
+            {syncStatus === "offline" && (
+              <>
+                <CloudOff className="size-4 text-amber-600 shrink-0" aria-hidden />
+                <span className="text-amber-700 font-bold">
+                  لا يوجد اتصال بالإنترنت — تم الحفظ محلياً وسيُزامَن تلقائياً عند عودة الاتصال.
+                </span>
+              </>
+            )}
+            {syncStatus === "queued" && (
+              <>
+                <Loader2 className="size-4 text-amber-600 animate-spin shrink-0" aria-hidden />
+                <span className="text-amber-700 font-bold">
+                  في طابور المزامنة — ستُعاد المحاولة تلقائياً.
                 </span>
               </>
             )}

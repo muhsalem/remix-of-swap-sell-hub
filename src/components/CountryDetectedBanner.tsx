@@ -197,21 +197,37 @@ export function CountryDetectedBanner() {
         source,
       });
       try {
-        await setPreferredCountry({ data: { country: selected } });
+        const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+        const res = await queuePreferredCountry(selected);
         const duration_ms = Math.round(performance.now() - t0);
-        const now = new Date();
-        setLastSyncedAt(now);
-        setSyncStatus("saved");
-        void track("sync_pref_save", {
-          stage: "success",
-          country: selected,
-          duration_ms,
-          last_synced_at: now.toISOString(),
-        });
-        window.setTimeout(() => {
-          setModalOpen(false);
-          setVisible(false);
-        }, 900);
+        if (res.synced) {
+          const now = new Date();
+          setLastSyncedAt(now);
+          setSyncStatus("saved");
+          void track("sync_pref_save", {
+            stage: "success",
+            country: selected,
+            duration_ms,
+            last_synced_at: now.toISOString(),
+          });
+          window.setTimeout(() => {
+            setModalOpen(false);
+            setVisible(false);
+          }, 900);
+        } else {
+          // Kept in the offline queue — will retry automatically.
+          setSyncStatus(online ? "queued" : "offline");
+          void track("sync_pref_save", {
+            stage: "queued",
+            country: selected,
+            online,
+            duration_ms,
+          });
+          window.setTimeout(() => {
+            setModalOpen(false);
+            setVisible(false);
+          }, 1400);
+        }
         return;
       } catch (err) {
         setSyncStatus("error");

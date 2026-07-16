@@ -160,7 +160,7 @@ export function CountryDetectedBanner() {
 
   const openModal = () => setModalOpen(true);
 
-  const save = () => {
+  const save = async () => {
     saveCountry(selected);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
     void track("country_confirmed", {
@@ -169,6 +169,25 @@ export function CountryDetectedBanner() {
       from: detected,
       source,
     });
+
+    // Persist to server profile when signed in and currency is server-supported.
+    if (signedIn && (selected === "SAR" || selected === "EGP")) {
+      setSyncStatus("syncing");
+      try {
+        await setPreferredCountry({ data: { country: selected } });
+        setLastSyncedAt(new Date());
+        setSyncStatus("saved");
+        window.setTimeout(() => {
+          setModalOpen(false);
+          setVisible(false);
+        }, 900);
+        return;
+      } catch {
+        setSyncStatus("error");
+        return;
+      }
+    }
+
     setModalOpen(false);
     setVisible(false);
   };

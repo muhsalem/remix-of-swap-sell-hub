@@ -39,6 +39,13 @@ export function CountryDetectedBanner() {
     "idle" | "syncing" | "saved" | "error" | "guest" | "queued" | "offline"
   >("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [lastError, setLastError] = useState<{
+    kind: "network" | "server" | "unknown";
+    message: string;
+    status?: number;
+    stage: "fetch" | "save";
+    at: Date;
+  } | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();

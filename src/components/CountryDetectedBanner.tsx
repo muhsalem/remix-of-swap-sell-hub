@@ -28,6 +28,37 @@ type SupportedCode = keyof typeof FX_VS_SAR;
  * opens a modal explaining how detection worked and lets the user pick
  * a different currency from all supported markets before saving.
  */
+function classifyError(err: unknown): {
+  kind: "network" | "server" | "unknown";
+  message: string;
+  status?: number;
+} {
+  const raw = (err as Error)?.message ?? String(err ?? "");
+  const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+  const statusMatch = raw.match(/\b(4\d{2}|5\d{2})\b/);
+  const status = statusMatch ? Number(statusMatch[1]) : undefined;
+
+  if (!online || /NetworkError|Failed to fetch|network|ECONNRESET|ENOTFOUND|timeout|timed out|abort/i.test(raw)) {
+    return {
+      kind: "network",
+      message: online
+        ? "تعذّر الوصول إلى الخادم — تحقّق من اتصالك بالإنترنت."
+        : "لا يوجد اتصال بالإنترنت.",
+      status,
+    };
+  }
+  if (status && status >= 500) {
+    return { kind: "server", message: `خطأ في الخادم (${status}) — حاول لاحقاً.`, status };
+  }
+  if (status === 401 || status === 403) {
+    return { kind: "server", message: "انتهت صلاحية جلستك — يرجى تسجيل الدخول مجدداً.", status };
+  }
+  if (status && status >= 400) {
+    return { kind: "server", message: `طلب غير صالح (${status}).`, status };
+  }
+  return { kind: "unknown", message: raw ? raw.slice(0, 200) : "خطأ غير معروف." };
+}
+
 export function CountryDetectedBanner() {
   const [visible, setVisible] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,6 +70,13 @@ export function CountryDetectedBanner() {
     "idle" | "syncing" | "saved" | "error" | "guest" | "queued" | "offline"
   >("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [lastError, setLastError] = useState<{
+    kind: "network" | "server" | "unknown";
+    message: string;
+    status?: number;
+    stage: "fetch" | "save";
+    at: Date;
+  } | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();
@@ -114,11 +152,15 @@ export function CountryDetectedBanner() {
           setSelected(res.country as SupportedCode);
         }
       } catch (err) {
+        const info = classifyError(err);
+        setLastError({ ...info, stage: "fetch", at: new Date() });
         setSyncStatus("error");
         void track("sync_pref_fetch", {
           stage: "error",
           duration_ms: Math.round(performance.now() - t0),
-          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+          error: info.message,
+          error_kind: info.kind,
+          error_status: info.status ?? null,
         });
       }
     })();
@@ -196,6 +238,7 @@ export function CountryDetectedBanner() {
       if (res.synced) {
         const now = new Date();
         setLastSyncedAt(now);
+        setLastError(null);
         setSyncStatus("saved");
         void track("sync_pref_save", {
           stage: "success",
@@ -219,12 +262,16 @@ export function CountryDetectedBanner() {
         });
       }
     } catch (err) {
+      const info = classifyError(err);
+      setLastError({ ...info, stage: "save", at: new Date() });
       setSyncStatus("error");
       void track("sync_pref_save", {
         stage: "error",
         country: selected,
         duration_ms: Math.round(performance.now() - t0),
-        error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        error: info.message,
+        error_kind: info.kind,
+        error_status: info.status ?? null,
         retry: isRetry,
       });
     }
@@ -436,7 +483,7 @@ export function CountryDetectedBanner() {
 
           {/* Sync status with the signed-in user's profile */}
           <div
-            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-center gap-2"
+            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-start gap-2"
             role="status"
             aria-live="polite"
           >
@@ -475,10 +522,31 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "error" && (
               <>
-                <CloudOff className="size-4 text-red-600 shrink-0" aria-hidden />
-                <span className="text-red-700 font-bold">
-                  تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
-                </span>
+                <CloudOff className="size-4 text-red-600 shrink-0 mt-0.5" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <div className="text-red-700 font-bold">
+                    تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
+                  </div>
+                  {lastError && (
+                    <div className="mt-1 text-[11px] text-red-700/90 leading-relaxed">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-800 font-bold me-1">
+                        {lastError.kind === "network"
+                          ? "خطأ شبكة"
+                          : lastError.kind === "server"
+                          ? `خطأ الخادم${lastError.status ? ` (${lastError.status})` : ""}`
+                          : "خطأ غير معروف"}
+                      </span>
+                      <span>{lastError.message}</span>
+                      <span className="block text-red-700/70 mt-0.5">
+                        وقت الفشل:{" "}
+                        <time dateTime={lastError.at.toISOString()}>
+                          {lastError.at.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+                        </time>
+                        {" · "}المرحلة: {lastError.stage === "fetch" ? "قراءة التفضيل" : "حفظ التفضيل"}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {syncStatus === "offline" && (

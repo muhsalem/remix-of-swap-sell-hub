@@ -5,7 +5,7 @@ import { getPreferredCountry } from "@/lib/currency-pref.functions";
 import { queuePreferredCountry } from "@/lib/pref-sync-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2 } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -178,6 +178,58 @@ export function CountryDetectedBanner() {
 
   const openModal = () => setModalOpen(true);
 
+  const runSync = async (isRetry = false) => {
+    if (!(signedIn && (selected === "SAR" || selected === "EGP"))) return;
+    setSyncStatus("syncing");
+    const t0 = performance.now();
+    void track("sync_pref_save", {
+      stage: "start",
+      country: selected,
+      from: detected,
+      source,
+      retry: isRetry,
+    });
+    try {
+      const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+      const res = await queuePreferredCountry(selected);
+      const duration_ms = Math.round(performance.now() - t0);
+      if (res.synced) {
+        const now = new Date();
+        setLastSyncedAt(now);
+        setSyncStatus("saved");
+        void track("sync_pref_save", {
+          stage: "success",
+          country: selected,
+          duration_ms,
+          last_synced_at: now.toISOString(),
+          retry: isRetry,
+        });
+        window.setTimeout(() => {
+          setModalOpen(false);
+          setVisible(false);
+        }, 900);
+      } else {
+        setSyncStatus(online ? "queued" : "offline");
+        void track("sync_pref_save", {
+          stage: "queued",
+          country: selected,
+          online,
+          duration_ms,
+          retry: isRetry,
+        });
+      }
+    } catch (err) {
+      setSyncStatus("error");
+      void track("sync_pref_save", {
+        stage: "error",
+        country: selected,
+        duration_ms: Math.round(performance.now() - t0),
+        error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        retry: isRetry,
+      });
+    }
+  };
+
   const save = async () => {
     saveCountry(selected);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
@@ -188,63 +240,18 @@ export function CountryDetectedBanner() {
       source,
     });
 
-    // Persist to server profile when signed in and currency is server-supported.
     if (signedIn && (selected === "SAR" || selected === "EGP")) {
-      setSyncStatus("syncing");
-      const t0 = performance.now();
-      void track("sync_pref_save", {
-        stage: "start",
-        country: selected,
-        from: detected,
-        source,
-      });
-      try {
-        const online = typeof navigator !== "undefined" ? navigator.onLine : true;
-        const res = await queuePreferredCountry(selected);
-        const duration_ms = Math.round(performance.now() - t0);
-        if (res.synced) {
-          const now = new Date();
-          setLastSyncedAt(now);
-          setSyncStatus("saved");
-          void track("sync_pref_save", {
-            stage: "success",
-            country: selected,
-            duration_ms,
-            last_synced_at: now.toISOString(),
-          });
-          window.setTimeout(() => {
-            setModalOpen(false);
-            setVisible(false);
-          }, 900);
-        } else {
-          // Kept in the offline queue — will retry automatically.
-          setSyncStatus(online ? "queued" : "offline");
-          void track("sync_pref_save", {
-            stage: "queued",
-            country: selected,
-            online,
-            duration_ms,
-          });
-          window.setTimeout(() => {
-            setModalOpen(false);
-            setVisible(false);
-          }, 1400);
-        }
-        return;
-      } catch (err) {
-        setSyncStatus("error");
-        void track("sync_pref_save", {
-          stage: "error",
-          country: selected,
-          duration_ms: Math.round(performance.now() - t0),
-          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
-        });
-        return;
-      }
+      await runSync(false);
+      return;
     }
 
     setModalOpen(false);
     setVisible(false);
+  };
+
+  const retrySync = () => {
+    void track("sync_pref_retry", { country: selected, from_status: syncStatus });
+    void runSync(true);
   };
 
   const dismiss = () => {
@@ -449,6 +456,20 @@ export function CountryDetectedBanner() {
               </>
             )}
           </div>
+
+          {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={retrySync}
+                aria-label="إعادة محاولة مزامنة تفضيل العملة مع حسابي"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 rounded-full border border-border bg-white text-[11px] font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <RefreshCw className="size-3.5" aria-hidden />
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
 
 
 

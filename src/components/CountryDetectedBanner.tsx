@@ -82,6 +82,29 @@ export function CountryDetectedBanner() {
         }
       });
 
+    // Check sign-in status and fetch server-side preference to display last-sync info.
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) {
+          setSignedIn(false);
+          setSyncStatus("guest");
+          return;
+        }
+        setSignedIn(true);
+        setSyncStatus("syncing");
+        const res = await getPreferredCountry();
+        setLastSyncedAt(new Date());
+        setSyncStatus("saved");
+        if (res?.country && FX_VS_SAR[res.country as SupportedCode]) {
+          // Reflect server preference in selection if present.
+          setSelected(res.country as SupportedCode);
+        }
+      } catch {
+        setSyncStatus("error");
+      }
+    })();
+
     setVisible(true);
   }, []);
 

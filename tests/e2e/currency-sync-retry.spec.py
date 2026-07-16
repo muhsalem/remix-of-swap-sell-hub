@@ -156,6 +156,69 @@ async def _test_retry_after_offline(browser):
     print("✓ Retry after offline: offline/queued → saved")
 
 
+async def _test_attempts_exhausted(browser):
+    """يحقن طابور مزامنة مستنفَد (attempts=MAX, بدون nextRetryAt) ويتحقق:
+      - عرض "استنفدت المحاولات التلقائية".
+      - عرض عدّاد المحاولات 5 / 5.
+      - عدم عرض "الإعادة القادمة خلال" (الإعادة التلقائية موقوفة).
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+
+    # Inject an exhausted queue entry directly, then notify the banner.
+    await page.evaluate(
+        """() => {
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 60_000).toISOString(),
+            attempts: 5,
+            lastError: 'network_unreachable',
+            // no nextRetryAt → exhausted branch
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'network_unreachable' }
+          }));
+        }"""
+    )
+
+    # Exhausted copy + attempts counter (5 / 5).
+    exhausted = dialog.get_by_text(re.compile("استنفدت المحاولات التلقائية"))
+    await expect(exhausted).to_be_visible(timeout=5_000)
+
+    attempts_row = dialog.get_by_text(re.compile("المحاولات:"))
+    await expect(attempts_row).to_contain_text(re.compile(r"5\s*/\s*5"))
+
+    # Automatic retry must NOT be scheduled: no countdown / next-retry line.
+    await expect(dialog.get_by_text(re.compile("الإعادة القادمة خلال"))).to_have_count(0)
+    await expect(dialog.get_by_text(re.compile("^\\s*وقت الإعادة القادمة"))).to_have_count(0)
+
+    await page.screenshot(path=str(OUT / "exhausted_01_state.png"))
+
+    # Clicking retry after exhaustion must NOT re-arm an automatic schedule:
+    # since the server is unreachable-by-design here (nothing routed), the
+    # attempt should either stay in the exhausted state or bump attempts,
+    # but never show a fresh countdown/nextRetry line.
+    await ctx.route(
+        "**/*setPreferredCountry*",
+        lambda route: route.fulfill(status=500, content_type="application/json", body='{"error":"still_failing"}'),
+    )
+    retry_btn = _retry_button(dialog)
+    if await retry_btn.count() > 0:
+        await retry_btn.click()
+        # Give the UI a moment to react; assert no countdown appears.
+        await page.wait_for_timeout(1500)
+        await expect(dialog.get_by_text(re.compile("الإعادة القادمة خلال"))).to_have_count(0)
+        await page.screenshot(path=str(OUT / "exhausted_02_after_manual_click.png"))
+
+    await ctx.close()
+    print("✓ Attempts exhausted: 5/5 message shown, no automatic retry re-armed")
+
+
 async def main():
     _require_auth()
     async with async_playwright() as pw:
@@ -163,9 +226,10 @@ async def main():
         try:
             await _test_retry_after_server_error(browser)
             await _test_retry_after_offline(browser)
+            await _test_attempts_exhausted(browser)
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted states.")
 
 
 if __name__ == "__main__":

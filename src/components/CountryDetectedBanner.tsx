@@ -630,7 +630,24 @@ export function CountryDetectedBanner() {
           {pendingEntry && (syncStatus === "queued" || syncStatus === "offline" || syncStatus === "error" || syncStatus === "syncing") && (() => {
             const attempts = pendingEntry.attempts;
             const max = MAX_PREF_SYNC_ATTEMPTS;
-            const nextMs = pendingEntry.nextRetryAt ? new Date(pendingEntry.nextRetryAt).getTime() - now : null;
+            // Capture / refresh the monotonic anchor whenever nextRetryAt
+            // changes. From then on, remaining = anchorRemaining - perfDelta,
+            // so device-clock changes cannot skew the countdown.
+            const key = pendingEntry.nextRetryAt ?? "";
+            if (key) {
+              if (!anchorRef.current || anchorRef.current.key !== key) {
+                anchorRef.current = {
+                  key,
+                  anchorPerf: perfNow(),
+                  remainingAtAnchor: new Date(key).getTime() - Date.now(),
+                };
+              }
+            } else if (anchorRef.current) {
+              anchorRef.current = null;
+            }
+            const nextMs = anchorRef.current
+              ? anchorRef.current.remainingAtAnchor - (tickPerf - anchorRef.current.anchorPerf)
+              : null;
             const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
             const mm = secs !== null ? Math.floor(secs / 60) : 0;
             const ss = secs !== null ? secs % 60 : 0;

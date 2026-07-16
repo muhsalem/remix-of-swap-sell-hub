@@ -302,6 +302,7 @@ async def main():
         try:
             await _test_retry_after_server_error(browser)
             await _test_retry_after_offline(browser)
+            await _test_attempts_and_countdown(browser)
             await _test_attempts_exhausted(browser)
         finally:
             await browser.close()

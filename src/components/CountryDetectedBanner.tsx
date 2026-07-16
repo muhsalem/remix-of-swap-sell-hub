@@ -35,7 +35,9 @@ export function CountryDetectedBanner() {
   const [selected, setSelected] = useState<SupportedCode>("SAR");
   const [source, setSource] = useState<string>("client-fallback");
   const [signedIn, setSignedIn] = useState<boolean>(false);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "saved" | "error" | "guest">("idle");
+  const [syncStatus, setSyncStatus] = useState<
+    "idle" | "syncing" | "saved" | "error" | "guest" | "queued" | "offline"
+  >("idle");
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);

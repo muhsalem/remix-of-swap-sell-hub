@@ -238,6 +238,7 @@ export function CountryDetectedBanner() {
       if (res.synced) {
         const now = new Date();
         setLastSyncedAt(now);
+        setLastError(null);
         setSyncStatus("saved");
         void track("sync_pref_save", {
           stage: "success",
@@ -261,12 +262,16 @@ export function CountryDetectedBanner() {
         });
       }
     } catch (err) {
+      const info = classifyError(err);
+      setLastError({ ...info, stage: "save", at: new Date() });
       setSyncStatus("error");
       void track("sync_pref_save", {
         stage: "error",
         country: selected,
         duration_ms: Math.round(performance.now() - t0),
-        error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        error: info.message,
+        error_kind: info.kind,
+        error_status: info.status ?? null,
         retry: isRetry,
       });
     }

@@ -251,7 +251,7 @@ export function CountryDetectedBanner() {
     read();
     const tick = window.setInterval(() => {
       read();
-      setNow(Date.now());
+      setTickPerf(perfNow());
     }, 1000);
     const onSync = () => read();
     window.addEventListener("badel:pref-sync", onSync as EventListener);

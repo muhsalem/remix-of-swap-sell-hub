@@ -32,6 +32,10 @@ export function CountryDetectedBanner() {
   const [selected, setSelected] = useState<SupportedCode>("SAR");
   const [source, setSource] = useState<string>("client-fallback");
   const trackedRef = useRef(false);
+  const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const titleId = useId();
+  const descId = useId();
+  const sourceId = useId();
 
   useEffect(() => {
     try {

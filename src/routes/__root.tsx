@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { CountryDetectedBanner } from "@/components/CountryDetectedBanner";
-import { trackPageview } from "@/lib/analytics";
+import { trackPageview, track } from "@/lib/analytics";
 import { detectCountryServer } from "@/lib/geo.functions";
 import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
 import { hasSavedCountry, saveCountry, loadCountry } from "@/lib/currency-fx";
@@ -186,6 +186,7 @@ function AuthListener() {
     const onCountryChanged = (e: Event) => {
       const code = (e as CustomEvent<string>).detail;
       if (code !== "SAR" && code !== "EGP") return;
+      void track("country_confirmed", { action: "manual-change", country: code, source: "user-action" });
       supabase.auth.getSession().then(({ data }) => {
         if (data.session) {
           setPreferredCountry({ data: { country: code } }).catch(() => {});
@@ -208,8 +209,24 @@ function AuthListener() {
     if (!hasSavedCountry()) {
       detectCountryServer()
         .then((r) => {
+          const src = r?.source || "client-fallback";
           if (!hasSavedCountry() && (r?.country === "SAR" || r?.country === "EGP")) {
             saveCountry(r.country);
+            void track("country_detected", {
+              detected: r.country,
+              local: null,
+              source: src,
+              matches_local: false,
+              auto_saved: true,
+            });
+          } else {
+            void track("country_detected", {
+              detected: r?.country ?? null,
+              local: loadCountry(),
+              source: src,
+              matches_local: r?.country === loadCountry(),
+              auto_saved: false,
+            });
           }
         })
         .catch(() => { /* silent — fallback to locale/timezone detection */ });

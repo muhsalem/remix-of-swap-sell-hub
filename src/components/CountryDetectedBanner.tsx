@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2 } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,10 @@ export function CountryDetectedBanner() {
   const [selected, setSelected] = useState<SupportedCode>("SAR");
   const [source, setSource] = useState<string>("client-fallback");
   const trackedRef = useRef(false);
+  const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const titleId = useId();
+  const descId = useId();
+  const sourceId = useId();
 
   useEffect(() => {
     try {
@@ -82,6 +86,20 @@ export function CountryDetectedBanner() {
     return [...LAUNCH, ...rest];
   }, []);
 
+  // Keyboard: Esc dismisses banner while modal is closed.
+  useEffect(() => {
+    if (!visible || modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        dismiss();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, modalOpen]);
+
   if (!visible) return null;
 
   const fx = FX_VS_SAR[detected];
@@ -90,6 +108,7 @@ export function CountryDetectedBanner() {
     source === "edge-header"
       ? "من عنوان الاتصال (Edge Header)"
       : "من إعدادات المتصفح واللغة";
+  const sourceShort = source === "edge-header" ? "شبكة الاتصال" : "لغة المتصفح";
 
   const openModal = () => setModalOpen(true);
 
@@ -115,49 +134,67 @@ export function CountryDetectedBanner() {
 
   return (
     <>
-      <div
+      <section
         className="fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:left-auto md:max-w-md z-40 rounded-2xl border border-border bg-white/95 backdrop-blur shadow-xl p-4 animate-in slide-in-from-bottom-4"
-        role="dialog"
-        aria-label="تأكيد الدولة والعملة"
+        role="region"
+        aria-labelledby={titleId}
+        aria-describedby={`${descId} ${sourceId}`}
+        aria-live="polite"
       >
         <div className="flex items-start gap-3">
           <div className="shrink-0 size-10 rounded-full bg-primary/10 text-primary inline-flex items-center justify-center">
-            <MapPin className="size-5" aria-hidden />
+            <MapPin className="size-5" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-foreground">
-              اكتشفنا موقعك: <span aria-hidden>{fx.flag}</span> {fx.label}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
+            <h2 id={titleId} className="text-sm font-bold text-foreground">
+              اكتشفنا موقعك: <span aria-hidden="true">{fx.flag}</span> {fx.label}
+            </h2>
+            <p id={descId} className="text-xs text-muted-foreground mt-0.5">
               سنعرض الأسعار بـ <span className="font-bold text-foreground">{fx.symbol}</span>
-            </div>
+            </p>
+            <p
+              id={sourceId}
+              className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-stone-soft/70 text-[11px] font-bold text-foreground"
+            >
+              <Radio className="size-3" aria-hidden="true" />
+              <span className="sr-only">مصدر الاكتشاف: </span>
+              اكتُشف عبر: {sourceShort}
+            </p>
             <div className="flex flex-wrap gap-2 mt-3">
               <button
+                ref={primaryBtnRef}
                 type="button"
                 onClick={openModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition"
+                aria-haspopup="dialog"
+                aria-expanded={modalOpen}
+                aria-label={`تأكيد أو تغيير العملة الحالية ${fx.label} ${fx.symbol}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-11 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                <Check className="size-3.5" aria-hidden /> تأكيد أو تغيير
+                <Check className="size-3.5" aria-hidden="true" /> تأكيد أو تغيير
               </button>
               <button
                 type="button"
                 onClick={openModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-white text-xs font-bold hover:bg-stone-soft transition"
+                aria-haspopup="dialog"
+                aria-expanded={modalOpen}
+                aria-label="عرض تفاصيل كيف تم اكتشاف الدولة"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-11 rounded-full border border-border bg-white text-xs font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                <Info className="size-3.5" aria-hidden /> كيف تم الاكتشاف؟
+                <Info className="size-3.5" aria-hidden="true" /> كيف تم الاكتشاف؟
               </button>
             </div>
+            <p className="sr-only">اضغط Escape لإغلاق هذه اللافتة.</p>
           </div>
           <button
             type="button"
             onClick={dismiss}
-            aria-label="إغلاق"
-            className="shrink-0 p-1 rounded-full hover:bg-stone-soft text-muted-foreground"
+            aria-label="إغلاق لافتة تأكيد الدولة"
+            className="shrink-0 inline-flex items-center justify-center min-h-11 min-w-11 rounded-full hover:bg-stone-soft text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <X className="size-4" aria-hidden />
+            <X className="size-4" aria-hidden="true" />
           </button>
         </div>
-      </div>
+      </section>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-lg" dir="rtl">

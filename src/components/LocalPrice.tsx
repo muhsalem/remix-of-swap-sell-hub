@@ -46,6 +46,9 @@ export function LocalPrice({
     <span
       className={className}
       title={country !== "SAR" ? `≈ ${formatSAR(n)}` : undefined}
+      data-testid="local-price"
+      data-currency={country}
+      data-symbol={fx.symbol}
     >
       {txt} <span className="opacity-80 font-extrabold">{fx.symbol}</span>
       {showOriginal && country !== "SAR" && (

@@ -79,6 +79,48 @@ def _retry_button(dialog):
     return dialog.get_by_role("button", name=re.compile("إعادة محاولة مزامنة"))
 
 
+def _capture_analytics(page):
+    """Sniffs POSTs to the analytics_events REST endpoint and returns a
+    live list of {event_name, meta} dicts. Failures are silently ignored —
+    analytics fires and forgets in the client too.
+    """
+    events: list[dict] = []
+
+    def on_request(req):
+        try:
+            if req.method != "POST":
+                return
+            if "analytics_events" not in req.url:
+                return
+            body = req.post_data
+            if not body:
+                return
+            payload = json.loads(body)
+            rows = payload if isinstance(payload, list) else [payload]
+            for row in rows:
+                events.append({
+                    "event_name": row.get("event_name"),
+                    "meta": row.get("meta") or {},
+                })
+        except Exception:
+            pass
+
+    page.on("request", on_request)
+    return events
+
+
+async def _wait_for_event(events: list[dict], predicate, timeout_ms: int = 8000):
+    """Poll `events` until predicate(evt) matches one entry, or timeout."""
+    deadline = asyncio.get_event_loop().time() + timeout_ms / 1000
+    while asyncio.get_event_loop().time() < deadline:
+        for e in events:
+            if predicate(e):
+                return e
+        await asyncio.sleep(0.15)
+    return None
+
+
+
 async def _test_retry_after_server_error(browser):
     ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
     page = await ctx.new_page()

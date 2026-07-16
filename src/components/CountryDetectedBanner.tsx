@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
+import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2, Radio } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +33,9 @@ export function CountryDetectedBanner() {
   const [detected, setDetected] = useState<SupportedCode>("SAR");
   const [selected, setSelected] = useState<SupportedCode>("SAR");
   const [source, setSource] = useState<string>("client-fallback");
+  const [signedIn, setSignedIn] = useState<boolean>(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "saved" | "error" | "guest">("idle");
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();
@@ -76,6 +81,29 @@ export function CountryDetectedBanner() {
           });
         }
       });
+
+    // Check sign-in status and fetch server-side preference to display last-sync info.
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) {
+          setSignedIn(false);
+          setSyncStatus("guest");
+          return;
+        }
+        setSignedIn(true);
+        setSyncStatus("syncing");
+        const res = await getPreferredCountry();
+        setLastSyncedAt(new Date());
+        setSyncStatus("saved");
+        if (res?.country && FX_VS_SAR[res.country as SupportedCode]) {
+          // Reflect server preference in selection if present.
+          setSelected(res.country as SupportedCode);
+        }
+      } catch {
+        setSyncStatus("error");
+      }
+    })();
 
     setVisible(true);
   }, []);
@@ -132,7 +160,7 @@ export function CountryDetectedBanner() {
 
   const openModal = () => setModalOpen(true);
 
-  const save = () => {
+  const save = async () => {
     saveCountry(selected);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
     void track("country_confirmed", {
@@ -141,6 +169,25 @@ export function CountryDetectedBanner() {
       from: detected,
       source,
     });
+
+    // Persist to server profile when signed in and currency is server-supported.
+    if (signedIn && (selected === "SAR" || selected === "EGP")) {
+      setSyncStatus("syncing");
+      try {
+        await setPreferredCountry({ data: { country: selected } });
+        setLastSyncedAt(new Date());
+        setSyncStatus("saved");
+        window.setTimeout(() => {
+          setModalOpen(false);
+          setVisible(false);
+        }, 900);
+        return;
+      } catch {
+        setSyncStatus("error");
+        return;
+      }
+    }
+
     setModalOpen(false);
     setVisible(false);
   };
@@ -276,6 +323,63 @@ export function CountryDetectedBanner() {
               })}
             </div>
           </div>
+
+          {/* Sync status with the signed-in user's profile */}
+          <div
+            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            {syncStatus === "guest" && (
+              <>
+                <CloudOff className="size-4 text-muted-foreground shrink-0" aria-hidden />
+                <span className="text-muted-foreground">
+                  لست مسجلاً الدخول — سيتم حفظ التفضيل على هذا الجهاز فقط.
+                </span>
+              </>
+            )}
+            {syncStatus === "syncing" && (
+              <>
+                <Loader2 className="size-4 text-primary animate-spin shrink-0" aria-hidden />
+                <span className="text-foreground font-bold">جاري المزامنة مع حسابك…</span>
+              </>
+            )}
+            {syncStatus === "saved" && (
+              <>
+                <Cloud className="size-4 text-emerald-600 shrink-0" aria-hidden />
+                <span className="text-foreground">
+                  <span className="font-bold text-emerald-700">تمّت المزامنة بنجاح</span>
+                  {lastSyncedAt && (
+                    <>
+                      {" "}· آخر مزامنة:{" "}
+                      <time dateTime={lastSyncedAt.toISOString()} className="font-bold">
+                        {lastSyncedAt.toLocaleTimeString("ar", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </>
+                  )}
+                </span>
+              </>
+            )}
+            {syncStatus === "error" && (
+              <>
+                <CloudOff className="size-4 text-red-600 shrink-0" aria-hidden />
+                <span className="text-red-700 font-bold">
+                  تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
+                </span>
+              </>
+            )}
+            {syncStatus === "idle" && (
+              <>
+                <Cloud className="size-4 text-muted-foreground shrink-0" aria-hidden />
+                <span className="text-muted-foreground">جاهز للمزامنة عند الحفظ.</span>
+              </>
+            )}
+          </div>
+
+
 
           <DialogFooter className="gap-2 sm:gap-2">
             <button

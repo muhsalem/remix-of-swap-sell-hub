@@ -52,6 +52,8 @@ async def run_case(browser, label: str, header: str, iso: str,
     assert saved == currency, f"[{label}] expected localStorage=badel:country={currency}, got {saved!r}"
 
     # 3) كل عناصر <LocalPrice /> تعرض العملة الصحيحة فوراً
+    # ننتظر ظهور أول عنصر (بعد hydration + رد detectCountryServer)
+    await page.wait_for_selector('[data-testid="local-price"]', timeout=15_000)
     prices = page.get_by_test_id("local-price")
     count = await prices.count()
     assert count > 0, f"[{label}] no <LocalPrice /> nodes found on homepage"

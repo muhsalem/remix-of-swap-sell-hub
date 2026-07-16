@@ -211,9 +211,31 @@ export function CountryDetectedBanner() {
   }, [visible, modalOpen, detected, source]);
 
   // Track pending queue entry (attempts + next retry) while the modal is open.
+  const exhaustionFiredRef = useRef<string | null>(null);
   useEffect(() => {
     if (!modalOpen) return;
-    const read = () => setPendingEntry(getPendingPrefSync());
+    const read = () => {
+      const entry = getPendingPrefSync();
+      setPendingEntry(entry);
+      if (entry && entry.attempts >= MAX_PREF_SYNC_ATTEMPTS && !entry.nextRetryAt) {
+        const key = `${entry.queuedAt}:${entry.attempts}`;
+        if (exhaustionFiredRef.current !== key) {
+          exhaustionFiredRef.current = key;
+          void track("pref_sync_exhausted", {
+            country: entry.country,
+            attempts: entry.attempts,
+            max_attempts: MAX_PREF_SYNC_ATTEMPTS,
+            next_retry_at: entry.nextRetryAt ?? null,
+            queued_at: entry.queuedAt,
+            last_error: entry.lastError ?? null,
+            online: typeof navigator !== "undefined" ? navigator.onLine : null,
+            sync_status: syncStatus,
+          });
+        }
+      } else if (!entry) {
+        exhaustionFiredRef.current = null;
+      }
+    };
     read();
     const tick = window.setInterval(() => {
       read();
@@ -225,7 +247,8 @@ export function CountryDetectedBanner() {
       window.clearInterval(tick);
       window.removeEventListener("badel:pref-sync", onSync as EventListener);
     };
-  }, [modalOpen]);
+  }, [modalOpen, syncStatus]);
+
 
   if (!visible) return null;
 

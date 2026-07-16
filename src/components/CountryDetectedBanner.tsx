@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
+import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2, Radio } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio, CloudCheck, CloudOff, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

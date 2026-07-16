@@ -59,6 +59,8 @@ async def _restore_session(context: BrowserContext, page):
       localStorage.removeItem('badel:country-banner-dismissed');
       localStorage.removeItem('badel:country-confirmed');
       localStorage.removeItem('badel:pref-sync-queue');
+      localStorage.setItem('badel_onboarding_v1', '1');
+      localStorage.setItem('badel:cookie-consent', JSON.stringify({ choice: 'all', at: Date.now() }));
     }""")
 
 
@@ -437,8 +439,134 @@ async def _test_countdown_ticks_to_zero_and_switches(browser):
     print(f"✓ Countdown ticks toward zero and switches to 'الآن…' after deadline (samples={values})")
 
 
+async def _test_retry_button_toggles_with_schedule(browser):
+    """يتحقق من انتقال حالة زر "إعادة المحاولة" وفق توفّر جدولة قادمة:
 
+      1) وجود nextRetryAt أثناء العد التنازلي → الزر مُفعَّل وقابل للنقر.
+      2) بلوغ العدّاد "الآن…" مع بقاء nextRetryAt → الزر يبقى قابلاً للنقر.
+      3) استنفاد المحاولات (attempts=MAX, nextRetryAt=null) → الزر معطّل
+         (disabled + aria-disabled=true) ولا يستجيب للنقر.
+      4) عودة nextRetryAt (attempts<MAX) → الزر يُفعَّل مجدداً.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
 
+    # اعتراض دائم لأي محاولة حفظ حتى تنتقل الحالة إلى "error" ويظهر زر الإعادة.
+    async def force_fail(route: Route):
+        url = route.request.url
+        if "setPreferredCountry" in url:
+            await route.fulfill(
+                status=500,
+                content_type="application/json",
+                body=json.dumps({"error": "forced_failure_for_test"}),
+            )
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", force_fail)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    await _click_save(dialog)
+
+    status_line = dialog.locator("[role=status]")
+    await expect(status_line).to_contain_text(re.compile("تعذّر حفظ التفضيل"), timeout=10_000)
+    btn = _retry_button(dialog)
+    await expect(btn).to_be_visible(timeout=5_000)
+
+    # (1) جدولة قريبة → الزر يجب أن يكون مُفعَّلاً.
+    await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 4_000).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 5_000).toISOString(),
+            attempts: 2,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+    await expect(btn).to_be_visible(timeout=3_000)
+    await expect(btn).to_be_enabled()
+    assert await btn.get_attribute("aria-disabled") in (None, "false"), "button should be enabled during countdown"
+    assert await btn.get_attribute("data-retry-exhausted") == "false"
+    await page.screenshot(path=str(OUT / "retry_enabled_during_countdown.png"))
+
+    # (2) عند بلوغ "الآن…" يبقى الزر قابلاً للنقر.
+    ready = dialog.get_by_text(re.compile("الإعادة القادمة خلال.*الآن"))
+    await expect(ready).to_be_visible(timeout=8_000)
+    await expect(btn).to_be_enabled()
+    assert await btn.get_attribute("data-retry-exhausted") == "false"
+    await page.screenshot(path=str(OUT / "retry_enabled_at_ready.png"))
+
+    # (3) استنفاد المحاولات → الزر يجب أن يصبح معطّلاً.
+    await page.evaluate(
+        """() => {
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 20_000).toISOString(),
+            attempts: 5,
+            lastError: 'HTTP 500',
+            nextRetryAt: null,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+    await expect(btn).to_be_disabled(timeout=3_000)
+    assert await btn.get_attribute("aria-disabled") == "true"
+    assert await btn.get_attribute("data-retry-exhausted") == "true"
+    await page.screenshot(path=str(OUT / "retry_disabled_when_exhausted.png"))
+
+    # النقر على زر معطّل يجب ألا يُطلق أي عملية مزامنة.
+    triggered = await page.evaluate(
+        """async () => {
+          let fired = false;
+          const handler = () => { fired = true; };
+          window.addEventListener('badel:pref-sync', handler, { once: true });
+          try {
+            const el = document.querySelector('button[data-retry-exhausted="true"]');
+            el?.click();
+            await new Promise(r => setTimeout(r, 200));
+          } finally {
+            window.removeEventListener('badel:pref-sync', handler);
+          }
+          return fired;
+        }"""
+    )
+    assert triggered is False, "disabled retry button must not trigger sync attempts"
+
+    # (4) عودة جدولة صالحة → الزر يعود مُفعَّلاً.
+    await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 6_000).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 30_000).toISOString(),
+            attempts: 3,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+    await expect(btn).to_be_enabled(timeout=3_000)
+    assert await btn.get_attribute("data-retry-exhausted") == "false"
+    await page.screenshot(path=str(OUT / "retry_re_enabled_after_reschedule.png"))
+
+    await ctx.close()
+    print("✓ Retry button toggles correctly with next-retry availability (countdown → ready → exhausted → rescheduled)")
 
 
 async def _test_attempts_exhausted(browser):
@@ -750,6 +878,7 @@ async def main():
             await _test_retry_incomplete_when_still_failing(browser)
             await _test_attempts_and_countdown(browser)
             await _test_countdown_ticks_to_zero_and_switches(browser)
+            await _test_retry_button_toggles_with_schedule(browser)
             await _test_attempts_exhausted(browser)
             await _test_status_transitions_ordered(browser)
             await _test_readable_failure_reason(browser)
@@ -757,7 +886,7 @@ async def main():
 
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy + schedule-toggle states.")
 
 
 if __name__ == "__main__":

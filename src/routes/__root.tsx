@@ -18,7 +18,8 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { CountryDetectedBanner } from "@/components/CountryDetectedBanner";
 import { trackPageview } from "@/lib/analytics";
 import { detectCountryServer } from "@/lib/geo.functions";
-import { hasSavedCountry, saveCountry } from "@/lib/currency-fx";
+import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
+import { hasSavedCountry, saveCountry, loadCountry } from "@/lib/currency-fx";
 
 function NotFoundComponent() {
   return (

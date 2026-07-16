@@ -8,10 +8,16 @@ class MemStorage {
   removeItem(k: string) { this.m.delete(k); }
   clear() { this.m.clear(); }
 }
-(globalThis as any).localStorage = new MemStorage();
-(globalThis as any).window = globalThis;
-(globalThis as any).navigator = { onLine: true };
-(globalThis as any).performance = (globalThis as any).performance ?? { now: () => Date.now() };
+Object.defineProperty(globalThis, "localStorage", { value: new MemStorage(), configurable: true });
+Object.defineProperty(globalThis, "window", { value: globalThis, configurable: true });
+if (!("navigator" in globalThis) || !(globalThis as any).navigator) {
+  Object.defineProperty(globalThis, "navigator", { value: { onLine: true }, configurable: true });
+} else {
+  try { (globalThis as any).navigator.onLine = true; } catch { /* ignore */ }
+}
+if (!(globalThis as any).performance) {
+  Object.defineProperty(globalThis, "performance", { value: { now: () => Date.now() }, configurable: true });
+}
 (globalThis as any).CustomEvent = class { constructor(public type: string, public init?: any) {} };
 (globalThis as any).dispatchEvent = () => true;
 

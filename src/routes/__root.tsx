@@ -142,6 +142,7 @@ function RootComponent() {
       <Outlet />
       <CookieConsent />
       <OnboardingTour />
+      <CountryDetectedBanner />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
     </QueryClientProvider>
   );

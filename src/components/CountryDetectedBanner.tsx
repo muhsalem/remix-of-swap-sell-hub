@@ -152,11 +152,15 @@ export function CountryDetectedBanner() {
           setSelected(res.country as SupportedCode);
         }
       } catch (err) {
+        const info = classifyError(err);
+        setLastError({ ...info, stage: "fetch", at: new Date() });
         setSyncStatus("error");
         void track("sync_pref_fetch", {
           stage: "error",
           duration_ms: Math.round(performance.now() - t0),
-          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+          error: info.message,
+          error_kind: info.kind,
+          error_status: info.status ?? null,
         });
       }
     })();

@@ -59,6 +59,7 @@ async def _restore_session(context: BrowserContext, page):
       localStorage.removeItem('badel:country-banner-dismissed');
       localStorage.removeItem('badel:country-confirmed');
       localStorage.removeItem('badel:pref-sync-queue');
+      localStorage.setItem('badel_onboarding_v1', '1');
     }""")
 
 

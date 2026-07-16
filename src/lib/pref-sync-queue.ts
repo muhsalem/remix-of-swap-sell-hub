@@ -111,26 +111,30 @@ export async function flushPrefSyncQueue(reason: string = "manual"): Promise<voi
   } catch (err) {
     const message = (err as Error)?.message?.slice(0, 200) ?? "unknown";
     const attempts = entry.attempts + 1;
-    writeQueue({ ...entry, attempts, lastError: message });
-    emit({ status: "failed", country: entry.country, error: message });
-    void track("pref_sync_flush", {
-      stage: "error",
-      country: entry.country,
-      reason,
-      attempts,
-      error: message,
-      duration_ms: Math.round(performance.now() - t0),
-    });
 
-    // Exponential backoff: 5s, 15s, 45s, 2m, 6m (capped at 5 retries here).
-    if (attempts <= 5) {
+    // Exponential backoff: 5s, 15s, 45s, 2m, 6m (capped at MAX attempts).
+    let nextRetryAt: string | undefined;
+    if (attempts <= MAX_PREF_SYNC_ATTEMPTS) {
       const delay = Math.min(5_000 * Math.pow(3, attempts - 1), 6 * 60_000);
+      nextRetryAt = new Date(Date.now() + delay).toISOString();
       if (backoffTimer) window.clearTimeout(backoffTimer);
       backoffTimer = window.setTimeout(() => {
         backoffTimer = null;
         void flushPrefSyncQueue(`backoff_attempt_${attempts + 1}`);
       }, delay);
     }
+
+    writeQueue({ ...entry, attempts, lastError: message, nextRetryAt });
+    emit({ status: "failed", country: entry.country, error: message });
+    void track("pref_sync_flush", {
+      stage: "error",
+      country: entry.country,
+      reason,
+      attempts,
+      next_retry_at: nextRetryAt ?? null,
+      error: message,
+      duration_ms: Math.round(performance.now() - t0),
+    });
   } finally {
     flushing = false;
   }

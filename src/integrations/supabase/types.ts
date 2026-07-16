@@ -596,6 +596,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          preferred_country: string | null
           rating: number | null
           terms_accepted_at: string | null
           terms_version: string | null
@@ -614,6 +615,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          preferred_country?: string | null
           rating?: number | null
           terms_accepted_at?: string | null
           terms_version?: string | null
@@ -632,6 +634,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          preferred_country?: string | null
           rating?: number | null
           terms_accepted_at?: string | null
           terms_version?: string | null

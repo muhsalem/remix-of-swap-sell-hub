@@ -457,6 +457,20 @@ export function CountryDetectedBanner() {
             )}
           </div>
 
+          {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={retrySync}
+                aria-label="إعادة محاولة مزامنة تفضيل العملة مع حسابي"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 rounded-full border border-border bg-white text-[11px] font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <RefreshCw className="size-3.5" aria-hidden />
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
+
 
 
           <DialogFooter className="gap-2 sm:gap-2">

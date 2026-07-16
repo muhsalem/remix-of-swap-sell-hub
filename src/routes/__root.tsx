@@ -153,17 +153,55 @@ function AuthListener() {
   const router = useRouter();
   const qc = useQueryClient();
   useEffect(() => {
+    // Pull profile-stored country preference; fall back to pushing local choice up.
+    const syncCountry = async () => {
+      try {
+        const { country } = await getPreferredCountry();
+        if (country === "SAR" || country === "EGP") {
+          if (loadCountry() !== country) saveCountry(country);
+          return;
+        }
+        // No profile pref yet — seed it from current local choice (if user has one).
+        if (hasSavedCountry()) {
+          const local = loadCountry();
+          if (local === "SAR" || local === "EGP") {
+            await setPreferredCountry({ data: { country: local } }).catch(() => {});
+          }
+        }
+      } catch { /* silent — not signed in or transient */ }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") qc.invalidateQueries();
+      if (event !== "SIGNED_OUT") {
+        qc.invalidateQueries();
+        if (event === "SIGNED_IN") void syncCountry();
+      }
     });
+
+    // Push local country changes up to the profile whenever a signed-in user switches.
+    const onCountryChanged = (e: Event) => {
+      const code = (e as CustomEvent<string>).detail;
+      if (code !== "SAR" && code !== "EGP") return;
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          setPreferredCountry({ data: { country: code } }).catch(() => {});
+        }
+      });
+    };
+    window.addEventListener("badel:country-changed", onCountryChanged as EventListener);
+
     // Pageview tracking on every route change (search is an object in TSR)
     const unsub = router.subscribe("onResolved", ({ toLocation }) => {
       trackPageview(toLocation.href ?? toLocation.pathname);
     });
     // First load
     trackPageview(window.location.pathname + window.location.search);
+
+    // If already signed in on mount, sync immediately.
+    supabase.auth.getSession().then(({ data }) => { if (data.session) void syncCountry(); });
+
     // Auto-detect visitor country from edge headers (once, only if user hasn't chosen)
     if (!hasSavedCountry()) {
       detectCountryServer()
@@ -174,7 +212,11 @@ function AuthListener() {
         })
         .catch(() => { /* silent — fallback to locale/timezone detection */ });
     }
-    return () => { subscription.unsubscribe(); unsub(); };
+    return () => {
+      subscription.unsubscribe();
+      unsub();
+      window.removeEventListener("badel:country-changed", onCountryChanged as EventListener);
+    };
   }, [router, qc]);
   return null;
 }

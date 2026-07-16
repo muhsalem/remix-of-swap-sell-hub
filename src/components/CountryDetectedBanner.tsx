@@ -324,6 +324,63 @@ export function CountryDetectedBanner() {
             </div>
           </div>
 
+          {/* Sync status with the signed-in user's profile */}
+          <div
+            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            {syncStatus === "guest" && (
+              <>
+                <CloudOff className="size-4 text-muted-foreground shrink-0" aria-hidden />
+                <span className="text-muted-foreground">
+                  لست مسجلاً الدخول — سيتم حفظ التفضيل على هذا الجهاز فقط.
+                </span>
+              </>
+            )}
+            {syncStatus === "syncing" && (
+              <>
+                <Loader2 className="size-4 text-primary animate-spin shrink-0" aria-hidden />
+                <span className="text-foreground font-bold">جاري المزامنة مع حسابك…</span>
+              </>
+            )}
+            {syncStatus === "saved" && (
+              <>
+                <Cloud className="size-4 text-emerald-600 shrink-0" aria-hidden />
+                <span className="text-foreground">
+                  <span className="font-bold text-emerald-700">تمّت المزامنة بنجاح</span>
+                  {lastSyncedAt && (
+                    <>
+                      {" "}· آخر مزامنة:{" "}
+                      <time dateTime={lastSyncedAt.toISOString()} className="font-bold">
+                        {lastSyncedAt.toLocaleTimeString("ar", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </>
+                  )}
+                </span>
+              </>
+            )}
+            {syncStatus === "error" && (
+              <>
+                <CloudOff className="size-4 text-red-600 shrink-0" aria-hidden />
+                <span className="text-red-700 font-bold">
+                  تعذّر حفظ التفضيل في حسابك — تم الحفظ على الجهاز فقط.
+                </span>
+              </>
+            )}
+            {syncStatus === "idle" && (
+              <>
+                <Cloud className="size-4 text-muted-foreground shrink-0" aria-hidden />
+                <span className="text-muted-foreground">جاهز للمزامنة عند الحفظ.</span>
+              </>
+            )}
+          </div>
+
+
+
           <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"

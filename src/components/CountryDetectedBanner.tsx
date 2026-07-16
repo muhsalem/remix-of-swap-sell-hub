@@ -178,6 +178,58 @@ export function CountryDetectedBanner() {
 
   const openModal = () => setModalOpen(true);
 
+  const runSync = async (isRetry = false) => {
+    if (!(signedIn && (selected === "SAR" || selected === "EGP"))) return;
+    setSyncStatus("syncing");
+    const t0 = performance.now();
+    void track("sync_pref_save", {
+      stage: "start",
+      country: selected,
+      from: detected,
+      source,
+      retry: isRetry,
+    });
+    try {
+      const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+      const res = await queuePreferredCountry(selected);
+      const duration_ms = Math.round(performance.now() - t0);
+      if (res.synced) {
+        const now = new Date();
+        setLastSyncedAt(now);
+        setSyncStatus("saved");
+        void track("sync_pref_save", {
+          stage: "success",
+          country: selected,
+          duration_ms,
+          last_synced_at: now.toISOString(),
+          retry: isRetry,
+        });
+        window.setTimeout(() => {
+          setModalOpen(false);
+          setVisible(false);
+        }, 900);
+      } else {
+        setSyncStatus(online ? "queued" : "offline");
+        void track("sync_pref_save", {
+          stage: "queued",
+          country: selected,
+          online,
+          duration_ms,
+          retry: isRetry,
+        });
+      }
+    } catch (err) {
+      setSyncStatus("error");
+      void track("sync_pref_save", {
+        stage: "error",
+        country: selected,
+        duration_ms: Math.round(performance.now() - t0),
+        error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        retry: isRetry,
+      });
+    }
+  };
+
   const save = async () => {
     saveCountry(selected);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
@@ -188,63 +240,18 @@ export function CountryDetectedBanner() {
       source,
     });
 
-    // Persist to server profile when signed in and currency is server-supported.
     if (signedIn && (selected === "SAR" || selected === "EGP")) {
-      setSyncStatus("syncing");
-      const t0 = performance.now();
-      void track("sync_pref_save", {
-        stage: "start",
-        country: selected,
-        from: detected,
-        source,
-      });
-      try {
-        const online = typeof navigator !== "undefined" ? navigator.onLine : true;
-        const res = await queuePreferredCountry(selected);
-        const duration_ms = Math.round(performance.now() - t0);
-        if (res.synced) {
-          const now = new Date();
-          setLastSyncedAt(now);
-          setSyncStatus("saved");
-          void track("sync_pref_save", {
-            stage: "success",
-            country: selected,
-            duration_ms,
-            last_synced_at: now.toISOString(),
-          });
-          window.setTimeout(() => {
-            setModalOpen(false);
-            setVisible(false);
-          }, 900);
-        } else {
-          // Kept in the offline queue — will retry automatically.
-          setSyncStatus(online ? "queued" : "offline");
-          void track("sync_pref_save", {
-            stage: "queued",
-            country: selected,
-            online,
-            duration_ms,
-          });
-          window.setTimeout(() => {
-            setModalOpen(false);
-            setVisible(false);
-          }, 1400);
-        }
-        return;
-      } catch (err) {
-        setSyncStatus("error");
-        void track("sync_pref_save", {
-          stage: "error",
-          country: selected,
-          duration_ms: Math.round(performance.now() - t0),
-          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
-        });
-        return;
-      }
+      await runSync(false);
+      return;
     }
 
     setModalOpen(false);
     setVisible(false);
+  };
+
+  const retrySync = () => {
+    void track("sync_pref_retry", { country: selected, from_status: syncStatus });
+    void runSync(true);
   };
 
   const dismiss = () => {

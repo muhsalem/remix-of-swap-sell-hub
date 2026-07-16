@@ -577,6 +577,94 @@ async def _test_readable_failure_reason(browser):
     print(f"✓ Readable failure reason: server(500)@{dt1} → network@{dt2} (badges + stage + timestamps updated)")
 
 
+EXHAUSTED_TEXT = "استنفدت المحاولات التلقائية — استخدم زر إعادة المحاولة يدوياً."
+
+
+async def _inject_exhausted_entry(page):
+    """يضبط طابور مزامنة مستنفَد (attempts=5, بدون nextRetryAt) ويُشعر البانر."""
+    await page.evaluate(
+        """() => {
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 90_000).toISOString(),
+            attempts: 5,
+            lastError: 'network_unreachable',
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'network_unreachable' }
+          }));
+        }"""
+    )
+
+
+async def _test_exhausted_message_offline_and_queued(browser):
+    """يتأكّد أن رسالة "استنفدت المحاولات التلقائية" تظهر بنفس النص المطابق
+    داخل مودال حالة المزامنة في كلتا الحالتين: الأوفلاين والطابور بعد فشل
+    الخادم، وأن سطر "الإعادة القادمة خلال" غير معروض عند الاستنفاد.
+    """
+    # --- A) حالة الأوفلاين ---
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    await ctx.set_offline(True)
+    await _click_save(dialog)
+    status = dialog.locator("[role=status]").first
+    await expect(status).to_contain_text(
+        re.compile("غير متصل|طابور المزامنة"), timeout=10_000
+    )
+
+    await _inject_exhausted_entry(page)
+
+    exhausted_a = dialog.get_by_text(EXHAUSTED_TEXT, exact=True)
+    await expect(exhausted_a).to_be_visible(timeout=5_000)
+    attempts_a = dialog.get_by_text(re.compile("المحاولات:"))
+    await expect(attempts_a).to_contain_text(re.compile(r"5\s*/\s*5"))
+    # الإعادة التلقائية موقوفة — لا عدّاد ولا موعد قادم.
+    await expect(dialog.get_by_text(re.compile("الإعادة القادمة خلال"))).to_have_count(0)
+    await page.screenshot(path=str(OUT / "exhausted_offline.png"))
+    await ctx.close()
+
+    # --- B) حالة الطابور (queued) بعد فشل الخادم أونلاين ---
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+
+    async def always_fail(route: Route):
+        if "setPreferredCountry" in route.request.url:
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"forced"}')
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", always_fail)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    await _click_save(dialog)
+    status = dialog.locator("[role=status]").first
+    # عند فشل flush أونلاين، الحالة تنتقل إلى "queued" (نص "طابور المزامنة")
+    # أو إلى "error" إذا رمى استدعاء الطابور استثناء — كلاهما يعرض صندوق المحاولات.
+    await expect(status).to_contain_text(
+        re.compile("طابور المزامنة|تعذّر حفظ التفضيل"), timeout=15_000
+    )
+
+    await _inject_exhausted_entry(page)
+
+    exhausted_b = dialog.get_by_text(EXHAUSTED_TEXT, exact=True)
+    await expect(exhausted_b).to_be_visible(timeout=5_000)
+    attempts_b = dialog.get_by_text(re.compile("المحاولات:"))
+    await expect(attempts_b).to_contain_text(re.compile(r"5\s*/\s*5"))
+    await expect(dialog.get_by_text(re.compile("الإعادة القادمة خلال"))).to_have_count(0)
+    await page.screenshot(path=str(OUT / "exhausted_queued.png"))
+    await ctx.close()
+
+    print("✓ Exhausted message matches exactly in both offline and queued states")
+
+
 async def main():
     _require_auth()
     async with async_playwright() as pw:
@@ -589,9 +677,10 @@ async def main():
             await _test_attempts_exhausted(browser)
             await _test_status_transitions_ordered(browser)
             await _test_readable_failure_reason(browser)
+            await _test_exhausted_message_offline_and_queued(browser)
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy states.")
 
 
 if __name__ == "__main__":

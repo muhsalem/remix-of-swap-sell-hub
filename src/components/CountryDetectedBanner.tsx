@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
+import { track } from "@/lib/analytics";
 import { MapPin, Check, X } from "lucide-react";
 
 const DISMISS_KEY = "badel:country-banner-dismissed";
@@ -15,6 +16,7 @@ export function CountryDetectedBanner() {
   const [visible, setVisible] = useState(false);
   const [country, setCountry] = useState<"SAR" | "EGP">("SAR");
   const [source, setSource] = useState<string>("");
+  const trackedRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -28,12 +30,34 @@ export function CountryDetectedBanner() {
     // Enrich with edge-header source label if available
     detectCountryServer()
       .then((r) => {
+        const detected: "SAR" | "EGP" =
+          r?.country === "SAR" || r?.country === "EGP" ? r.country : current;
+        const src = r?.source || "client-fallback";
         if (r?.source) setSource(r.source);
         if (r?.country && (r.country === "SAR" || r.country === "EGP")) {
           setCountry(r.country);
         }
+        if (!trackedRef.current) {
+          trackedRef.current = true;
+          void track("country_detected", {
+            detected,
+            local: current,
+            source: src,
+            matches_local: detected === current,
+          });
+        }
       })
-      .catch(() => { /* silent */ });
+      .catch(() => {
+        if (!trackedRef.current) {
+          trackedRef.current = true;
+          void track("country_detected", {
+            detected: current,
+            local: current,
+            source: "client-fallback",
+            matches_local: true,
+          });
+        }
+      });
 
     setVisible(true);
   }, []);
@@ -47,16 +71,24 @@ export function CountryDetectedBanner() {
   const confirm = () => {
     saveCountry(country);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
+    void track("country_confirmed", { action: "confirm", country, source: source || "client-fallback" });
     setVisible(false);
   };
   const switchTo = () => {
     saveCountry(other);
     setCountry(other);
     try { localStorage.setItem(CONFIRMED_KEY, "1"); } catch { /* ignore */ }
+    void track("country_confirmed", {
+      action: "switch",
+      country: other,
+      from: country,
+      source: source || "client-fallback",
+    });
     setVisible(false);
   };
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }
+    void track("country_confirmed", { action: "dismiss", country, source: source || "client-fallback" });
     setVisible(false);
   };
 

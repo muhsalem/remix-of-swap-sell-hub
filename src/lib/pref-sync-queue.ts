@@ -22,11 +22,14 @@ const EVENT = "badel:pref-sync";
 export type SyncCountry = "SAR" | "EGP";
 export type SyncStatus = "queued" | "syncing" | "synced" | "failed" | "offline";
 
-type QueueEntry = {
+export const MAX_PREF_SYNC_ATTEMPTS = 5;
+
+export type QueueEntry = {
   country: SyncCountry;
   queuedAt: string; // ISO
   attempts: number;
   lastError?: string;
+  nextRetryAt?: string; // ISO — when the next automatic retry is scheduled
 };
 
 function readQueue(): QueueEntry | null {

@@ -365,6 +365,82 @@ async def _test_attempts_and_countdown(browser):
 
 
 
+async def _test_countdown_ticks_to_zero_and_switches(browser):
+    """يتحقق أن قيمة الثواني في العدّاد التنازلي تنخفض فعلياً باتجاه الصفر
+    عبر عدة قراءات متتالية (s1 > s2 > s3 > s4)، وأن النص يتحوّل فور
+    انتهاء الموعد إلى حالة الجاهزية للإعادة القادمة ("الآن…") بدلاً من
+    عرض قيمة ثوانٍ سالبة أو التجمّد.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+
+    # موعد الإعادة القادمة قريب جداً (~5 ثوانٍ) لتوثيق تحوّل النص بسرعة.
+    await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 5_000).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 10_000).toISOString(),
+            attempts: 3,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+
+    countdown_line = dialog.get_by_text(re.compile("الإعادة القادمة خلال"))
+    await expect(countdown_line).to_be_visible(timeout=3_000)
+
+    def _extract_seconds(text: str) -> int:
+        m = re.search(r"(?:(\d+)\s*د)?\s*(\d+)\s*ث", text)
+        if not m:
+            return -1
+        return int(m.group(1) or 0) * 60 + int(m.group(2))
+
+    # التقاط 4 عيّنات متتالية للتأكد من الاتجاه التنازلي نحو الصفر.
+    samples = []
+    for _ in range(4):
+        txt = await countdown_line.inner_text()
+        samples.append((txt, _extract_seconds(txt)))
+        await page.wait_for_timeout(1100)
+
+    values = [s for _, s in samples]
+    assert all(v >= 0 for v in values), f"unexpected negative countdown value: {samples!r}"
+    assert values[0] > values[-1], f"countdown did not decrease across samples: {samples!r}"
+    # كل عيّنة يجب ألا تتجاوز سابقتها (متسلسلة غير متزايدة).
+    for i in range(1, len(values)):
+        assert values[i] <= values[i - 1], (
+            f"countdown went up between samples {i-1}→{i}: {samples!r}"
+        )
+    await page.screenshot(path=str(OUT / "countdown_ticks_down.png"))
+
+    # بعد انقضاء الموعد الفعلي، يجب أن يتحوّل النص إلى "الآن…" مباشرة
+    # (حالة الجاهزية لإطلاق المحاولة القادمة) بدل عرض قيمة ثوانٍ.
+    ready_line = dialog.get_by_text(re.compile("الإعادة القادمة خلال.*الآن"))
+    await expect(ready_line).to_be_visible(timeout=8_000)
+    final_text = await countdown_line.inner_text()
+    assert "الآن" in final_text, f"expected 'الآن…' after deadline, got: {final_text!r}"
+    assert not re.search(r"\d+\s*ث", final_text), (
+        f"countdown seconds should be replaced by 'الآن…' after deadline, got: {final_text!r}"
+    )
+    await page.screenshot(path=str(OUT / "countdown_reached_zero.png"))
+
+    await ctx.close()
+    print(f"✓ Countdown ticks toward zero and switches to 'الآن…' after deadline (samples={values})")
+
+
+
+
+
+
 async def _test_attempts_exhausted(browser):
     """يحقن طابور مزامنة مستنفَد (attempts=MAX, بدون nextRetryAt) ويتحقق:
       - عرض "استنفدت المحاولات التلقائية".

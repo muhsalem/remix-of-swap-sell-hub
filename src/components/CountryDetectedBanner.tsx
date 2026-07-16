@@ -249,10 +249,58 @@ export function CountryDetectedBanner() {
     setVisible(false);
   };
 
-  const retrySync = () => {
+  const retrySync = async () => {
     void track("sync_pref_retry", { country: selected, from_status: syncStatus });
+
+    // If there's a pending entry in the offline queue, try draining it first.
+    // The queue's flush path already emits its own `pref_sync_flush` analytics;
+    // we add a retry-scoped success event here so dashboards can attribute
+    // successful drains to the retry button specifically.
+    const pending = typeof window !== "undefined" ? getPendingPrefSync() : null;
+    if (pending) {
+      setSyncStatus("syncing");
+      const t0 = performance.now();
+      void track("pref_sync_flush", {
+        stage: "retry_start",
+        country: pending.country,
+        reason: "retry_button",
+        from_status: syncStatus,
+      });
+      try {
+        await flushPrefSyncQueue("retry_button");
+      } catch { /* flush handles its own errors */ }
+
+      const drained = getPendingPrefSync() === null;
+      const duration_ms = Math.round(performance.now() - t0);
+      if (drained) {
+        const now = new Date();
+        setLastSyncedAt(now);
+        setSyncStatus("saved");
+        void track("pref_sync_flush", {
+          stage: "retry_success",
+          country: pending.country,
+          reason: "retry_button",
+          duration_ms,
+          last_synced_at: now.toISOString(),
+        });
+        window.setTimeout(() => {
+          setModalOpen(false);
+          setVisible(false);
+        }, 900);
+        return;
+      }
+      void track("pref_sync_flush", {
+        stage: "retry_incomplete",
+        country: pending.country,
+        reason: "retry_button",
+        duration_ms,
+      });
+    }
+
+    // Fallback: re-run the save path (covers no-queue error states).
     void runSync(true);
   };
+
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }

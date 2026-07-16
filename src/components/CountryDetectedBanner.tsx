@@ -86,6 +86,20 @@ export function CountryDetectedBanner() {
     return [...LAUNCH, ...rest];
   }, []);
 
+  // Keyboard: Esc dismisses banner while modal is closed.
+  useEffect(() => {
+    if (!visible || modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        dismiss();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, modalOpen]);
+
   if (!visible) return null;
 
   const fx = FX_VS_SAR[detected];
@@ -94,6 +108,7 @@ export function CountryDetectedBanner() {
     source === "edge-header"
       ? "من عنوان الاتصال (Edge Header)"
       : "من إعدادات المتصفح واللغة";
+  const sourceShort = source === "edge-header" ? "شبكة الاتصال" : "لغة المتصفح";
 
   const openModal = () => setModalOpen(true);
 

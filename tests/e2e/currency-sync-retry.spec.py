@@ -79,9 +79,52 @@ def _retry_button(dialog):
     return dialog.get_by_role("button", name=re.compile("إعادة محاولة مزامنة"))
 
 
+def _capture_analytics(page):
+    """Sniffs POSTs to the analytics_events REST endpoint and returns a
+    live list of {event_name, meta} dicts. Failures are silently ignored —
+    analytics fires and forgets in the client too.
+    """
+    events: list[dict] = []
+
+    def on_request(req):
+        try:
+            if req.method != "POST":
+                return
+            if "analytics_events" not in req.url:
+                return
+            body = req.post_data
+            if not body:
+                return
+            payload = json.loads(body)
+            rows = payload if isinstance(payload, list) else [payload]
+            for row in rows:
+                events.append({
+                    "event_name": row.get("event_name"),
+                    "meta": row.get("meta") or {},
+                })
+        except Exception:
+            pass
+
+    page.on("request", on_request)
+    return events
+
+
+async def _wait_for_event(events: list[dict], predicate, timeout_ms: int = 8000):
+    """Poll `events` until predicate(evt) matches one entry, or timeout."""
+    deadline = asyncio.get_event_loop().time() + timeout_ms / 1000
+    while asyncio.get_event_loop().time() < deadline:
+        for e in events:
+            if predicate(e):
+                return e
+        await asyncio.sleep(0.15)
+    return None
+
+
+
 async def _test_retry_after_server_error(browser):
     ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
     page = await ctx.new_page()
+    events = _capture_analytics(page)
     await _restore_session(ctx, page)
 
     fail_mode = {"on": True}
@@ -112,19 +155,44 @@ async def _test_retry_after_server_error(browser):
 
     # Recover: stop failing, click retry.
     fail_mode["on"] = False
+    events.clear()  # focus on the retry-click window only
     await retry_btn.click()
 
     await expect(status).to_contain_text("تمّت المزامنة بنجاح", timeout=10_000)
     await expect(status.locator("time[datetime]")).to_be_visible()
     await page.screenshot(path=str(OUT / "err_02_saved_after_retry.png"))
 
+    # Observability: retry_start THEN retry_success on pref_sync_flush.
+    ev_start = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_start",
+    )
+    assert ev_start is not None, f"missing pref_sync_flush.retry_start; captured={[e['event_name']+':'+str(e['meta'].get('stage')) for e in events]}"
+
+    ev_success = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_success",
+    )
+    assert ev_success is not None, "missing pref_sync_flush.retry_success after successful retry"
+    assert "duration_ms" in ev_success["meta"], "retry_success must include duration_ms"
+
+    # sync_pref_retry emitted by the button click itself
+    ev_click = await _wait_for_event(events, lambda e: e["event_name"] == "sync_pref_retry")
+    assert ev_click is not None, "missing sync_pref_retry (button click event)"
+
+    # retry_incomplete MUST NOT fire on a successful retry
+    bad = [e for e in events if e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_incomplete"]
+    assert not bad, f"unexpected retry_incomplete on success path: {bad}"
+
     await ctx.close()
-    print("✓ Retry after server error: error → saved")
+    print("✓ Retry after server error: retry_start + retry_success emitted (no retry_incomplete)")
+
 
 
 async def _test_retry_after_offline(browser):
     ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
     page = await ctx.new_page()
+    events = _capture_analytics(page)
     await _restore_session(ctx, page)
     await page.reload(wait_until="domcontentloaded")
 
@@ -146,14 +214,79 @@ async def _test_retry_after_offline(browser):
 
     # Back online, click retry → should drain the queue and land on saved.
     await ctx.set_offline(False)
+    events.clear()  # focus the analytics assertions on the retry-click window
     await retry_btn.click()
 
     await expect(status).to_contain_text("تمّت المزامنة بنجاح", timeout=15_000)
     await expect(status.locator("time[datetime]")).to_be_visible()
     await page.screenshot(path=str(OUT / "off_02_saved_after_retry.png"))
 
+    # Observability from the queue-drain path: retry_start + retry_success.
+    ev_start = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_start",
+    )
+    assert ev_start is not None, "missing pref_sync_flush.retry_start on queued retry"
+
+    ev_success = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_success",
+    )
+    assert ev_success is not None, "missing pref_sync_flush.retry_success on queued retry"
+
+    ev_click = await _wait_for_event(events, lambda e: e["event_name"] == "sync_pref_retry")
+    assert ev_click is not None, "missing sync_pref_retry (button click)"
+
     await ctx.close()
-    print("✓ Retry after offline: offline/queued → saved")
+    print("✓ Retry after offline: retry_start + retry_success emitted from queue drain")
+
+
+async def _test_retry_incomplete_when_still_failing(browser):
+    """المسار السلبي: بعد فشل الخادم، النقر على "إعادة المحاولة" مع بقاء
+    الخادم فاشلاً يجب أن يُصدر `pref_sync_flush.retry_incomplete` لا
+    `retry_success`.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    events = _capture_analytics(page)
+    await _restore_session(ctx, page)
+
+    async def always_fail(route: Route):
+        if "setPreferredCountry" in route.request.url:
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"still_failing"}')
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", always_fail)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+    await _click_save(dialog)
+    status = dialog.locator("[role=status]")
+    await expect(status).to_contain_text(re.compile("تعذّر حفظ التفضيل"), timeout=10_000)
+
+    retry_btn = _retry_button(dialog)
+    events.clear()
+    await retry_btn.click()
+
+    # Give the retry a moment to complete a full round-trip + analytics flush.
+    ev_incomplete = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush"
+        and e["meta"].get("stage") in ("retry_incomplete", "error"),
+        timeout_ms=12_000,
+    )
+    assert ev_incomplete is not None, "expected retry_incomplete (or flush error) after failed retry"
+
+    ev_success = [e for e in events if e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_success"]
+    assert not ev_success, f"retry_success must NOT fire while server keeps failing: {ev_success}"
+
+    await page.screenshot(path=str(OUT / "err_03_retry_incomplete.png"))
+    await ctx.close()
+    print("✓ Retry-incomplete path: retry_incomplete emitted, no retry_success")
+
+
 
 async def _test_attempts_and_countdown(browser):
     """يحقن طابور مزامنة قيد الإعادة (attempts=2, nextRetryAt خلال ~12s)
@@ -302,6 +435,7 @@ async def main():
         try:
             await _test_retry_after_server_error(browser)
             await _test_retry_after_offline(browser)
+            await _test_retry_incomplete_when_still_failing(browser)
             await _test_attempts_and_countdown(browser)
             await _test_attempts_exhausted(browser)
         finally:

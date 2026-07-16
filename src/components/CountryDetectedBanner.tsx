@@ -100,6 +100,26 @@ export function CountryDetectedBanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, modalOpen]);
 
+  // Auto-hide after 10s of inactivity: silently accept the detected country
+  // and persist so the banner does not re-appear next visit.
+  useEffect(() => {
+    if (!visible || modalOpen) return;
+    const t = window.setTimeout(() => {
+      try {
+        saveCountry(detected);
+        localStorage.setItem(CONFIRMED_KEY, "1");
+      } catch { /* ignore */ }
+      void track("country_confirmed", {
+        action: "auto_timeout",
+        country: detected,
+        source,
+        timeout_ms: 10000,
+      });
+      setVisible(false);
+    }, 10000);
+    return () => window.clearTimeout(t);
+  }, [visible, modalOpen, detected, source]);
+
   if (!visible) return null;
 
   const fx = FX_VS_SAR[detected];

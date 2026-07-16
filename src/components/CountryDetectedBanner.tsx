@@ -78,7 +78,19 @@ export function CountryDetectedBanner() {
     at: Date;
   } | null>(null);
   const [pendingEntry, setPendingEntry] = useState<QueueEntry | null>(null);
-  const [now, setNow] = useState<number>(() => Date.now());
+  // Monotonic clock tick — driven by performance.now() so system-clock
+  // jumps (NTP resync, user changing device time, DST) cannot alter the
+  // countdown. Only used as a heartbeat; the actual remaining time is
+  // computed against a captured anchor below.
+  const perfNow = () =>
+    typeof performance !== "undefined" && typeof performance.now === "function"
+      ? performance.now()
+      : Date.now();
+  const [tickPerf, setTickPerf] = useState<number>(() => perfNow());
+  // Anchor: captured once per distinct `nextRetryAt`. Stores the perf
+  // timestamp when we observed it and the wall-clock remaining at that
+  // instant. Subsequent ticks derive remaining purely from perf deltas.
+  const anchorRef = useRef<{ key: string; anchorPerf: number; remainingAtAnchor: number } | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();

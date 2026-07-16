@@ -124,6 +124,7 @@ async def _wait_for_event(events: list[dict], predicate, timeout_ms: int = 8000)
 async def _test_retry_after_server_error(browser):
     ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
     page = await ctx.new_page()
+    events = _capture_analytics(page)
     await _restore_session(ctx, page)
 
     fail_mode = {"on": True}
@@ -154,14 +155,38 @@ async def _test_retry_after_server_error(browser):
 
     # Recover: stop failing, click retry.
     fail_mode["on"] = False
+    events.clear()  # focus on the retry-click window only
     await retry_btn.click()
 
     await expect(status).to_contain_text("تمّت المزامنة بنجاح", timeout=10_000)
     await expect(status.locator("time[datetime]")).to_be_visible()
     await page.screenshot(path=str(OUT / "err_02_saved_after_retry.png"))
 
+    # Observability: retry_start THEN retry_success on pref_sync_flush.
+    ev_start = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_start",
+    )
+    assert ev_start is not None, f"missing pref_sync_flush.retry_start; captured={[e['event_name']+':'+str(e['meta'].get('stage')) for e in events]}"
+
+    ev_success = await _wait_for_event(
+        events,
+        lambda e: e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_success",
+    )
+    assert ev_success is not None, "missing pref_sync_flush.retry_success after successful retry"
+    assert "duration_ms" in ev_success["meta"], "retry_success must include duration_ms"
+
+    # sync_pref_retry emitted by the button click itself
+    ev_click = await _wait_for_event(events, lambda e: e["event_name"] == "sync_pref_retry")
+    assert ev_click is not None, "missing sync_pref_retry (button click event)"
+
+    # retry_incomplete MUST NOT fire on a successful retry
+    bad = [e for e in events if e["event_name"] == "pref_sync_flush" and e["meta"].get("stage") == "retry_incomplete"]
+    assert not bad, f"unexpected retry_incomplete on success path: {bad}"
+
     await ctx.close()
-    print("✓ Retry after server error: error → saved")
+    print("✓ Retry after server error: retry_start + retry_success emitted (no retry_incomplete)")
+
 
 
 async def _test_retry_after_offline(browser):

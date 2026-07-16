@@ -652,12 +652,24 @@ export function CountryDetectedBanner() {
             const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
             const countdown = formatArabicCountdown(secs);
             const exhausted = attempts >= max && !pendingEntry.nextRetryAt;
+            const isReadyNow = secs === 0 && !exhausted && !!pendingEntry.nextRetryAt;
+            const liveMessage = exhausted
+              ? "استنفدت محاولات إعادة المزامنة التلقائية."
+              : isReadyNow
+                ? "جاهز لإعادة المحاولة الآن."
+                : "";
             return (
-              <div
-                className="mt-2 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5 text-[11px] leading-relaxed"
-                role="status"
-                aria-live="polite"
-              >
+              <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5 text-[11px] leading-relaxed">
+                {/* Screen-reader-only status: announces only on meaningful transitions
+                    (ready-now / exhausted) so readers don't spam every tick. */}
+                <span
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="sr-only"
+                >
+                  {liveMessage}
+                </span>
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-amber-900">
                     <span className="font-bold">المحاولات:</span>{" "}
@@ -665,7 +677,7 @@ export function CountryDetectedBanner() {
                     <span className="text-amber-700"> / {max}</span>
                   </div>
                   {countdown && !exhausted && (
-                    <div className="text-amber-900">
+                    <div className="text-amber-900" aria-hidden="true">
                       <span className="font-bold">الإعادة القادمة خلال:</span>{" "}
                       <span className="tabular-nums font-bold">{countdown}</span>
                     </div>

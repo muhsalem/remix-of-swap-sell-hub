@@ -750,10 +750,12 @@ async def main():
             await _test_retry_after_offline(browser)
             await _test_retry_incomplete_when_still_failing(browser)
             await _test_attempts_and_countdown(browser)
+            await _test_countdown_ticks_to_zero_and_switches(browser)
             await _test_attempts_exhausted(browser)
             await _test_status_transitions_ordered(browser)
             await _test_readable_failure_reason(browser)
             await _test_exhausted_message_offline_and_queued(browser)
+
         finally:
             await browser.close()
     print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy states.")

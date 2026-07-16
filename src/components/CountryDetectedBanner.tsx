@@ -84,24 +84,39 @@ export function CountryDetectedBanner() {
 
     // Check sign-in status and fetch server-side preference to display last-sync info.
     (async () => {
+      const t0 = performance.now();
       try {
         const { data } = await supabase.auth.getUser();
         if (!data.user) {
           setSignedIn(false);
           setSyncStatus("guest");
+          void track("sync_pref_fetch", { stage: "guest", signed_in: false });
           return;
         }
         setSignedIn(true);
         setSyncStatus("syncing");
+        void track("sync_pref_fetch", { stage: "start", signed_in: true });
         const res = await getPreferredCountry();
+        const duration_ms = Math.round(performance.now() - t0);
         setLastSyncedAt(new Date());
         setSyncStatus("saved");
+        void track("sync_pref_fetch", {
+          stage: "success",
+          signed_in: true,
+          has_server_pref: !!res?.country,
+          server_country: res?.country ?? null,
+          duration_ms,
+        });
         if (res?.country && FX_VS_SAR[res.country as SupportedCode]) {
-          // Reflect server preference in selection if present.
           setSelected(res.country as SupportedCode);
         }
-      } catch {
+      } catch (err) {
         setSyncStatus("error");
+        void track("sync_pref_fetch", {
+          stage: "error",
+          duration_ms: Math.round(performance.now() - t0),
+          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        });
       }
     })();
 
@@ -173,17 +188,38 @@ export function CountryDetectedBanner() {
     // Persist to server profile when signed in and currency is server-supported.
     if (signedIn && (selected === "SAR" || selected === "EGP")) {
       setSyncStatus("syncing");
+      const t0 = performance.now();
+      void track("sync_pref_save", {
+        stage: "start",
+        country: selected,
+        from: detected,
+        source,
+      });
       try {
         await setPreferredCountry({ data: { country: selected } });
-        setLastSyncedAt(new Date());
+        const duration_ms = Math.round(performance.now() - t0);
+        const now = new Date();
+        setLastSyncedAt(now);
         setSyncStatus("saved");
+        void track("sync_pref_save", {
+          stage: "success",
+          country: selected,
+          duration_ms,
+          last_synced_at: now.toISOString(),
+        });
         window.setTimeout(() => {
           setModalOpen(false);
           setVisible(false);
         }, 900);
         return;
-      } catch {
+      } catch (err) {
         setSyncStatus("error");
+        void track("sync_pref_save", {
+          stage: "error",
+          country: selected,
+          duration_ms: Math.round(performance.now() - t0),
+          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        });
         return;
       }
     }

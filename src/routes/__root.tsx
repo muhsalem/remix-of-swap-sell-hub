@@ -155,6 +155,9 @@ function AuthListener() {
   useEffect(() => {
     // Start live FX auto-refresh (cache-first, backoff on outage, broadcast on update).
     void import("@/lib/fx-live-init").then((m) => m.initFxLive());
+    // Boot offline-tolerant sync queue: replays any pending country prefs
+    // when the browser regains connectivity / focus / visibility.
+    void import("@/lib/pref-sync-queue").then((m) => m.initPrefSyncQueue());
     // Pull profile-stored country preference; fall back to pushing local choice up.
     const syncCountry = async () => {
       try {
@@ -167,7 +170,8 @@ function AuthListener() {
         if (hasSavedCountry()) {
           const local = loadCountry();
           if (local === "SAR" || local === "EGP") {
-            await setPreferredCountry({ data: { country: local } }).catch(() => {});
+            const { queuePreferredCountry } = await import("@/lib/pref-sync-queue");
+            await queuePreferredCountry(local).catch(() => {});
           }
         }
       } catch { /* silent — not signed in or transient */ }
@@ -178,20 +182,22 @@ function AuthListener() {
       router.invalidate();
       if (event !== "SIGNED_OUT") {
         qc.invalidateQueries();
-        if (event === "SIGNED_IN") void syncCountry();
+        if (event === "SIGNED_IN") {
+          void syncCountry();
+          // Drain any offline-queued pref changes now that we have a session.
+          void import("@/lib/pref-sync-queue").then((m) => m.flushPrefSyncQueue("signed_in"));
+        }
       }
     });
 
-    // Push local country changes up to the profile whenever a signed-in user switches.
+    // Push local country changes up through the offline-tolerant queue.
     const onCountryChanged = (e: Event) => {
       const code = (e as CustomEvent<string>).detail;
       if (code !== "SAR" && code !== "EGP") return;
       void track("country_confirmed", { action: "manual-change", country: code, source: "user-action" });
-      supabase.auth.getSession().then(({ data }) => {
-        if (data.session) {
-          setPreferredCountry({ data: { country: code } }).catch(() => {});
-        }
-      });
+      void import("@/lib/pref-sync-queue").then((m) =>
+        m.queuePreferredCountry(code as "SAR" | "EGP").catch(() => {}),
+      );
     };
     window.addEventListener("badel:country-changed", onCountryChanged as EventListener);
 

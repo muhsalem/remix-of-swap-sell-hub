@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { FX_VS_SAR, loadCountry, saveCountry } from "@/lib/currency-fx";
 import { detectCountryServer } from "@/lib/geo.functions";
 import { getPreferredCountry } from "@/lib/currency-pref.functions";
-import { queuePreferredCountry, flushPrefSyncQueue, getPendingPrefSync } from "@/lib/pref-sync-queue";
+import { queuePreferredCountry, flushPrefSyncQueue, getPendingPrefSync, MAX_PREF_SYNC_ATTEMPTS, type QueueEntry } from "@/lib/pref-sync-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react";

@@ -155,6 +155,82 @@ async def _test_retry_after_offline(browser):
     await ctx.close()
     print("✓ Retry after offline: offline/queued → saved")
 
+async def _test_attempts_and_countdown(browser):
+    """يحقن طابور مزامنة قيد الإعادة (attempts=2, nextRetryAt خلال ~12s)
+    ويتحقق داخل المودال من:
+      - عرض عدّاد المحاولات "2 / 5".
+      - سطر "الإعادة القادمة خلال:" مع قيمة ثواني.
+      - سطر "وقت الإعادة القادمة:" مع <time datetime>.
+      - تناقص العدّاد التنازلي مع مرور الوقت (تحديث كل ثانية).
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+
+    next_iso = await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 12_000).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 30_000).toISOString(),
+            attempts: 2,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+          return next;
+        }"""
+    )
+
+    # attempts counter "2 / 5"
+    attempts_row = dialog.get_by_text(re.compile("المحاولات:"))
+    await expect(attempts_row).to_contain_text(re.compile(r"2\s*/\s*5"), timeout=5_000)
+
+    # countdown line visible with a seconds value (X ث or M د SS ث)
+    countdown_line = dialog.get_by_text(re.compile("الإعادة القادمة خلال"))
+    await expect(countdown_line).to_be_visible()
+    await expect(countdown_line).to_contain_text(re.compile(r"\d+\s*ث"))
+
+    # absolute next-retry time element
+    next_time = dialog.locator(f'time[datetime="{next_iso}"]')
+    await expect(next_time).to_be_visible()
+
+    # exhausted copy MUST NOT appear while attempts < max and next retry is scheduled
+    await expect(dialog.get_by_text(re.compile("استنفدت المحاولات التلقائية"))).to_have_count(0)
+
+    await page.screenshot(path=str(OUT / "queue_01_countdown_initial.png"))
+
+    # Capture the first countdown value, wait, and confirm it decreases.
+    def _extract_seconds(text: str) -> int:
+        # "الإعادة القادمة خلال: 12 ث" or "1 د 05 ث"
+        m = re.search(r"(?:(\d+)\s*د)?\s*(\d+)\s*ث", text)
+        if not m:
+            return -1
+        mins = int(m.group(1) or 0)
+        secs = int(m.group(2))
+        return mins * 60 + secs
+
+    t1_text = await countdown_line.inner_text()
+    s1 = _extract_seconds(t1_text)
+    assert s1 > 0, f"expected positive countdown seconds, got {t1_text!r}"
+
+    await page.wait_for_timeout(2500)
+
+    t2_text = await countdown_line.inner_text()
+    s2 = _extract_seconds(t2_text)
+    assert s2 < s1, f"countdown did not decrease ({s1} → {s2}) — text: {t2_text!r}"
+    await page.screenshot(path=str(OUT / "queue_02_countdown_ticked.png"))
+
+    await ctx.close()
+    print(f"✓ Attempts + countdown while queued: 2/5 shown, countdown ticked {s1}s → {s2}s")
+
+
 
 async def _test_attempts_exhausted(browser):
     """يحقن طابور مزامنة مستنفَد (attempts=MAX, بدون nextRetryAt) ويتحقق:
@@ -226,6 +302,7 @@ async def main():
         try:
             await _test_retry_after_server_error(browser)
             await _test_retry_after_offline(browser)
+            await _test_attempts_and_countdown(browser)
             await _test_attempts_exhausted(browser)
         finally:
             await browser.close()

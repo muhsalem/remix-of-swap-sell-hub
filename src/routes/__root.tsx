@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { CountryDetectedBanner } from "@/components/CountryDetectedBanner";
 import { trackPageview } from "@/lib/analytics";
 import { detectCountryServer } from "@/lib/geo.functions";
 import { hasSavedCountry, saveCountry } from "@/lib/currency-fx";
@@ -141,6 +142,7 @@ function RootComponent() {
       <Outlet />
       <CookieConsent />
       <OnboardingTour />
+      <CountryDetectedBanner />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
     </QueryClientProvider>
   );

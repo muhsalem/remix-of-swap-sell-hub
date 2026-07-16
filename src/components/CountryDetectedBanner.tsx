@@ -28,6 +28,37 @@ type SupportedCode = keyof typeof FX_VS_SAR;
  * opens a modal explaining how detection worked and lets the user pick
  * a different currency from all supported markets before saving.
  */
+function classifyError(err: unknown): {
+  kind: "network" | "server" | "unknown";
+  message: string;
+  status?: number;
+} {
+  const raw = (err as Error)?.message ?? String(err ?? "");
+  const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+  const statusMatch = raw.match(/\b(4\d{2}|5\d{2})\b/);
+  const status = statusMatch ? Number(statusMatch[1]) : undefined;
+
+  if (!online || /NetworkError|Failed to fetch|network|ECONNRESET|ENOTFOUND|timeout|timed out|abort/i.test(raw)) {
+    return {
+      kind: "network",
+      message: online
+        ? "تعذّر الوصول إلى الخادم — تحقّق من اتصالك بالإنترنت."
+        : "لا يوجد اتصال بالإنترنت.",
+      status,
+    };
+  }
+  if (status && status >= 500) {
+    return { kind: "server", message: `خطأ في الخادم (${status}) — حاول لاحقاً.`, status };
+  }
+  if (status === 401 || status === 403) {
+    return { kind: "server", message: "انتهت صلاحية جلستك — يرجى تسجيل الدخول مجدداً.", status };
+  }
+  if (status && status >= 400) {
+    return { kind: "server", message: `طلب غير صالح (${status}).`, status };
+  }
+  return { kind: "unknown", message: raw ? raw.slice(0, 200) : "خطأ غير معروف." };
+}
+
 export function CountryDetectedBanner() {
   const [visible, setVisible] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

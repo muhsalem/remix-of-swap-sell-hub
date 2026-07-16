@@ -98,6 +98,12 @@ export async function flushPrefSyncQueue(reason: string = "manual"): Promise<voi
 
     await setPreferredCountry({ data: { country: entry.country } });
 
+    // Success: reset counters and cancel any pending backoff so the next
+    // queuePreferredCountry() starts from attempts=0 with no stale retry.
+    if (backoffTimer) {
+      window.clearTimeout(backoffTimer);
+      backoffTimer = null;
+    }
     const now = new Date().toISOString();
     writeQueue(null);
     emit({ status: "synced", country: entry.country, lastSyncedAt: now });
@@ -106,6 +112,8 @@ export async function flushPrefSyncQueue(reason: string = "manual"): Promise<voi
       country: entry.country,
       reason,
       attempts: entry.attempts + 1,
+      attempts_reset: true,
+      next_retry_at: null,
       duration_ms: Math.round(performance.now() - t0),
     });
   } catch (err) {

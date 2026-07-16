@@ -188,17 +188,38 @@ export function CountryDetectedBanner() {
     // Persist to server profile when signed in and currency is server-supported.
     if (signedIn && (selected === "SAR" || selected === "EGP")) {
       setSyncStatus("syncing");
+      const t0 = performance.now();
+      void track("sync_pref_save", {
+        stage: "start",
+        country: selected,
+        from: detected,
+        source,
+      });
       try {
         await setPreferredCountry({ data: { country: selected } });
-        setLastSyncedAt(new Date());
+        const duration_ms = Math.round(performance.now() - t0);
+        const now = new Date();
+        setLastSyncedAt(now);
         setSyncStatus("saved");
+        void track("sync_pref_save", {
+          stage: "success",
+          country: selected,
+          duration_ms,
+          last_synced_at: now.toISOString(),
+        });
         window.setTimeout(() => {
           setModalOpen(false);
           setVisible(false);
         }, 900);
         return;
-      } catch {
+      } catch (err) {
         setSyncStatus("error");
+        void track("sync_pref_save", {
+          stage: "error",
+          country: selected,
+          duration_ms: Math.round(performance.now() - t0),
+          error: (err as Error)?.message?.slice(0, 200) ?? "unknown",
+        });
         return;
       }
     }

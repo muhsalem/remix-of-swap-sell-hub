@@ -1,5 +1,19 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// Minimal browser shims — the queue only needs localStorage + window + navigator.
+class MemStorage {
+  private m = new Map<string, string>();
+  getItem(k: string) { return this.m.has(k) ? this.m.get(k)! : null; }
+  setItem(k: string, v: string) { this.m.set(k, String(v)); }
+  removeItem(k: string) { this.m.delete(k); }
+  clear() { this.m.clear(); }
+}
+(globalThis as any).localStorage = new MemStorage();
+(globalThis as any).window = globalThis;
+(globalThis as any).navigator = { onLine: true };
+(globalThis as any).performance = (globalThis as any).performance ?? { now: () => Date.now() };
+(globalThis as any).CustomEvent = class { constructor(public type: string, public init?: any) {} };
+(globalThis as any).dispatchEvent = () => true;
 
 // Mocks must be declared before importing the module under test.
 const setPreferredCountryMock = vi.fn();

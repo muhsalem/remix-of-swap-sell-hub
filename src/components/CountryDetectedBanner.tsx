@@ -426,6 +426,22 @@ export function CountryDetectedBanner() {
                 </span>
               </>
             )}
+            {syncStatus === "offline" && (
+              <>
+                <CloudOff className="size-4 text-amber-600 shrink-0" aria-hidden />
+                <span className="text-amber-700 font-bold">
+                  لا يوجد اتصال بالإنترنت — تم الحفظ محلياً وسيُزامَن تلقائياً عند عودة الاتصال.
+                </span>
+              </>
+            )}
+            {syncStatus === "queued" && (
+              <>
+                <Loader2 className="size-4 text-amber-600 animate-spin shrink-0" aria-hidden />
+                <span className="text-amber-700 font-bold">
+                  في طابور المزامنة — ستُعاد المحاولة تلقائياً.
+                </span>
+              </>
+            )}
             {syncStatus === "idle" && (
               <>
                 <Cloud className="size-4 text-muted-foreground shrink-0" aria-hidden />

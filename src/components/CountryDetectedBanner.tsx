@@ -5,7 +5,7 @@ import { getPreferredCountry } from "@/lib/currency-pref.functions";
 import { queuePreferredCountry } from "@/lib/pref-sync-queue";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2 } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -4,7 +4,7 @@ import { detectCountryServer } from "@/lib/geo.functions";
 import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { MapPin, Check, X, Info, Globe2, Radio, CloudCheck, CloudOff, Loader2 } from "lucide-react";
+import { MapPin, Check, X, Info, Globe2, Radio, Cloud, CloudOff, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

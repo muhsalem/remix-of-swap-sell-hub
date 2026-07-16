@@ -592,6 +592,58 @@ export function CountryDetectedBanner() {
             )}
           </div>
 
+          {pendingEntry && (syncStatus === "queued" || syncStatus === "offline" || syncStatus === "error" || syncStatus === "syncing") && (() => {
+            const attempts = pendingEntry.attempts;
+            const max = MAX_PREF_SYNC_ATTEMPTS;
+            const nextMs = pendingEntry.nextRetryAt ? new Date(pendingEntry.nextRetryAt).getTime() - now : null;
+            const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
+            const mm = secs !== null ? Math.floor(secs / 60) : 0;
+            const ss = secs !== null ? secs % 60 : 0;
+            const countdown = secs === null
+              ? null
+              : secs === 0
+              ? "الآن…"
+              : mm > 0
+              ? `${mm} د ${ss.toString().padStart(2, "0")} ث`
+              : `${ss} ث`;
+            const exhausted = attempts >= max && !pendingEntry.nextRetryAt;
+            return (
+              <div
+                className="mt-2 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5 text-[11px] leading-relaxed"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-amber-900">
+                    <span className="font-bold">المحاولات:</span>{" "}
+                    <span className="tabular-nums">{attempts}</span>
+                    <span className="text-amber-700"> / {max}</span>
+                  </div>
+                  {countdown && !exhausted && (
+                    <div className="text-amber-900">
+                      <span className="font-bold">الإعادة القادمة خلال:</span>{" "}
+                      <span className="tabular-nums font-bold">{countdown}</span>
+                    </div>
+                  )}
+                </div>
+                {exhausted && (
+                  <div className="mt-1 text-amber-800">
+                    استنفدت المحاولات التلقائية — استخدم زر إعادة المحاولة يدوياً.
+                  </div>
+                )}
+                {!exhausted && pendingEntry.nextRetryAt && (
+                  <div className="mt-1 text-amber-800/90">
+                    وقت الإعادة القادمة:{" "}
+                    <time dateTime={pendingEntry.nextRetryAt} className="font-bold">
+                      {new Date(pendingEntry.nextRetryAt).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </time>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+
           {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (
             <div className="mt-2 flex justify-end">
               <button

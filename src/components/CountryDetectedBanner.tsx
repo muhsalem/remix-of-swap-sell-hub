@@ -483,7 +483,7 @@ export function CountryDetectedBanner() {
 
           {/* Sync status with the signed-in user's profile */}
           <div
-            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-center gap-2"
+            className="mt-3 rounded-xl border border-border bg-stone-soft/60 p-2.5 text-[11px] flex items-start gap-2"
             role="status"
             aria-live="polite"
           >

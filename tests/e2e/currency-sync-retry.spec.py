@@ -587,7 +587,6 @@ async def _test_status_transitions_ordered(browser):
     print(f"✓ Status transitions ordered (queued→error→saved) with {len(timeline)} timestamps")
 
 
-async def main():
 async def _test_readable_failure_reason(browser):
     """يتحقق أن مودال حالة المزامنة يعرض سبب الفشل المقروء بعد كل
     محاولة فاشلة، ويميّز بين "خطأ الخادم" و"خطأ شبكة" مع طابع زمني

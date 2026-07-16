@@ -628,7 +628,7 @@ export function CountryDetectedBanner() {
                 </div>
                 {exhausted && (
                   <div className="mt-1 text-amber-800">
-                    استنفدت المحاولات التلقائية — استخدم زر إعادة المحاولة يدوياً.
+                    استنفدت المحاولات التلقائية — لم يعد بالإمكان إعادة المحاولة تلقائياً.
                   </div>
                 )}
                 {!exhausted && pendingEntry.nextRetryAt && (
@@ -644,19 +644,27 @@ export function CountryDetectedBanner() {
           })()}
 
 
-          {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (
-            <div className="mt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={retrySync}
-                aria-label="إعادة محاولة مزامنة تفضيل العملة مع حسابي"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 rounded-full border border-border bg-white text-[11px] font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                <RefreshCw className="size-3.5" aria-hidden />
-                إعادة المحاولة
-              </button>
-            </div>
-          )}
+          {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (() => {
+            const retryExhausted = !!pendingEntry && pendingEntry.attempts >= MAX_PREF_SYNC_ATTEMPTS && !pendingEntry.nextRetryAt;
+            return (
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={retrySync}
+                  disabled={retryExhausted}
+                  aria-disabled={retryExhausted}
+                  aria-label={retryExhausted ? "استنفدت محاولات إعادة المزامنة التلقائية" : "إعادة محاولة مزامنة تفضيل العملة مع حسابي"}
+                  title={retryExhausted ? "استنفدت المحاولات التلقائية (5/5)" : undefined}
+                  data-retry-exhausted={retryExhausted ? "true" : "false"}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 rounded-full border border-border bg-white text-[11px] font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+                >
+                  <RefreshCw className="size-3.5" aria-hidden />
+                  إعادة المحاولة
+                </button>
+              </div>
+            );
+          })()}
+
 
 
 

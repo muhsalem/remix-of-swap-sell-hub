@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { TERMS_VERSION } from "./legal.$doc";
+import badelLogo from "@/assets/badel-logo.png";
 
 function isSafeRelativePath(p: unknown): p is string {
   return typeof p === "string" && /^\/[^/\\]/.test(p) && !p.startsWith("//");
@@ -113,8 +114,8 @@ function AuthPage() {
   return (
     <div dir="rtl" className="min-h-screen grid lg:grid-cols-2 bg-background font-body">
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-primary to-accent text-primary-foreground">
-        <Link to="/" className="font-display text-3xl font-extrabold tracking-tighter">
-          بادل بادل
+        <Link to="/" className="flex items-center gap-3">
+          <img src={badelLogo} alt="بادل" width={48} height={48} className="h-12 w-12 rounded-xl bg-white/10 p-1 backdrop-blur" />
         </Link>
         <div>
           <h2 className="font-display text-4xl font-extrabold leading-tight mb-4">
@@ -130,8 +131,11 @@ function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="font-display text-3xl font-extrabold text-primary">بادل بادل</Link>
+            <Link to="/" className="inline-flex items-center gap-2">
+              <img src={badelLogo} alt="بادل" width={40} height={40} className="h-10 w-10" />
+            </Link>
           </div>
+
           <h1 className="font-display text-3xl font-extrabold mb-2">
             {mode === "signin" ? "مرحباً بعودتك" : "أنشئ حسابك"}
           </h1>

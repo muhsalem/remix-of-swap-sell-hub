@@ -573,6 +573,10 @@ async def _test_readable_failure_reason(browser):
     assert dt2 and dt2 != dt1, f"failure timestamp must update after each attempt (dt1={dt1!r}, dt2={dt2!r})"
     await page.screenshot(path=str(OUT / "reason_02_network.png"))
 
+    await ctx.close()
+    print(f"✓ Readable failure reason: server(500)@{dt1} → network@{dt2} (badges + stage + timestamps updated)")
+
+
 EXHAUSTED_TEXT = "استنفدت المحاولات التلقائية — استخدم زر إعادة المحاولة يدوياً."
 
 

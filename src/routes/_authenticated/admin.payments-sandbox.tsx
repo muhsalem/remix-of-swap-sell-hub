@@ -286,15 +286,69 @@ function PaymentsSandbox() {
   );
 }
 
-function JsonBlock({ title, data }: { title: string; data: unknown }) {
+// مفاتيح حساسة (بطاقات، توقيعات، أسرار، Tokens) نطمسها افتراضياً.
+const SENSITIVE_KEY_RE =
+  /(card|pan|cvv|cvc|cardnumber|card_number|expiry|exp_month|exp_year|holder|signature|sign|hash|hmac|secret|api[_-]?key|apikey|token|access[_-]?token|refresh[_-]?token|password|authorization|auth[_-]?header|otp|iban|account[_-]?number|routing)/i;
+
+function maskValue(v: unknown): unknown {
+  if (v == null) return v;
+  if (typeof v === "string") {
+    if (v.length <= 4) return "••••";
+    return `${v.slice(0, 2)}••••${v.slice(-2)} (${v.length})`;
+  }
+  if (typeof v === "number") return "••••";
+  return "••••";
+}
+
+function redact(data: unknown): unknown {
+  if (data == null) return data;
+  if (Array.isArray(data)) return data.map(redact);
+  if (typeof data === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+      if (SENSITIVE_KEY_RE.test(k)) {
+        out[k] = maskValue(v);
+      } else {
+        out[k] = redact(v);
+      }
+    }
+    return out;
+  }
+  return data;
+}
+
+function JsonBlock({
+  title,
+  data,
+  reveal,
+}: {
+  title: string;
+  data: unknown;
+  reveal: boolean;
+}) {
+  const display = reveal ? data : redact(data);
+  const hasData = data != null;
   return (
     <div className="rounded-xl border border-border bg-stone-soft/40 p-3">
-      <div className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground mb-2">
-        {title}
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <div className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground">
+          {title}
+        </div>
+        {hasData && (
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+              reveal
+                ? "bg-amber-100 border-amber-300 text-amber-800"
+                : "bg-emerald-100 border-emerald-300 text-emerald-800"
+            }`}
+          >
+            {reveal ? "كامل" : "مطموس"}
+          </span>
+        )}
       </div>
-      {data ? (
+      {hasData ? (
         <pre className="text-[11px] font-mono max-h-64 overflow-auto whitespace-pre-wrap break-all">
-          {JSON.stringify(data, null, 2)}
+          {JSON.stringify(display, null, 2)}
         </pre>
       ) : (
         <p className="text-[11px] text-muted-foreground">لا توجد بيانات.</p>

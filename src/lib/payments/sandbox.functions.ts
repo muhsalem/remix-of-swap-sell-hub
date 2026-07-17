@@ -107,23 +107,6 @@ export const listAllPayments = createServerFn({ method: "GET" })
     if (data.purpose) q = q.eq("purpose", data.purpose as never);
     if (data.currency) q = q.eq("currency", data.currency.toUpperCase());
     if (data.userId) q = q.eq("user_id", data.userId);
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-
-    let q = supabase
-      .from("payments")
-      .select(
-        "id, user_id, provider, provider_invoice_id, purpose, target_id, amount, currency, status, checkout_url, paid_at, created_at, updated_at",
-        { count: "exact" },
-      )
-      .order("created_at", { ascending: false })
-      .range(data.offset, data.offset + data.limit - 1);
-
-    if (data.status) q = q.eq("status", data.status);
-    if (data.purpose) q = q.eq("purpose", data.purpose as never);
-    if (data.userId) q = q.eq("user_id", data.userId);
     if (data.search) {
       const s = data.search;
       q = q.or(`provider_invoice_id.ilike.%${s}%,id.eq.${isUuid(s) ? s : "00000000-0000-0000-0000-000000000000"}`);

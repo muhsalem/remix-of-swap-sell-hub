@@ -44,6 +44,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedAdminWaitlistRouteImport } from './routes/_authenticated/admin.waitlist'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
 import { Route as AuthenticatedAdminPaymentsSandboxRouteImport } from './routes/_authenticated/admin.payments-sandbox'
@@ -233,6 +234,12 @@ const AuthenticatedOfferListingIdRoute =
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminWaitlistRoute =
+  AuthenticatedAdminWaitlistRouteImport.update({
+    id: '/waitlist',
+    path: '/waitlist',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSupportRoute =
   AuthenticatedAdminSupportRouteImport.update({
     id: '/support',
@@ -334,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -380,6 +388,7 @@ export interface FileRoutesByTo {
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -428,6 +437,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/_authenticated/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
   '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
+    | '/admin/waitlist'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
+    | '/admin/waitlist'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -569,6 +581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payments-sandbox'
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/admin/support'
+    | '/_authenticated/admin/waitlist'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
     | '/_authenticated/support/$id'
@@ -849,6 +862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/waitlist': {
+      id: '/_authenticated/admin/waitlist'
+      path: '/waitlist'
+      fullPath: '/admin/waitlist'
+      preLoaderRoute: typeof AuthenticatedAdminWaitlistRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/support': {
       id: '/_authenticated/admin/support'
       path: '/support'
@@ -930,6 +950,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPaymentsSandboxRoute: typeof AuthenticatedAdminPaymentsSandboxRoute
   AuthenticatedAdminShippingCitiesRoute: typeof AuthenticatedAdminShippingCitiesRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
+  AuthenticatedAdminWaitlistRoute: typeof AuthenticatedAdminWaitlistRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -942,6 +963,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminPaymentsSandboxRoute,
   AuthenticatedAdminShippingCitiesRoute: AuthenticatedAdminShippingCitiesRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
+  AuthenticatedAdminWaitlistRoute: AuthenticatedAdminWaitlistRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =

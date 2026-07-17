@@ -1408,6 +1408,75 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_signups: {
+        Row: {
+          city: string | null
+          confirmed: boolean
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          interest: string | null
+          invited_at: string | null
+          ip_hash: string | null
+          landing_path: string | null
+          phone: string | null
+          referral_code: string | null
+          role: string | null
+          updated_at: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          city?: string | null
+          confirmed?: boolean
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          interest?: string | null
+          invited_at?: string | null
+          ip_hash?: string | null
+          landing_path?: string | null
+          phone?: string | null
+          referral_code?: string | null
+          role?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          city?: string | null
+          confirmed?: boolean
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string | null
+          invited_at?: string | null
+          ip_hash?: string | null
+          landing_path?: string | null
+          phone?: string | null
+          referral_code?: string | null
+          role?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       wallet_ledger: {
         Row: {
           amount_di: number

@@ -478,6 +478,20 @@ function PaymentsSandbox() {
             );
           })}
         </div>
+
+        {hasMore && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => setPageSize((n) => n + 30)}
+              disabled={paymentsQ.isFetching}
+              className="text-xs font-bold px-4 py-2 rounded-xl border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              {paymentsQ.isFetching
+                ? "جارٍ التحميل…"
+                : `تحميل المزيد (${total - rows.length} متبقّية)`}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

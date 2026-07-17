@@ -222,6 +222,24 @@ function PaymentsSandbox() {
               </span>
             </label>
             <button
+              onClick={() =>
+                exportPayments(paymentsQ.data ?? [], "json", revealSensitive)
+              }
+              disabled={!paymentsQ.data?.length}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              تصدير JSON ⬇
+            </button>
+            <button
+              onClick={() =>
+                exportPayments(paymentsQ.data ?? [], "csv", revealSensitive)
+              }
+              disabled={!paymentsQ.data?.length}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              تصدير CSV ⬇
+            </button>
+            <button
               onClick={() => paymentsQ.refetch()}
               className="text-xs text-primary font-bold hover:underline"
             >

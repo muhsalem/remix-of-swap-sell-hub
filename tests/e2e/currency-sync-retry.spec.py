@@ -933,7 +933,109 @@ async def _test_aria_live_announces_ready_now(browser):
     await page.screenshot(path=str(OUT / "aria_live_ready_now.png"))
 
     await ctx.close()
-    print("✓ aria-live region announces 'جاهز لإعادة المحاولة الآن.' exactly on transition to 'الآن…'")
+
+
+async def _test_aria_live_exact_at_zero(browser):
+    """تأكيد أن إعلان aria-live يُطلق عند بلوغ العدّاد صفراً بالضبط،
+    وأن النص المُعلَن يطابق حرفياً "جاهز لإعادة المحاولة الآن.".
+
+    نستخدم MutationObserver مثبَّتاً *قبل* بلوغ الصفر لالتقاط كل قيمة تدخل
+    منطقة الإعلان مع طابع زمني (performance.now()). بعد التحوّل نتحقق:
+      - تُوجد قيمة واحدة على الأقل تطابق النص الحرفي المتوقّع.
+      - في لحظة الإعلان، نص العدّاد المرئي يحتوي رمز الحذف "…" (الحرف
+        الفعلي U+2026) وليس رقماً — أي أن العدّ فعلاً وصل إلى صفر.
+      - قبل الوصول إلى صفر، لم تصدر أي إعلانات (المنطقة تبقى صامتة).
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+
+    # جدولة قريبة (~2.5s) لتحوّل يمكن التقاطه ضمن مهلة الاختبار.
+    await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 2_500).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 10_000).toISOString(),
+            attempts: 2,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+
+    # حدد منطقة الإعلان قبل تركيب المراقب.
+    live_selector = "[role='dialog'] span[role='status'][aria-live='polite'].sr-only"
+    await page.wait_for_selector(live_selector, timeout=5_000)
+
+    # ثبّت MutationObserver قبل بلوغ الصفر لالتقاط كل الإعلانات مع طوابعها.
+    await page.evaluate(
+        """(sel) => {
+          const el = document.querySelector(sel);
+          window.__ariaAnnouncements = [];
+          const obs = new MutationObserver(() => {
+            const text = (el.textContent || '').trim();
+            window.__ariaAnnouncements.push({ text, at: performance.now() });
+          });
+          obs.observe(el, { childList: true, characterData: true, subtree: true });
+          window.__ariaObserver = obs;
+        }""",
+        live_selector,
+    )
+
+    # انتظر بلوغ الإعلان الحرفي.
+    live_region = page.locator(live_selector).first
+    await expect(live_region).to_have_text("جاهز لإعادة المحاولة الآن.", timeout=8_000)
+
+    # افحص كل الإعلانات المُلتقطة.
+    recorded = await page.evaluate(
+        "() => (window.__ariaAnnouncements || []).map(x => ({ text: x.text, at: x.at }))"
+    )
+    await page.evaluate("() => { window.__ariaObserver && window.__ariaObserver.disconnect(); }")
+
+    # لا يُعلن إلا نص واحد صحيح (بعد تصفية القيم الفارغة).
+    non_empty = [a for a in recorded if a["text"]]
+    assert non_empty, f"expected at least one aria-live announcement, got: {recorded!r}"
+
+    expected = "جاهز لإعادة المحاولة الآن."
+    matches = [a for a in non_empty if a["text"] == expected]
+    assert matches, (
+        f"aria-live announcement did not match expected literal.\n"
+        f"expected: {expected!r}\ngot: {[a['text'] for a in non_empty]!r}"
+    )
+
+    # لا يُعلن أي نص مختلف (لا ضجيج قبل/بعد الصفر).
+    unexpected = [a["text"] for a in non_empty if a["text"] != expected]
+    assert not unexpected, (
+        f"aria-live emitted unexpected text(s) besides the ready message: {unexpected!r}"
+    )
+
+    # في لحظة الإعلان: العدّاد المرئي يحتوي رمز الحذف U+2026 (الحرف الفعلي "…")
+    # وليس رقماً — دليل مباشر على أن العدّ بلغ صفراً.
+    countdown_line = dialog.get_by_text(re.compile("الإعادة القادمة خلال"))
+    visible_text = await countdown_line.inner_text()
+    assert "الآن\u2026" in visible_text, (
+        f"visible countdown must show the exact literal 'الآن…' (U+2026) at zero, "
+        f"got: {visible_text!r}"
+    )
+    # ولا يحتوي أي رقم عربي/لاتيني (تأكيد إضافي أن العدّ انتهى).
+    assert not re.search(r"[0-9\u0660-\u0669]", visible_text), (
+        f"countdown text should not contain digits after reaching zero: {visible_text!r}"
+    )
+
+    await page.screenshot(path=str(OUT / "aria_live_exact_at_zero.png"))
+    await ctx.close()
+    print("✓ aria-live announcement fires exactly at zero with literal 'جاهز لإعادة المحاولة الآن.'")
+
+
+
 
 
 async def _test_axe_no_a11y_violations(browser):

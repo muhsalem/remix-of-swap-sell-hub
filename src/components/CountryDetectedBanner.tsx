@@ -264,6 +264,43 @@ export function CountryDetectedBanner() {
     };
   }, [modalOpen, syncStatus]);
 
+  // Focus management: when the countdown transitions to "الآن…" (ready),
+  // move keyboard focus onto the "إعادة المحاولة" button so keyboard users
+  // can trigger the retry immediately without hunting for the control.
+  useEffect(() => {
+    if (!modalOpen || !pendingEntry) {
+      wasReadyRef.current = false;
+      return;
+    }
+    const key = pendingEntry.nextRetryAt ?? "";
+    const anchor = anchorRef.current;
+    const nextMs = key && anchor && anchor.key === key
+      ? anchor.remainingAtAnchor - (tickPerf - anchor.anchorPerf)
+      : null;
+    const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
+    const exhausted = pendingEntry.attempts >= MAX_PREF_SYNC_ATTEMPTS && !pendingEntry.nextRetryAt;
+    const isReadyNow = secs === 0 && !exhausted && !!pendingEntry.nextRetryAt;
+    if (isReadyNow && !wasReadyRef.current) {
+      wasReadyRef.current = true;
+      // Defer so the button's `disabled` state has re-rendered before focusing.
+      const t = window.setTimeout(() => {
+        const btn = retryBtnRef.current;
+        if (btn && !btn.disabled) {
+          btn.focus();
+          void track("pref_sync_retry_focused", {
+            country: pendingEntry.country,
+            attempts: pendingEntry.attempts,
+            reason: "countdown_ready",
+          });
+        }
+      }, 0);
+      return () => window.clearTimeout(t);
+    }
+    if (!isReadyNow) wasReadyRef.current = false;
+  }, [modalOpen, pendingEntry, tickPerf]);
+
+
+
 
   if (!visible) return null;
 

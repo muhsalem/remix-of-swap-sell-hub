@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react";
 import { getPaymentStatus } from "@/lib/payments/fawaterak.functions";
 import { formatAmount } from "@/lib/format-price";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CallbackSearch {
   pid?: string;
@@ -30,18 +33,68 @@ export const Route = createFileRoute("/payments/callback")({
 function PaymentCallback() {
   const { pid, result } = useSearch({ from: "/payments/callback" });
   const fetchStatus = useServerFn(getPaymentStatus);
+  const queryClient = useQueryClient();
+  const notifiedRef = useRef<string | null>(null);
 
+  const queryKey = ["payment-status", pid] as const;
   const { data, isLoading } = useQuery({
-    queryKey: ["payment-status", pid],
+    queryKey,
     queryFn: () => (pid ? fetchStatus({ data: { paymentId: pid } }) : null),
     enabled: !!pid,
+    // Realtime يدفع التحديث فوراً؛ الاستطلاع مجرد شبكة أمان بفاصل أطول.
     refetchInterval: (q) => {
       const s = (q.state.data as { status?: string } | undefined)?.status;
-      return s === "paid" || s === "failed" || s === "expired" ? false : 2500;
+      return s === "paid" || s === "failed" || s === "expired" ? false : 8000;
     },
   });
 
+  // اشتراك Realtime على صف الدفعة الحالية → تحديث فوري بدون polling طويل.
+  useEffect(() => {
+    if (!pid) return;
+    const channel = supabase
+      .channel(`payment:${pid}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "payments", filter: `id=eq.${pid}` },
+        (payload) => {
+          const next = payload.new as { status?: string } | undefined;
+          if (!next) return;
+          // حدّث الكاش فوراً حتى يعاد الرسم دون انتظار fetch.
+          queryClient.setQueryData(queryKey, (prev: unknown) => ({
+            ...(prev as object | null ?? {}),
+            ...next,
+          }));
+          if (next.status === "paid" && notifiedRef.current !== "paid") {
+            notifiedRef.current = "paid";
+            toast.success("تم الدفع بنجاح — تم تفعيل الخدمة على حسابك.");
+          } else if ((next.status === "failed" || next.status === "expired") && notifiedRef.current !== next.status) {
+            notifiedRef.current = next.status;
+            toast.error("لم يكتمل الدفع. يمكنك المحاولة مرة أخرى.");
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pid, queryClient]);
+
+  // إشعار احتياطي إذا وصلت بيانات "paid" أولاً عبر الاستطلاع (قبل أول UPDATE realtime).
+  useEffect(() => {
+    const s = data?.status;
+    if (!s) return;
+    if (s === "paid" && notifiedRef.current !== "paid") {
+      notifiedRef.current = "paid";
+      toast.success("تم الدفع بنجاح — تم تفعيل الخدمة على حسابك.");
+    } else if ((s === "failed" || s === "expired") && notifiedRef.current !== s) {
+      notifiedRef.current = s;
+      toast.error("لم يكتمل الدفع. يمكنك المحاولة مرة أخرى.");
+    }
+  }, [data?.status]);
+
   const status = data?.status ?? (result === "success" ? "pending" : result ?? "pending");
+
 
   const tone =
     status === "paid"

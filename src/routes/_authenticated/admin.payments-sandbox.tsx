@@ -43,6 +43,7 @@ function PaymentsSandbox() {
   const create = useServerFn(createPaymentIntent);
   const list = useServerFn(listRecentPayments);
   const modeFn = useServerFn(getFawaterakMode);
+  const simulate = useServerFn(simulateWebhook);
   const qc = useQueryClient();
 
   const [purpose, setPurpose] = useState<string>("verify_individual");

@@ -609,7 +609,7 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "syncing" && (
               <>
-                <Loader2 className="size-4 text-primary animate-spin shrink-0" aria-hidden />
+                <Loader2 className={`size-4 text-primary shrink-0${reducedMotion ? "" : " animate-spin"}`} aria-hidden />
                 <span className="text-foreground font-bold">جاري المزامنة مع حسابك…</span>
               </>
             )}

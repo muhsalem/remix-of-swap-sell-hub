@@ -53,7 +53,7 @@ export const createTicket = createServerFn({ method: "POST" })
         related_offer_id: data.related_offer_id ?? null,
         related_listing_id: data.related_listing_id ?? null,
         related_payment_id: data.related_payment_id ?? null,
-      })
+      } as never)
       .select("id")
       .single();
     if (error || !ticket) throw new Error(error?.message ?? "insert_failed");
@@ -220,7 +220,7 @@ export const adminUpdateTicket = createServerFn({ method: "POST" })
     if (data.assignSelf) patch.assigned_admin = userId;
     const { error } = await supabase
       .from("support_tickets")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.ticketId);
     if (error) throw new Error(error.message);
     return { ok: true };

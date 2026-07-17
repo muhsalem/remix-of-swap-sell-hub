@@ -46,6 +46,98 @@ function fmtMoney(n: number, cur: string) {
   return `${formatAmount(n)} ${cur === "SAR" ? "ر.س" : cur === "EGP" ? "ج.م" : cur}`;
 }
 
+function csvEscape(v: unknown): string {
+  if (v == null) return "";
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function downloadCsv(filename: string, rows: (string | number)[][]) {
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function buildFinanceCsv(data: any): (string | number)[][] {
+  const rows: (string | number)[][] = [];
+  rows.push([`تقرير المدفوعات المالية — مُصدَّر في ${new Date().toLocaleString("ar")}`]);
+  rows.push([]);
+
+  rows.push(["ملخص عام"]);
+  rows.push(["المؤشر", "القيمة"]);
+  rows.push(["إجمالي العمليات", data.totalCount ?? 0]);
+  rows.push(["عمليات ناجحة", data.paidCount ?? 0]);
+  rows.push(["نسبة النجاح %", data.successRate ?? 0]);
+  rows.push(["عدد العملات", Object.keys(data.byCurrency || {}).length]);
+  rows.push([]);
+
+  rows.push(["الإيرادات المُحصّلة حسب العملة"]);
+  rows.push(["العملة", "إجمالي مدفوع", "آخر ٣٠ يوم"]);
+  for (const [cur, total] of Object.entries(data.paidTotalByCurrency || {})) {
+    rows.push([cur, Number(total), Number((data.paid30ByCurrency || {})[cur] || 0)]);
+  }
+  rows.push([]);
+
+  const statusKeys = Object.keys(STATUS_LABEL);
+  rows.push(["تفصيل حسب العملة × الحالة"]);
+  rows.push([
+    "العملة",
+    ...statusKeys.flatMap((s) => [`${STATUS_LABEL[s]} — مبلغ`, `${STATUS_LABEL[s]} — عدد`]),
+    "الإجمالي — مبلغ",
+    "الإجمالي — عدد",
+  ]);
+  for (const [cur, statuses] of Object.entries(data.byCurrencyStatus || {})) {
+    const row: (string | number)[] = [cur];
+    for (const s of statusKeys) {
+      const b = (statuses as any)[s];
+      row.push(b ? Number(b.total) : 0, b ? Number(b.count) : 0);
+    }
+    row.push(
+      Number((data.byCurrency || {})[cur]?.total || 0),
+      Number((data.byCurrency || {})[cur]?.count || 0),
+    );
+    rows.push(row);
+  }
+  rows.push([]);
+
+  rows.push(["توزيع الحالات"]);
+  rows.push(["الحالة", "عدد العمليات", "النسبة %"]);
+  for (const [st, b] of Object.entries(data.byStatus || {})) {
+    const count = (b as any).count || 0;
+    const pct = data.totalCount ? Math.round((count / data.totalCount) * 100) : 0;
+    rows.push([STATUS_LABEL[st] || st, count, pct]);
+  }
+  rows.push([]);
+
+  rows.push(["حسب الغرض"]);
+  rows.push(["الغرض", "عدد العمليات", "الإجمالي"]);
+  for (const [p, b] of Object.entries(data.byPurpose || {})) {
+    rows.push([PURPOSE_LABEL[p] || p, (b as any).count || 0, Number((b as any).total || 0)]);
+  }
+  rows.push([]);
+
+  rows.push(["أحدث العمليات"]);
+  rows.push(["التاريخ", "الغرض", "العملة", "المبلغ", "الحالة"]);
+  for (const r of data.recent || []) {
+    rows.push([
+      new Date(r.created_at).toISOString(),
+      PURPOSE_LABEL[r.purpose] || r.purpose || "",
+      (r.currency || "SAR").toUpperCase(),
+      Number(r.amount || 0),
+      STATUS_LABEL[r.status] || r.status || "",
+    ]);
+  }
+
+  return rows;
+}
+
 function PaymentsFinanceDashboard() {
   const fetchData = useServerFn(getPaymentsBreakdown);
   const { data, isLoading, error, refetch, isFetching } = useQuery({
@@ -70,6 +162,18 @@ function PaymentsFinanceDashboard() {
             disabled={isFetching}
           >
             {isFetching ? "جارٍ التحديث…" : "تحديث"}
+          </button>
+          <button
+            onClick={() => {
+              if (!data) return;
+              const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+              downloadCsv(`payments-finance-${stamp}.csv`, buildFinanceCsv(data));
+            }}
+            disabled={!data}
+            className="text-xs px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-bold hover:bg-primary/20 disabled:opacity-50"
+            title="تصدير التقرير الحالي إلى CSV"
+          >
+            ⬇ تصدير CSV
           </button>
           <Link to="/admin" className="text-primary font-bold hover:underline text-sm">
             ← لوحة المشرف

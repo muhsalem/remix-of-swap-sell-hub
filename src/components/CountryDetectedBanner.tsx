@@ -471,7 +471,7 @@ export function CountryDetectedBanner() {
   return (
     <>
       <section
-        className="fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:left-auto md:max-w-md z-40 rounded-2xl border border-border bg-white/95 backdrop-blur shadow-xl p-4 animate-in slide-in-from-bottom-4"
+        className={`fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:left-auto md:max-w-md z-40 rounded-2xl border border-border bg-white/95 backdrop-blur shadow-xl p-4${reducedMotion ? "" : " animate-in slide-in-from-bottom-4"}`}
         role="region"
         aria-labelledby={titleId}
         aria-describedby={`${descId} ${sourceId}`}

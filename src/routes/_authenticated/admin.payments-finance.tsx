@@ -288,6 +288,12 @@ function PaymentsFinanceDashboard() {
 
       {data && (
         <>
+          {/* Charts */}
+          <FinanceCharts
+            daily={(data as any).daily ?? []}
+            currencies={(data as any).currencies ?? Object.keys(data.byCurrency)}
+          />
+
           {/* Summary */}
           <section className="mb-8">
             <h2 className="font-display text-lg font-extrabold mb-3">ملخص عام</h2>

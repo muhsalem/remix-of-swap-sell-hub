@@ -216,6 +216,7 @@ function PaymentsDashboard() {
             <option value="SAR">SAR — ر.س</option>
             <option value="EGP">EGP — ج.م</option>
           </select>
+        </label>
         {scope === "all" && (
           <>
             <label className="text-xs">

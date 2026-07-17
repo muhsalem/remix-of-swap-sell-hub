@@ -48,6 +48,17 @@ function PaymentsSandbox() {
   const [country, setCountry] = useState<"SA" | "EG">("SA");
   const [targetId, setTargetId] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [revealSensitive, setRevealSensitive] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("badel:reveal-sensitive") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      "badel:reveal-sensitive",
+      revealSensitive ? "1" : "0",
+    );
+  }, [revealSensitive]);
 
   const modeQ = useQuery({ queryKey: ["fw-mode"], queryFn: () => modeFn() });
   const paymentsQ = useQuery({

@@ -38,6 +38,7 @@ function AdminDashboard() {
         <div className="flex gap-3 text-sm">
           <Link to="/admin/finance" className="text-primary font-bold hover:underline">لوحة المالية →</Link>
           <Link to="/admin/payments-finance" className="text-primary font-bold hover:underline">مالية المدفوعات →</Link>
+          <Link to="/admin/waitlist" className="text-primary font-bold hover:underline">قائمة الانتظار →</Link>
           <Link to="/admin/monitoring" className="text-primary font-bold hover:underline">المراقبة والضمان →</Link>
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
           <Link to="/admin/shipping-cities" className="text-primary font-bold hover:underline">مدن الشحن →</Link>

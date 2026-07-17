@@ -82,12 +82,31 @@ export const listAllPayments = createServerFn({ method: "GET" })
       .object({
         status: STATUS.optional(),
         purpose: z.string().optional(),
+        currency: z.string().trim().max(6).optional(),
         userId: z.string().uuid().optional(),
         search: z.string().trim().max(200).optional(),
         limit: z.number().int().min(1).max(200).default(50),
         offset: z.number().int().min(0).default(0),
       })
       .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    let q = supabase
+      .from("payments")
+      .select(
+        "id, user_id, provider, provider_invoice_id, purpose, target_id, amount, currency, status, checkout_url, paid_at, created_at, updated_at",
+        { count: "exact" },
+      )
+      .order("created_at", { ascending: false })
+      .range(data.offset, data.offset + data.limit - 1);
+
+    if (data.status) q = q.eq("status", data.status);
+    if (data.purpose) q = q.eq("purpose", data.purpose as never);
+    if (data.currency) q = q.eq("currency", data.currency.toUpperCase());
+    if (data.userId) q = q.eq("user_id", data.userId);
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;

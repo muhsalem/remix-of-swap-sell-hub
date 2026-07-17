@@ -349,7 +349,7 @@ export const getPaymentsBreakdown = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const data0 = rowsData;
 
-    const rows = (data ?? []) as Array<{
+    const rows = (data0 ?? []) as Array<{
       amount: number | string | null;
       currency: string | null;
       status: string;

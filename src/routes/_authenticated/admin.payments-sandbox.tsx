@@ -8,6 +8,7 @@ import { createPaymentIntent } from "@/lib/payments/fawaterak.functions";
 import {
   listRecentPayments,
   getFawaterakMode,
+  simulateWebhook,
 } from "@/lib/payments/sandbox.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-sandbox")({

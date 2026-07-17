@@ -868,6 +868,71 @@ async def _test_exhausted_message_offline_and_queued(browser):
     print("✓ Exhausted message matches exactly in both offline and queued states")
 
 
+async def _test_aria_live_announces_ready_now(browser):
+    """يتحقق أن منطقة aria-live المخفية (sr-only role=status) داخل بطاقة
+    العدّاد التنازلي:
+      1) تبقى فارغة أثناء العدّ (لا تُقاطع قارئ الشاشة كل ثانية).
+      2) تُحدَّث فوراً إلى النص الصحيح "جاهز لإعادة المحاولة الآن." عند
+         بلوغ الموعد، بالتزامن مع تحوّل نص العدّاد إلى "الآن…".
+      3) تحمل السمات الصحيحة (aria-live=polite, aria-atomic=true) حتى
+         يعلن قارئ الشاشة التغيير كوحدة واحدة.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+    await page.reload(wait_until="domcontentloaded")
+
+    dialog = await _open_modal(page)
+
+    # موعد قريب جداً (~3 ثوانٍ) لتوثيق تحوّل الإعلان بسرعة.
+    await page.evaluate(
+        """() => {
+          const next = new Date(Date.now() + 3_000).toISOString();
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 10_000).toISOString(),
+            attempts: 2,
+            lastError: 'HTTP 500',
+            nextRetryAt: next,
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'HTTP 500' }
+          }));
+        }"""
+    )
+
+    # حصر منطقة sr-only الخاصة بالعدّاد: role=status + aria-live=polite + sr-only،
+    # وموجودة داخل نفس الحاوية التي تعرض "المحاولات: n / m".
+    countdown_card = dialog.locator("div", has_text=re.compile("المحاولات:")).filter(
+        has_text=re.compile("الإعادة القادمة خلال")
+    ).first
+    await expect(countdown_card).to_be_visible(timeout=3_000)
+
+    live_region = countdown_card.locator("span[role='status'][aria-live='polite'].sr-only").first
+    await expect(live_region).to_have_count(1)
+    await expect(live_region).to_have_attribute("aria-atomic", "true")
+    await expect(live_region).to_have_attribute("aria-live", "polite")
+
+    # أثناء العدّ: يجب أن تكون منطقة الإعلان فارغة حتى لا يُقاطع القارئ كل ثانية.
+    initial_text = (await live_region.inner_text()).strip()
+    assert initial_text == "", (
+        f"aria-live region should stay empty while counting down, got: {initial_text!r}"
+    )
+
+    # بعد انقضاء الموعد: يظهر النص الدقيق ويتزامن مع تحوّل العدّاد إلى "الآن…".
+    await expect(live_region).to_have_text("جاهز لإعادة المحاولة الآن.", timeout=8_000)
+    countdown_line = dialog.get_by_text(re.compile("الإعادة القادمة خلال"))
+    final_text = await countdown_line.inner_text()
+    assert "الآن" in final_text, (
+        f"visible countdown should also flip to 'الآن…' when aria-live fires, got: {final_text!r}"
+    )
+    await page.screenshot(path=str(OUT / "aria_live_ready_now.png"))
+
+    await ctx.close()
+    print("✓ aria-live region announces 'جاهز لإعادة المحاولة الآن.' exactly on transition to 'الآن…'")
+
+
 async def main():
     _require_auth()
     async with async_playwright() as pw:
@@ -883,10 +948,11 @@ async def main():
             await _test_status_transitions_ordered(browser)
             await _test_readable_failure_reason(browser)
             await _test_exhausted_message_offline_and_queued(browser)
+            await _test_aria_live_announces_ready_now(browser)
 
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy + schedule-toggle states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy + schedule-toggle + aria-live-ready-now states.")
 
 
 if __name__ == "__main__":

@@ -200,7 +200,9 @@ function PaymentsFinanceDashboard() {
             onClick={() => {
               if (!data) return;
               const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-              downloadCsv(`payments-finance-${stamp}.csv`, buildFinanceCsv(data));
+              const rows = buildFinanceCsv(data);
+              rows.splice(1, 0, [`النطاق الزمني: ${range.label}`]);
+              downloadCsv(`payments-finance-${stamp}.csv`, rows);
             }}
             disabled={!data}
             className="text-xs px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-bold hover:bg-primary/20 disabled:opacity-50"

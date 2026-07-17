@@ -371,11 +371,20 @@ export const getPaymentsBreakdown = createServerFn({ method: "GET" })
     const monthAgo = now - 30 * 86400_000;
     const paid30ByCurrency: Record<string, number> = {};
 
+    // Daily time-series (UTC day bucket)
+    const dailyMap: Record<
+      string,
+      { revenueByCurrency: Record<string, number>; countsByStatus: Record<string, number> }
+    > = {};
+    const bucketFor = (iso: string) => iso.slice(0, 10);
+    const currencySet = new Set<string>();
+
     for (const r of rows) {
       const amt = Number(r.amount ?? 0);
       const cur = (r.currency || "SAR").toUpperCase();
       const st = r.status || "unknown";
       const pu = r.purpose || "other";
+      currencySet.add(cur);
 
       byCurrencyStatus[cur] ??= {};
       byCurrencyStatus[cur][st] ??= { count: 0, total: 0 };
@@ -401,7 +410,19 @@ export const getPaymentsBreakdown = createServerFn({ method: "GET" })
         const ts = r.paid_at ? new Date(r.paid_at).getTime() : new Date(r.created_at).getTime();
         if (ts >= monthAgo) paid30ByCurrency[cur] = (paid30ByCurrency[cur] || 0) + amt;
       }
+
+      const dayKey = bucketFor(r.paid_at || r.created_at);
+      dailyMap[dayKey] ??= { revenueByCurrency: {}, countsByStatus: {} };
+      dailyMap[dayKey].countsByStatus[st] = (dailyMap[dayKey].countsByStatus[st] || 0) + 1;
+      if (st === "paid") {
+        dailyMap[dayKey].revenueByCurrency[cur] =
+          (dailyMap[dayKey].revenueByCurrency[cur] || 0) + amt;
+      }
     }
+
+    const daily = Object.entries(dailyMap)
+      .map(([date, v]) => ({ date, ...v }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     return {
       totalCount,
@@ -413,6 +434,9 @@ export const getPaymentsBreakdown = createServerFn({ method: "GET" })
       byCurrencyStatus,
       paidTotalByCurrency,
       paid30ByCurrency,
+      currencies: Array.from(currencySet),
+      daily,
       recent: rows.slice(0, 20),
     };
   });
+

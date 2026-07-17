@@ -776,7 +776,7 @@ export function CountryDetectedBanner() {
               : isReadyNow
                 ? "جاهز لإعادة المحاولة الآن — إعادة مزامنة تفضيل العملة مع حسابي"
                 : waiting
-                  ? `الإعادة القادمة خلال ${secs} ثانية — إعادة مزامنة تفضيل العملة مع حسابي`
+                  ? `الإعادة القادمة خلال ${formatArabicCountdown(secs)} — إعادة مزامنة تفضيل العملة مع حسابي`
                   : "إعادة محاولة مزامنة تفضيل العملة مع حسابي";
             return (
               <div className="mt-2 flex justify-end">

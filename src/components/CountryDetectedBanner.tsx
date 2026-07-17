@@ -671,7 +671,7 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "queued" && (
               <>
-                <Loader2 className="size-4 text-amber-600 animate-spin shrink-0" aria-hidden />
+                <Loader2 className={`size-4 text-amber-600 shrink-0${reducedMotion ? "" : " animate-spin"}`} aria-hidden />
                 <span className="text-amber-700 font-bold">
                   في طابور المزامنة — ستُعاد المحاولة تلقائياً.
                 </span>

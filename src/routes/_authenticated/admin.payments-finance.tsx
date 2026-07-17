@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
+import { FinanceCharts } from "@/components/admin/FinanceCharts";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-finance")({
   component: PaymentsFinanceDashboard,
@@ -287,6 +288,12 @@ function PaymentsFinanceDashboard() {
 
       {data && (
         <>
+          {/* Charts */}
+          <FinanceCharts
+            daily={(data as any).daily ?? []}
+            currencies={(data as any).currencies ?? Object.keys(data.byCurrency)}
+          />
+
           {/* Summary */}
           <section className="mb-8">
             <h2 className="font-display text-lg font-extrabold mb-3">ملخص عام</h2>

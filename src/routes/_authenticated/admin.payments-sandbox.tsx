@@ -265,8 +265,16 @@ function PaymentsSandbox() {
                 </div>
                 {open && (
                   <div className="mt-3 grid md:grid-cols-2 gap-3">
-                    <JsonBlock title="raw_request (إلى فواتيرك)" data={p.raw_request} />
-                    <JsonBlock title="raw_callback (Webhook)" data={p.raw_callback} />
+                    <JsonBlock
+                      title="raw_request (إلى فواتيرك)"
+                      data={p.raw_request}
+                      reveal={revealSensitive}
+                    />
+                    <JsonBlock
+                      title="raw_callback (Webhook)"
+                      data={p.raw_callback}
+                      reveal={revealSensitive}
+                    />
                   </div>
                 )}
               </div>

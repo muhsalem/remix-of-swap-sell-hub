@@ -138,18 +138,46 @@ function PaymentsFinanceDashboard() {
                 <tbody>
                   {Object.entries(data.byCurrencyStatus).map(([cur, statuses]) => (
                     <tr key={cur} className="border-t border-border">
-                      <td className="p-3 font-bold">{cur}</td>
+                      <td className="p-3 font-bold">
+                        <Link
+                          to="/payments"
+                          search={{
+                            scope: "all",
+                            status: "all",
+                            currency: cur,
+                            purpose: "all",
+                            q: "",
+                          }}
+                          className="text-primary hover:underline"
+                          title={`عرض كل عمليات ${cur}`}
+                        >
+                          {cur}
+                        </Link>
+                      </td>
                       {Object.keys(STATUS_LABEL).map((s) => {
                         const b = statuses[s];
                         return (
                           <td key={s} className="p-3">
                             {b ? (
-                              <div>
-                                <div className="font-bold">{fmtMoney(b.total, cur)}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  {b.count} عملية
+                              <Link
+                                to="/payments"
+                                search={{
+                                  scope: "all",
+                                  status: s,
+                                  currency: cur,
+                                  purpose: "all",
+                                  q: "",
+                                }}
+                                className="block group hover:bg-primary/5 rounded-lg -m-1 p-1 transition"
+                                title={`عرض ${STATUS_LABEL[s] || s} · ${cur}`}
+                              >
+                                <div className="font-bold group-hover:text-primary">
+                                  {fmtMoney(b.total, cur)}
                                 </div>
-                              </div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  {b.count} عملية · فتح ↗
+                                </div>
+                              </Link>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
@@ -157,10 +185,22 @@ function PaymentsFinanceDashboard() {
                         );
                       })}
                       <td className="p-3 font-bold">
-                        {fmtMoney(data.byCurrency[cur]?.total || 0, cur)}
-                        <div className="text-[10px] text-muted-foreground font-normal">
-                          {data.byCurrency[cur]?.count || 0} عملية
-                        </div>
+                        <Link
+                          to="/payments"
+                          search={{
+                            scope: "all",
+                            status: "all",
+                            currency: cur,
+                            purpose: "all",
+                            q: "",
+                          }}
+                          className="hover:text-primary hover:underline"
+                        >
+                          {fmtMoney(data.byCurrency[cur]?.total || 0, cur)}
+                          <div className="text-[10px] text-muted-foreground font-normal">
+                            {data.byCurrency[cur]?.count || 0} عملية
+                          </div>
+                        </Link>
                       </td>
                     </tr>
                   ))}

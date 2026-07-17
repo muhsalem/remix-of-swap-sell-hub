@@ -62,16 +62,21 @@ export const Route = createFileRoute("/api/public/webhooks/fawaterak")({
         if (!row) return new Response("Payment not found", { status: 404 });
         if (row.status === "paid") return new Response("ok", { status: 200 });
 
-        const patch: Record<string, unknown> = {
+        const patch: {
+          status: "pending" | "paid" | "failed" | "expired";
+          raw_callback: unknown;
+          provider_invoice_id?: string;
+          paid_at?: string;
+        } = {
           status,
-          raw_callback: payload as never,
-          provider_invoice_id: invoiceId || undefined,
+          raw_callback: payload,
         };
+        if (invoiceId) patch.provider_invoice_id = invoiceId;
         if (status === "paid") patch.paid_at = new Date().toISOString();
 
         const { error } = await supabaseAdmin
           .from("payments")
-          .update(patch)
+          .update(patch as never)
           .eq("id", row.id);
         if (error) {
           console.error("[fawaterak-webhook] update failed", error);

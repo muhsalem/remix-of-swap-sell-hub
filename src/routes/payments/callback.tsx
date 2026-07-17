@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react";
 import { getPaymentStatus } from "@/lib/payments/fawaterak.functions";
-import { formatPrice } from "@/lib/format-price";
+import { formatAmount } from "@/lib/format-price";
 
 interface CallbackSearch {
   pid?: string;
@@ -69,7 +69,7 @@ function PaymentCallback() {
               <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <dt className="text-muted-foreground">المبلغ:</dt>
                 <dd className="font-bold text-foreground tabular-nums">
-                  {formatPrice(Number(data.amount), (data.currency as "SAR" | "EGP") ?? "SAR")}
+                  {formatAmount(Number(data.amount))} {data.currency ?? "SAR"}
                 </dd>
                 <dt className="text-muted-foreground">الحالة:</dt>
                 <dd className="font-bold text-foreground">

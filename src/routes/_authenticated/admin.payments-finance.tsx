@@ -139,11 +139,43 @@ function buildFinanceCsv(data: any): (string | number)[][] {
   return rows;
 }
 
+const PRESETS: { key: string; label: string; days: number | null }[] = [
+  { key: "7d", label: "٧ أيام", days: 7 },
+  { key: "30d", label: "٣٠ يوم", days: 30 },
+  { key: "90d", label: "٩٠ يوم", days: 90 },
+  { key: "all", label: "الكل", days: null },
+];
+
+function toDateInput(iso: string): string {
+  return iso ? iso.slice(0, 10) : "";
+}
+
 function PaymentsFinanceDashboard() {
   const fetchData = useServerFn(getPaymentsBreakdown);
+  const [preset, setPreset] = useState<string>("30d");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
+  const range = useMemo(() => {
+    if (preset === "custom") {
+      return {
+        from: fromDate ? new Date(fromDate + "T00:00:00Z").toISOString() : undefined,
+        to: toDate ? new Date(toDate + "T23:59:59Z").toISOString() : undefined,
+        label:
+          fromDate || toDate
+            ? `${fromDate || "…"} → ${toDate || "…"}`
+            : "الكل",
+      };
+    }
+    const p = PRESETS.find((x) => x.key === preset);
+    if (!p || p.days == null) return { from: undefined, to: undefined, label: "الكل" };
+    const from = new Date(Date.now() - p.days * 86400_000).toISOString();
+    return { from, to: undefined, label: `آخر ${p.label}` };
+  }, [preset, fromDate, toDate]);
+
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["admin-payments-finance"],
-    queryFn: () => fetchData(),
+    queryKey: ["admin-payments-finance", range.from ?? "-", range.to ?? "-"],
+    queryFn: () => fetchData({ data: { from: range.from, to: range.to } }),
     refetchInterval: 60_000,
   });
 

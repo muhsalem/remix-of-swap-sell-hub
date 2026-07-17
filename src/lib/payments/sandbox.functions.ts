@@ -132,3 +132,80 @@ export const listMyPaymentsHistory = createServerFn({ method: "GET" })
 function isUuid(s: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 }
+
+// -----------------------------------------------------------------------------
+// محاكاة Webhook (sandbox فقط) — يحدّث الحالة كأن فواتيرك أرسلت callback.
+// -----------------------------------------------------------------------------
+const SIM_SCENARIO = z.enum(["success", "failure", "pending", "expired"]);
+
+export const simulateWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        paymentId: z.string().uuid(),
+        scenario: SIM_SCENARIO,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    // حماية: لا نسمح بالمحاكاة إلا في وضع sandbox.
+    const mode = process.env.FAWATERAK_MODE ?? "sandbox";
+    if (mode !== "sandbox") {
+      throw new Error("simulate_webhook_disabled_in_live_mode");
+    }
+
+    const map: Record<
+      z.infer<typeof SIM_SCENARIO>,
+      "paid" | "failed" | "pending" | "expired"
+    > = {
+      success: "paid",
+      failure: "failed",
+      pending: "pending",
+      expired: "expired",
+    };
+    const status = map[data.scenario];
+
+    const now = new Date().toISOString();
+    const fakePayload = {
+      _simulated: true,
+      simulated_by: userId,
+      simulated_at: now,
+      scenario: data.scenario,
+      invoice_status:
+        status === "paid"
+          ? "paid"
+          : status === "failed"
+            ? "failed"
+            : status === "expired"
+              ? "expired"
+              : "unpaid",
+      payLoad: { paymentId: data.paymentId },
+    };
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    const patch: Record<string, unknown> = {
+      status,
+      raw_callback: fakePayload,
+      updated_at: now,
+    };
+    if (status === "paid") patch.paid_at = now;
+    else patch.paid_at = null;
+
+    const { data: updated, error } = await supabaseAdmin
+      .from("payments")
+      .update(patch as never)
+      .eq("id", data.paymentId)
+      .select("id, status, paid_at")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!updated) throw new Error("payment_not_found");
+
+    return { ok: true as const, id: updated.id, status: updated.status };
+  });

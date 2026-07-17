@@ -323,3 +323,83 @@ export const listEscrowHolds = createServerFn({ method: "GET" })
     );
     return { holds: data ?? [], totals };
   });
+
+export const getPaymentsBreakdown = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { data, error } = await supabase
+      .from("payments")
+      .select("amount,currency,status,purpose,paid_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as Array<{
+      amount: number | string | null;
+      currency: string | null;
+      status: string;
+      purpose: string | null;
+      paid_at: string | null;
+      created_at: string;
+    }>;
+
+    type Bucket = { count: number; total: number };
+    const byCurrencyStatus: Record<string, Record<string, Bucket>> = {};
+    const byStatus: Record<string, Bucket> = {};
+    const byCurrency: Record<string, Bucket> = {};
+    const byPurpose: Record<string, Bucket> = {};
+    let totalCount = 0;
+    let paidCount = 0;
+    let paidTotalByCurrency: Record<string, number> = {};
+
+    const now = Date.now();
+    const monthAgo = now - 30 * 86400_000;
+    const paid30ByCurrency: Record<string, number> = {};
+
+    for (const r of rows) {
+      const amt = Number(r.amount ?? 0);
+      const cur = (r.currency || "SAR").toUpperCase();
+      const st = r.status || "unknown";
+      const pu = r.purpose || "other";
+
+      byCurrencyStatus[cur] ??= {};
+      byCurrencyStatus[cur][st] ??= { count: 0, total: 0 };
+      byCurrencyStatus[cur][st].count += 1;
+      byCurrencyStatus[cur][st].total += amt;
+
+      byStatus[st] ??= { count: 0, total: 0 };
+      byStatus[st].count += 1;
+      byStatus[st].total += amt;
+
+      byCurrency[cur] ??= { count: 0, total: 0 };
+      byCurrency[cur].count += 1;
+      byCurrency[cur].total += amt;
+
+      byPurpose[pu] ??= { count: 0, total: 0 };
+      byPurpose[pu].count += 1;
+      byPurpose[pu].total += amt;
+
+      totalCount += 1;
+      if (st === "paid") {
+        paidCount += 1;
+        paidTotalByCurrency[cur] = (paidTotalByCurrency[cur] || 0) + amt;
+        const ts = r.paid_at ? new Date(r.paid_at).getTime() : new Date(r.created_at).getTime();
+        if (ts >= monthAgo) paid30ByCurrency[cur] = (paid30ByCurrency[cur] || 0) + amt;
+      }
+    }
+
+    return {
+      totalCount,
+      paidCount,
+      successRate: totalCount ? Math.round((paidCount / totalCount) * 1000) / 10 : 0,
+      byCurrency,
+      byStatus,
+      byPurpose,
+      byCurrencyStatus,
+      paidTotalByCurrency,
+      paid30ByCurrency,
+      recent: rows.slice(0, 20),
+    };
+  });

@@ -94,6 +94,8 @@ export function CountryDetectedBanner() {
   const anchorRef = useRef<{ key: string; anchorPerf: number; remainingAtAnchor: number } | null>(null);
   const trackedRef = useRef(false);
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const retryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const wasReadyRef = useRef<boolean>(false);
   const titleId = useId();
   const descId = useId();
   const sourceId = useId();

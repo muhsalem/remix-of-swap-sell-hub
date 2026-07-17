@@ -501,6 +501,66 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          created_at: string
+          currency: string
+          duration_days: number | null
+          id: string
+          paid_at: string | null
+          provider: string
+          provider_invoice_id: string | null
+          provider_invoice_key: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          raw_callback: Json | null
+          raw_request: Json | null
+          status: Database["public"]["Enums"]["payment_status"]
+          target_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          checkout_url?: string | null
+          created_at?: string
+          currency?: string
+          duration_days?: number | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_invoice_id?: string | null
+          provider_invoice_key?: string | null
+          purpose: Database["public"]["Enums"]["payment_purpose"]
+          raw_callback?: Json | null
+          raw_request?: Json | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          target_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          created_at?: string
+          currency?: string
+          duration_days?: number | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_invoice_id?: string | null
+          provider_invoice_key?: string | null
+          purpose?: Database["public"]["Enums"]["payment_purpose"]
+          raw_callback?: Json | null
+          raw_request?: Json | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          target_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_config: {
         Row: {
           key: string
@@ -1404,6 +1464,16 @@ export type Database = {
         | "rejected"
         | "cancelled"
         | "completed"
+      payment_purpose:
+        | "verify_individual"
+        | "verify_company"
+        | "listing_featured_7d"
+        | "listing_featured_30d"
+        | "listing_pinned_7d"
+        | "listing_boost"
+        | "sub_merchant_month"
+        | "sub_store_month"
+      payment_status: "pending" | "paid" | "failed" | "expired" | "refunded"
       promotion_kind:
         | "featured"
         | "pinned"
@@ -1571,6 +1641,17 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      payment_purpose: [
+        "verify_individual",
+        "verify_company",
+        "listing_featured_7d",
+        "listing_featured_30d",
+        "listing_pinned_7d",
+        "listing_boost",
+        "sub_merchant_month",
+        "sub_store_month",
+      ],
+      payment_status: ["pending", "paid", "failed", "expired", "refunded"],
       promotion_kind: [
         "featured",
         "pinned",

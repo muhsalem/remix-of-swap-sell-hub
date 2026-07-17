@@ -82,6 +82,7 @@ export const listAllPayments = createServerFn({ method: "GET" })
       .object({
         status: STATUS.optional(),
         purpose: z.string().optional(),
+        currency: z.string().trim().max(6).optional(),
         userId: z.string().uuid().optional(),
         search: z.string().trim().max(200).optional(),
         limit: z.number().int().min(1).max(200).default(50),
@@ -104,6 +105,7 @@ export const listAllPayments = createServerFn({ method: "GET" })
 
     if (data.status) q = q.eq("status", data.status);
     if (data.purpose) q = q.eq("purpose", data.purpose as never);
+    if (data.currency) q = q.eq("currency", data.currency.toUpperCase());
     if (data.userId) q = q.eq("user_id", data.userId);
     if (data.search) {
       const s = data.search;
@@ -129,6 +131,7 @@ export const listMyPaymentsHistory = createServerFn({ method: "GET" })
     z
       .object({
         status: STATUS.optional(),
+        currency: z.string().trim().max(6).optional(),
         limit: z.number().int().min(1).max(200).default(50),
         offset: z.number().int().min(0).default(0),
       })
@@ -146,6 +149,7 @@ export const listMyPaymentsHistory = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .range(data.offset, data.offset + data.limit - 1);
     if (data.status) q = q.eq("status", data.status);
+    if (data.currency) q = q.eq("currency", data.currency.toUpperCase());
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
 

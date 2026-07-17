@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -9,7 +11,16 @@ import {
   listMyPaymentsHistory,
 } from "@/lib/payments/sandbox.functions";
 
+const paymentsSearchSchema = z.object({
+  scope: fallback(z.string(), "mine").default("mine"),
+  status: fallback(z.string(), "all").default("all"),
+  currency: fallback(z.string(), "all").default("all"),
+  purpose: fallback(z.string(), "all").default("all"),
+  q: fallback(z.string(), "").default(""),
+});
+
 export const Route = createFileRoute("/_authenticated/payments")({
+  validateSearch: zodValidator(paymentsSearchSchema),
   component: PaymentsDashboard,
   errorComponent: ({ error }) => (
     <div dir="rtl" className="p-8 text-destructive">
@@ -53,10 +64,14 @@ function PaymentsDashboard() {
   const listMine = useServerFn(listMyPaymentsHistory);
   const qc = useQueryClient();
 
-  const [scope, setScope] = useState<"mine" | "all">("mine");
-  const [status, setStatus] = useState<string>("all");
-  const [purpose, setPurpose] = useState<string>("all");
-  const [search, setSearch] = useState("");
+  const urlSearch = Route.useSearch();
+  const [scope, setScope] = useState<"mine" | "all">(
+    urlSearch.scope === "all" ? "all" : "mine",
+  );
+  const [status, setStatus] = useState<string>(urlSearch.status || "all");
+  const [currency, setCurrency] = useState<string>(urlSearch.currency || "all");
+  const [purpose, setPurpose] = useState<string>(urlSearch.purpose || "all");
+  const [search, setSearch] = useState(urlSearch.q || "");
   const [page, setPage] = useState(0);
 
   const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
@@ -68,11 +83,20 @@ function PaymentsDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [scope, status, purpose, search]);
+  }, [scope, status, currency, purpose, search]);
 
-  const queryKey = ["payments-dash", scope, status, purpose, search, page] as const;
+  const queryKey = [
+    "payments-dash",
+    scope,
+    status,
+    currency,
+    purpose,
+    search,
+    page,
+  ] as const;
   const payload = {
     status: status === "all" ? undefined : (status as never),
+    currency: currency === "all" ? undefined : currency,
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
   };
@@ -179,6 +203,18 @@ function PaymentsDashboard() {
                 {STATUS_LABEL[s]}
               </option>
             ))}
+          </select>
+        </label>
+        <label className="text-xs">
+          العملة
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background"
+          >
+            <option value="all">الكل</option>
+            <option value="SAR">SAR — ر.س</option>
+            <option value="EGP">EGP — ج.م</option>
           </select>
         </label>
         {scope === "all" && (

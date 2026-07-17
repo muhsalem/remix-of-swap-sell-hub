@@ -22,6 +22,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PaymentsCallbackRouteImport } from './routes/payments/callback'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as ApiSitemapDotxmlRouteImport } from './routes/api/sitemap[.]xml'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as ApiPublicWebhooksFawaterakRouteImport } from './routes/api/public/webhooks/fawaterak'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -108,6 +110,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsCallbackRoute = PaymentsCallbackRouteImport.update({
+  id: '/payments/callback',
+  path: '/payments/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListingsIdRoute = ListingsIdRouteImport.update({
@@ -234,6 +241,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksFawaterakRoute =
+  ApiPublicWebhooksFawaterakRouteImport.update({
+    id: '/api/public/webhooks/fawaterak',
+    path: '/api/public/webhooks/fawaterak',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -263,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/payments/callback': typeof PaymentsCallbackRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
@@ -271,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -300,6 +315,7 @@ export interface FileRoutesByTo {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/payments/callback': typeof PaymentsCallbackRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
@@ -308,6 +324,7 @@ export interface FileRoutesByTo {
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -339,6 +356,7 @@ export interface FileRoutesById {
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/payments/callback': typeof PaymentsCallbackRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
@@ -347,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -378,6 +397,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/payments/callback'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
@@ -386,6 +406,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-cities'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/api/public/webhooks/fawaterak'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -415,6 +436,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/payments/callback'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/disputes'
@@ -423,6 +445,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-cities'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/api/public/webhooks/fawaterak'
   id:
     | '__root__'
     | '/'
@@ -453,6 +476,7 @@ export interface FileRouteTypes {
     | '/api/sitemap.xml'
     | '/legal/$doc'
     | '/listings/$id'
+    | '/payments/callback'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/disputes'
@@ -461,6 +485,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
+    | '/api/public/webhooks/fawaterak'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -483,8 +508,10 @@ export interface RootRouteChildren {
   ApiSitemapDotxmlRoute: typeof ApiSitemapDotxmlRoute
   LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
+  PaymentsCallbackRoute: typeof PaymentsCallbackRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicWebhooksFawaterakRoute: typeof ApiPublicWebhooksFawaterakRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -578,6 +605,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/callback': {
+      id: '/payments/callback'
+      path: '/payments/callback'
+      fullPath: '/payments/callback'
+      preLoaderRoute: typeof PaymentsCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/listings/$id': {
@@ -741,6 +775,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/fawaterak': {
+      id: '/api/public/webhooks/fawaterak'
+      path: '/api/public/webhooks/fawaterak'
+      fullPath: '/api/public/webhooks/fawaterak'
+      preLoaderRoute: typeof ApiPublicWebhooksFawaterakRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -822,8 +863,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSitemapDotxmlRoute: ApiSitemapDotxmlRoute,
   LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
+  PaymentsCallbackRoute: PaymentsCallbackRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicWebhooksFawaterakRoute: ApiPublicWebhooksFawaterakRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

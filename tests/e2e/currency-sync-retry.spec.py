@@ -1036,6 +1036,171 @@ async def _test_aria_live_exact_at_zero(browser):
 
 
 
+async def _describe_active(page):
+    """يعيد وصفاً مقروءاً للعنصر النشط: aria-label أو نص أو data-retry-state."""
+    return await page.evaluate(
+        """() => {
+          const el = document.activeElement;
+          if (!el || el === document.body) return null;
+          return {
+            tag: el.tagName.toLowerCase(),
+            label: el.getAttribute('aria-label') || (el.textContent || '').trim().slice(0, 80),
+            role: el.getAttribute('role'),
+            retryState: el.getAttribute('data-retry-state'),
+            ariaDisabled: el.getAttribute('aria-disabled'),
+            inDialog: !!el.closest('[role=dialog]'),
+            inBanner: !!el.closest('[data-country-banner], section[role=region]'),
+          };
+        }"""
+    )
+
+
+async def _tab_ring(page, steps: int):
+    """يضغط Tab عدة مرات ويجمع وصف العنصر النشط في كل خطوة."""
+    ring = []
+    for _ in range(steps):
+        await page.keyboard.press("Tab")
+        ring.append(await _describe_active(page))
+    return ring
+
+
+async def _test_keyboard_focus_order(browser):
+    """ترتيب التركيز بالكيبورد داخل البانر والمودال عبر waiting/ready/exhausted.
+
+    الحالات المُغطّاة:
+      1) البانر: Tab يصل بالترتيب إلى "تأكيد أو تغيير" ثم "كيف تم الاكتشاف؟"
+         ثم زر الإغلاق — بحسب ترتيب DOM.
+      2) المودال في الخمول (waiting/idle): Tab يمرّ على عناصر داخل الحوار فقط
+         (تركيز محبوس)، ويصل إلى زر "حفظ" ثم زر الإغلاق.
+      3) بعد فشل الخادم (ready): زر "إعادة المحاولة" مُدرج في حلقة التركيز
+         ويكون قابلاً للتفعيل (aria-disabled ≠ true).
+      4) بعد الاستنفاد (exhausted): زر "إعادة المحاولة" لا يزال يستقبل التركيز
+         (لأن aria-disabled يُبقيه في حلقة Tab لقارئات الشاشة) لكن aria-disabled=true
+         والضغط على Enter لا يُطلق حدث sync_pref_retry.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    events = _capture_analytics(page)
+    await _restore_session(ctx, page)
+
+    fail_mode = {"on": False}
+
+    async def controlled(route: Route):
+        if "setPreferredCountry" in route.request.url and fail_mode["on"]:
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"forced_failure_for_focus_test"}')
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", controlled)
+    await page.reload(wait_until="domcontentloaded")
+
+    # 1) البانر — ابدأ من body ثم اضغط Tab حتى تلتقط الأزرار الثلاثة.
+    banner = page.get_by_role("region").filter(has_text=re.compile("اكتشفنا موقعك"))
+    await banner.wait_for(state="visible", timeout=15_000)
+    await page.evaluate("() => (document.activeElement instanceof HTMLElement) && document.activeElement.blur()")
+    await page.evaluate("() => document.body.focus()")
+
+    # قد يوجد عناصر قابلة للتركيز قبل البانر (روابط تنقّل)، فنمشي حتى ندخل البانر.
+    banner_hits = []
+    for _ in range(40):
+        await page.keyboard.press("Tab")
+        info = await _describe_active(page)
+        if info and info.get("inBanner"):
+            banner_hits.append(info)
+            if len(banner_hits) >= 3:
+                break
+    assert len(banner_hits) >= 3, f"Tab لم يصل إلى أزرار البانر الثلاثة؛ التقط={banner_hits}"
+
+    labels = [h["label"] for h in banner_hits[:3]]
+    # الترتيب المتوقع بحسب DOM: أساسي → معلومات → إغلاق
+    assert re.search(r"تأكيد أو تغيير", labels[0] or ""), f"أول تركيز بالبانر يجب أن يكون زر التأكيد، لا: {labels[0]!r}"
+    assert re.search(r"كيف تم الاكتشاف|عرض تفاصيل", labels[1] or ""), f"ثاني تركيز يجب أن يكون زر المعلومات، لا: {labels[1]!r}"
+    assert re.search(r"إغلاق لافتة", labels[2] or ""), f"ثالث تركيز يجب أن يكون زر الإغلاق، لا: {labels[2]!r}"
+    await page.screenshot(path=str(OUT / "focus_01_banner_order.png"))
+
+    # 2) المودال في الخمول — التركيز محبوس داخل [role=dialog].
+    dialog = await _open_modal(page)
+    # Radix ينقل التركيز الأولي داخل الحوار؛ ندع خطوة Tab أولى تستقر.
+    await page.wait_for_timeout(150)
+
+    idle_ring = await _tab_ring(page, 10)
+    idle_in_dialog = [x for x in idle_ring if x and x.get("inDialog")]
+    idle_out = [x for x in idle_ring if x and not x.get("inDialog")]
+    assert idle_out == [], f"تركيز خرج من المودال في الخمول: {idle_out}"
+
+    # زر "حفظ" لا بد أن يظهر ضمن حلقة التركيز.
+    idle_labels = " | ".join((x["label"] or "") for x in idle_in_dialog)
+    assert re.search(r"حفظ", idle_labels), f"زر الحفظ غير موجود في حلقة تركيز الخمول: {idle_labels!r}"
+    # زر "إعادة المحاولة" لا يظهر قبل حدوث فشل.
+    assert not any((x.get("retryState") for x in idle_in_dialog)), \
+        "زر إعادة المحاولة لا يجب أن يظهر قبل ظهور خطأ"
+    await page.screenshot(path=str(OUT / "focus_02_modal_idle.png"))
+
+    # 3) حالة ready — بعد فشل الخادم يظهر زر "إعادة المحاولة".
+    fail_mode["on"] = True
+    await _click_save(dialog)
+    status = dialog.locator("[role=status]")
+    await expect(status).to_contain_text(re.compile("تعذّر حفظ التفضيل"), timeout=10_000)
+    retry_btn = _retry_button(dialog)
+    await expect(retry_btn).to_be_visible()
+
+    # اعِد تدوير التركيز داخل المودال؛ اضغط Tab عدة مرات وتحقق من إدراج زر الإعادة.
+    ready_ring = await _tab_ring(page, 14)
+    ready_in_dialog = [x for x in ready_ring if x and x.get("inDialog")]
+    ready_out = [x for x in ready_ring if x and not x.get("inDialog")]
+    assert ready_out == [], f"تركيز خرج من المودال في حالة ready: {ready_out}"
+
+    retry_hits = [x for x in ready_in_dialog if x.get("retryState") is not None or re.search(r"إعادة محاولة", x.get("label") or "")]
+    assert retry_hits, f"زر إعادة المحاولة غير مُدرج في حلقة تركيز ready: {[x['label'] for x in ready_in_dialog]}"
+    # في ready يجب ألا يكون aria-disabled=true
+    assert not any(x.get("ariaDisabled") == "true" for x in retry_hits), \
+        f"زر إعادة المحاولة في حالة ready يجب ألا يكون aria-disabled: {retry_hits}"
+    await page.screenshot(path=str(OUT / "focus_03_modal_ready.png"))
+
+    # 4) حالة exhausted — احقن طابوراً باستنفاد المحاولات.
+    fail_mode["on"] = True
+    await page.evaluate(
+        """() => {
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 60_000).toISOString(),
+            attempts: 5,
+            lastError: 'network_unreachable',
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'network_unreachable' }
+          }));
+        }"""
+    )
+    await expect(dialog.get_by_text(re.compile("استنفدت المحاولات التلقائية"))).to_be_visible(timeout=5_000)
+
+    # يجب أن يبقى الزر قابلاً للتركيز (Radix/aria-disabled يحافظ عليه بحلقة Tab)
+    # مع aria-disabled="true" لمنع التفعيل.
+    exhausted_ring = await _tab_ring(page, 14)
+    exhausted_in_dialog = [x for x in exhausted_ring if x and x.get("inDialog")]
+    exhausted_out = [x for x in exhausted_ring if x and not x.get("inDialog")]
+    assert exhausted_out == [], f"تركيز خرج من المودال في حالة exhausted: {exhausted_out}"
+
+    exhausted_retry_hits = [x for x in exhausted_in_dialog if re.search(r"إعادة محاولة", x.get("label") or "") or x.get("retryState") is not None]
+    assert exhausted_retry_hits, "زر إعادة المحاولة يجب أن يبقى ضمن حلقة التركيز في exhausted"
+    assert all(x.get("ariaDisabled") == "true" for x in exhausted_retry_hits), \
+        f"aria-disabled يجب أن يكون true عند الاستنفاد: {exhausted_retry_hits}"
+
+    # ركّز الزر واضغط Enter/Space — لا يجب أن يُطلَق sync_pref_retry.
+    events.clear()
+    await retry_btn.focus()
+    await page.keyboard.press("Enter")
+    await page.keyboard.press("Space")
+    await page.wait_for_timeout(500)
+    triggered = [e for e in events if e["event_name"] == "sync_pref_retry"]
+    assert not triggered, f"aria-disabled يجب أن يمنع تفعيل الزر بالكيبورد، لكن أُطلق: {triggered}"
+
+    await page.screenshot(path=str(OUT / "focus_04_modal_exhausted.png"))
+    await ctx.close()
+    print("✓ ترتيب التركيز بالكيبورد ثابت عبر banner + modal(waiting/ready/exhausted) "
+          "وaria-disabled يمنع التفعيل في exhausted")
 
 
 async def _test_axe_no_a11y_violations(browser):
@@ -1134,6 +1299,7 @@ async def main():
             await _test_exhausted_message_offline_and_queued(browser)
             await _test_aria_live_announces_ready_now(browser)
             await _test_aria_live_exact_at_zero(browser)
+            await _test_keyboard_focus_order(browser)
             await _test_axe_no_a11y_violations(browser)
 
         finally:

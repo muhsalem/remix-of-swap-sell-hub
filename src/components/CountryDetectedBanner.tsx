@@ -280,7 +280,7 @@ export function CountryDetectedBanner() {
       window.clearInterval(tick);
       window.removeEventListener("badel:pref-sync", onSync as EventListener);
     };
-  }, [modalOpen, syncStatus]);
+  }, [modalOpen, syncStatus, reducedMotion]);
 
   // Focus management: when the countdown transitions to "الآن…" (ready),
   // move keyboard focus onto the "إعادة المحاولة" button so keyboard users

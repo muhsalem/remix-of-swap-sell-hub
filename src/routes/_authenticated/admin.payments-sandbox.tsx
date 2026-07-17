@@ -293,6 +293,39 @@ function PaymentsSandbox() {
                     </button>
                   </div>
                 </div>
+
+                {isSandbox && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 pt-3 border-t border-dashed border-border">
+                    <span className="text-[11px] font-bold text-muted-foreground">
+                      محاكاة Webhook:
+                    </span>
+                    {(
+                      [
+                        { key: "success", label: "نجاح ✅", cls: "bg-emerald-600 text-white border-emerald-700" },
+                        { key: "failure", label: "فشل ❌", cls: "bg-rose-600 text-white border-rose-700" },
+                        { key: "pending", label: "قيد الانتظار ⏳", cls: "bg-amber-500 text-white border-amber-600" },
+                        { key: "expired", label: "منتهية ⌛", cls: "bg-stone-600 text-white border-stone-700" },
+                      ] as const
+                    ).map((s) => {
+                      const isThis =
+                        simulateMut.isPending &&
+                        simulateMut.variables?.paymentId === p.id &&
+                        simulateMut.variables?.scenario === s.key;
+                      return (
+                        <button
+                          key={s.key}
+                          onClick={() =>
+                            simulateMut.mutate({ paymentId: p.id, scenario: s.key })
+                          }
+                          disabled={simulateMut.isPending}
+                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full border disabled:opacity-50 ${s.cls}`}
+                        >
+                          {isThis ? "…" : s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 {open && (
                   <div className="mt-3 grid md:grid-cols-2 gap-3">
                     <JsonBlock

@@ -831,6 +831,63 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_rewards: {
+        Row: {
+          expires_at: string
+          granted_at: string
+          id: string
+          note: string | null
+          reward_type: Database["public"]["Enums"]["referral_reward_type"]
+          role_in_referral: string | null
+          source_referral_id: string | null
+          status: Database["public"]["Enums"]["referral_reward_status"]
+          used_at: string | null
+          used_on_listing: string | null
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          note?: string | null
+          reward_type: Database["public"]["Enums"]["referral_reward_type"]
+          role_in_referral?: string | null
+          source_referral_id?: string | null
+          status?: Database["public"]["Enums"]["referral_reward_status"]
+          used_at?: string | null
+          used_on_listing?: string | null
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          note?: string | null
+          reward_type?: Database["public"]["Enums"]["referral_reward_type"]
+          role_in_referral?: string | null
+          source_referral_id?: string | null
+          status?: Database["public"]["Enums"]["referral_reward_status"]
+          used_at?: string | null
+          used_on_listing?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_source_referral_id_fkey"
+            columns: ["source_referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_used_on_listing_fkey"
+            columns: ["used_on_listing"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           code: string
@@ -1610,6 +1667,10 @@ export type Database = {
           rating: number
         }[]
       }
+      grant_welcome_referral_coupon: {
+        Args: { _referral_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1678,6 +1739,11 @@ export type Database = {
         | "verify_individual"
         | "sub_merchant"
         | "sub_store"
+      referral_reward_status: "active" | "used" | "expired"
+      referral_reward_type:
+        | "free_featured_7d"
+        | "welcome_discount_10"
+        | "free_verify_month"
       subscription_status: "active" | "canceled" | "past_due" | "trialing"
       subscription_tier: "free" | "plus" | "pro" | "merchant" | "store"
       ticket_category:
@@ -1866,6 +1932,12 @@ export const Constants = {
         "verify_individual",
         "sub_merchant",
         "sub_store",
+      ],
+      referral_reward_status: ["active", "used", "expired"],
+      referral_reward_type: [
+        "free_featured_7d",
+        "welcome_discount_10",
+        "free_verify_month",
       ],
       subscription_status: ["active", "canceled", "past_due", "trialing"],
       subscription_tier: ["free", "plus", "pro", "merchant", "store"],

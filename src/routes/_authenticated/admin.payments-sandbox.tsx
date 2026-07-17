@@ -103,6 +103,34 @@ function PaymentsSandbox() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const simulateMut = useMutation({
+    mutationFn: (v: {
+      paymentId: string;
+      scenario: "success" | "failure" | "pending" | "expired";
+    }) => simulate({ data: v }),
+    onSuccess: (res) => {
+      const label =
+        res.status === "paid"
+          ? "مدفوعة ✅"
+          : res.status === "failed"
+            ? "فشلت ❌"
+            : res.status === "expired"
+              ? "منتهية ⌛"
+              : "قيد الانتظار ⏳";
+      toast.success(`تمت محاكاة Webhook — الحالة الآن: ${label}`);
+      qc.invalidateQueries({ queryKey: ["sandbox-payments"] });
+    },
+    onError: (e: Error) => {
+      if (e.message.includes("live_mode")) {
+        toast.error("المحاكاة معطّلة في الوضع الحي.");
+      } else {
+        toast.error(e.message);
+      }
+    },
+  });
+
+  const isSandbox = (modeQ.data?.mode ?? "sandbox") === "sandbox";
+
   const needsTarget = purpose.startsWith("listing_");
 
   return (

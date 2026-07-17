@@ -708,6 +708,7 @@ export function CountryDetectedBanner() {
             return (
               <div className="mt-2 flex justify-end">
                 <button
+                  ref={retryBtnRef}
                   type="button"
                   onClick={retrySync}
                   disabled={retryExhausted}

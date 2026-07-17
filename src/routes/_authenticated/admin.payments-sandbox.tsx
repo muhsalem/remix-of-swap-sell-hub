@@ -177,15 +177,34 @@ function PaymentsSandbox() {
       </section>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 className="font-display text-xl font-extrabold">آخر عمليات الدفع و Webhooks</h2>
-          <button
-            onClick={() => paymentsQ.refetch()}
-            className="text-xs text-primary font-bold hover:underline"
-          >
-            تحديث ↻
-          </button>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs font-bold cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={revealSensitive}
+                onChange={(e) => setRevealSensitive(e.target.checked)}
+                className="h-4 w-4 accent-foreground"
+              />
+              <span>
+                {revealSensitive ? "عرض كامل ⚠️" : "طمس الحقول الحساسة"}
+              </span>
+            </label>
+            <button
+              onClick={() => paymentsQ.refetch()}
+              className="text-xs text-primary font-bold hover:underline"
+            >
+              تحديث ↻
+            </button>
+          </div>
         </div>
+
+        {!revealSensitive && (
+          <p className="text-[11px] text-muted-foreground mb-3">
+            بطاقات · توقيعات · مفاتيح · Tokens ستظهر كـ <code className="font-mono">••••</code>. فعّل "عرض كامل" للاطلاع الكامل (للتشخيص فقط).
+          </p>
+        )}
 
         {paymentsQ.isLoading && <p className="text-sm text-muted-foreground">جارٍ التحميل…</p>}
         {paymentsQ.data?.length === 0 && (

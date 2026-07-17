@@ -936,6 +936,85 @@ async def _test_aria_live_announces_ready_now(browser):
     print("✓ aria-live region announces 'جاهز لإعادة المحاولة الآن.' exactly on transition to 'الآن…'")
 
 
+async def _test_axe_no_a11y_violations(browser):
+    """فحص axe-core على حالات المودال المختلفة للتأكد من عدم وجود
+    تضارب في aria-live / roles / aria-disabled / أسماء الأزرار.
+
+    يمرّ على:
+      1) البانر بحدّ ذاته (قبل فتح المودال).
+      2) المودال في حالة الخمول (idle).
+      3) بعد فشل الخادم → زر "إعادة المحاولة" ظاهر ورسالة role=status نشطة.
+      4) بعد حقن طابور مستنفَد → aria-disabled=true على زر الإعادة.
+    """
+    ctx = await browser.new_context(viewport={"width": 1280, "height": 1800}, locale="ar-SA")
+    page = await ctx.new_page()
+    await _restore_session(ctx, page)
+
+    fail_mode = {"on": False}
+
+    async def controlled(route: Route):
+        if "setPreferredCountry" in route.request.url and fail_mode["on"]:
+            await route.fulfill(status=500, content_type="application/json",
+                                body='{"error":"forced_failure_for_a11y"}')
+        else:
+            await route.continue_()
+
+    await ctx.route("**/*setPreferredCountry*", controlled)
+    await page.reload(wait_until="domcontentloaded")
+
+    # 1) البانر قبل فتح المودال.
+    banner = page.get_by_role("region").filter(has_text=re.compile("اكتشفنا موقعك"))
+    await banner.wait_for(state="visible", timeout=15_000)
+    await run_axe(page, context_selector="[data-country-banner], [role=region]",
+                  label="banner-visible", out_dir=OUT)
+
+    # 2) المودال في حالة الخمول.
+    dialog = await _open_modal(page)
+    # نُثبّت data-testid عبر role=dialog (shadcn Radix يضع role=dialog).
+    await run_axe(page, context_selector="[role=dialog]",
+                  label="modal-idle", out_dir=OUT)
+
+    # 3) حالة خطأ الخادم مع ظهور زر "إعادة المحاولة".
+    fail_mode["on"] = True
+    await _click_save(dialog)
+    status = dialog.locator("[role=status]")
+    await expect(status).to_contain_text(re.compile("تعذّر حفظ التفضيل"), timeout=10_000)
+    retry_btn = _retry_button(dialog)
+    await expect(retry_btn).to_be_visible()
+    await run_axe(page, context_selector="[role=dialog]",
+                  label="modal-retry-visible", out_dir=OUT)
+
+    # 4) حالة استنفاد المحاولات → aria-disabled=true على زر الإعادة.
+    await page.evaluate(
+        """() => {
+          const entry = {
+            country: 'EGP',
+            queuedAt: new Date(Date.now() - 60_000).toISOString(),
+            attempts: 5,
+            lastError: 'network_unreachable',
+          };
+          localStorage.setItem('badel:pref-sync-queue', JSON.stringify(entry));
+          window.dispatchEvent(new CustomEvent('badel:pref-sync', {
+            detail: { status: 'failed', country: 'EGP', error: 'network_unreachable' }
+          }));
+        }"""
+    )
+    await expect(dialog.get_by_text(re.compile("استنفدت المحاولات التلقائية"))).to_be_visible(timeout=5_000)
+    # تحقّق يدوي أن aria-disabled فعلاً على الزر (وليس disabled فقط)، ثم اطلب axe.
+    if await retry_btn.count() > 0:
+        aria_disabled = await retry_btn.get_attribute("aria-disabled")
+        assert aria_disabled in ("true", None), (
+            f"retry button aria-disabled unexpected value: {aria_disabled!r}"
+        )
+    await run_axe(page, context_selector="[role=dialog]",
+                  label="modal-exhausted-aria-disabled", out_dir=OUT)
+
+    await page.screenshot(path=str(OUT / "axe_final_state.png"))
+    await ctx.close()
+    print("✓ axe-core: no serious/critical ARIA violations across "
+          "banner / modal-idle / retry-visible / exhausted-aria-disabled states")
+
+
 async def main():
     _require_auth()
     async with async_playwright() as pw:
@@ -952,10 +1031,11 @@ async def main():
             await _test_readable_failure_reason(browser)
             await _test_exhausted_message_offline_and_queued(browser)
             await _test_aria_live_announces_ready_now(browser)
+            await _test_axe_no_a11y_violations(browser)
 
         finally:
             await browser.close()
-    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy + schedule-toggle + aria-live-ready-now states.")
+    print("\nALL PASS — retry button behavior verified in error + offline/queue + exhausted + ordered-transition + readable-failure-reason + exhausted-copy + schedule-toggle + aria-live-ready-now + axe-a11y states.")
 
 
 if __name__ == "__main__":

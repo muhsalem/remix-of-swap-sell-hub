@@ -40,6 +40,7 @@ function AdminDashboard() {
           <Link to="/admin/monitoring" className="text-primary font-bold hover:underline">المراقبة والضمان →</Link>
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
           <Link to="/admin/shipping-cities" className="text-primary font-bold hover:underline">مدن الشحن →</Link>
+          <Link to="/admin/payments-sandbox" className="text-primary font-bold hover:underline">مختبر المدفوعات →</Link>
         </div>
       </div>
 

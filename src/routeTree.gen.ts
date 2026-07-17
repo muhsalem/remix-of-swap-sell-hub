@@ -29,6 +29,7 @@ import { Route as ApiSitemapDotxmlRouteImport } from './routes/api/sitemap[.]xml
 import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedThreeWayRouteImport } from './routes/_authenticated/three-way'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedOffersRouteImport } from './routes/_authenticated/offers'
@@ -39,8 +40,10 @@ import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
 import { Route as AuthenticatedAdminPaymentsSandboxRouteImport } from './routes/_authenticated/admin.payments-sandbox'
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
@@ -150,6 +153,11 @@ const AuthenticatedThreeWayRoute = AuthenticatedThreeWayRouteImport.update({
   path: '/three-way',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -202,6 +210,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedSupportIdRoute = AuthenticatedSupportIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedSupportRoute,
+} as any)
 const AuthenticatedOffersIdRoute = AuthenticatedOffersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -212,6 +225,12 @@ const AuthenticatedOfferListingIdRoute =
     id: '/offer/$listingId',
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSupportRoute =
+  AuthenticatedAdminSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminShippingCitiesRoute =
   AuthenticatedAdminShippingCitiesRouteImport.update({
@@ -284,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
@@ -298,8 +318,10 @@ export interface FileRoutesByFullPath {
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRoutesByTo {
@@ -325,6 +347,7 @@ export interface FileRoutesByTo {
   '/offers': typeof AuthenticatedOffersRouteWithChildren
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
@@ -339,8 +362,10 @@ export interface FileRoutesByTo {
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
+  '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRoutesById {
@@ -368,6 +393,7 @@ export interface FileRoutesById {
   '/_authenticated/offers': typeof AuthenticatedOffersRouteWithChildren
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRouteWithChildren
   '/_authenticated/three-way': typeof AuthenticatedThreeWayRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
@@ -382,8 +408,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
+  '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
 export interface FileRouteTypes {
@@ -411,6 +439,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/payments'
     | '/profile'
+    | '/support'
     | '/three-way'
     | '/transactions'
     | '/api/robots.txt'
@@ -425,8 +454,10 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
+    | '/admin/support'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -452,6 +483,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/payments'
     | '/profile'
+    | '/support'
     | '/three-way'
     | '/transactions'
     | '/api/robots.txt'
@@ -466,8 +498,10 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
+    | '/admin/support'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   id:
     | '__root__'
@@ -494,6 +528,7 @@ export interface FileRouteTypes {
     | '/_authenticated/offers'
     | '/_authenticated/payments'
     | '/_authenticated/profile'
+    | '/_authenticated/support'
     | '/_authenticated/three-way'
     | '/_authenticated/transactions'
     | '/api/robots.txt'
@@ -508,8 +543,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/monitoring'
     | '/_authenticated/admin/payments-sandbox'
     | '/_authenticated/admin/shipping-cities'
+    | '/_authenticated/admin/support'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
+    | '/_authenticated/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesById: FileRoutesById
 }
@@ -681,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedThreeWayRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -751,6 +795,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/support/$id': {
+      id: '/_authenticated/support/$id'
+      path: '/$id'
+      fullPath: '/support/$id'
+      preLoaderRoute: typeof AuthenticatedSupportIdRouteImport
+      parentRoute: typeof AuthenticatedSupportRoute
+    }
     '/_authenticated/offers/$id': {
       id: '/_authenticated/offers/$id'
       path: '/$id'
@@ -764,6 +815,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/offer/$listingId'
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/support': {
+      id: '/_authenticated/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/shipping-cities': {
       id: '/_authenticated/admin/shipping-cities'
@@ -830,6 +888,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
   AuthenticatedAdminPaymentsSandboxRoute: typeof AuthenticatedAdminPaymentsSandboxRoute
   AuthenticatedAdminShippingCitiesRoute: typeof AuthenticatedAdminShippingCitiesRoute
+  AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -839,6 +898,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPaymentsSandboxRoute:
     AuthenticatedAdminPaymentsSandboxRoute,
   AuthenticatedAdminShippingCitiesRoute: AuthenticatedAdminShippingCitiesRoute,
+  AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -855,6 +915,17 @@ const AuthenticatedOffersRouteChildren: AuthenticatedOffersRouteChildren = {
 const AuthenticatedOffersRouteWithChildren =
   AuthenticatedOffersRoute._addFileChildren(AuthenticatedOffersRouteChildren)
 
+interface AuthenticatedSupportRouteChildren {
+  AuthenticatedSupportIdRoute: typeof AuthenticatedSupportIdRoute
+}
+
+const AuthenticatedSupportRouteChildren: AuthenticatedSupportRouteChildren = {
+  AuthenticatedSupportIdRoute: AuthenticatedSupportIdRoute,
+}
+
+const AuthenticatedSupportRouteWithChildren =
+  AuthenticatedSupportRoute._addFileChildren(AuthenticatedSupportRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
@@ -864,6 +935,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOffersRoute: typeof AuthenticatedOffersRouteWithChildren
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRouteWithChildren
   AuthenticatedThreeWayRoute: typeof AuthenticatedThreeWayRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
@@ -878,6 +950,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOffersRoute: AuthenticatedOffersRouteWithChildren,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRouteWithChildren,
   AuthenticatedThreeWayRoute: AuthenticatedThreeWayRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,

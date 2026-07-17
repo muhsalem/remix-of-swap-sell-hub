@@ -163,6 +163,18 @@ function PaymentsFinanceDashboard() {
           >
             {isFetching ? "جارٍ التحديث…" : "تحديث"}
           </button>
+          <button
+            onClick={() => {
+              if (!data) return;
+              const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+              downloadCsv(`payments-finance-${stamp}.csv`, buildFinanceCsv(data));
+            }}
+            disabled={!data}
+            className="text-xs px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-bold hover:bg-primary/20 disabled:opacity-50"
+            title="تصدير التقرير الحالي إلى CSV"
+          >
+            ⬇ تصدير CSV
+          </button>
           <Link to="/admin" className="text-primary font-bold hover:underline text-sm">
             ← لوحة المشرف
           </Link>

@@ -266,10 +266,14 @@ export function CountryDetectedBanner() {
       }
     };
     read();
+    // Reduced-motion users get a much slower heartbeat (every 15s) so the
+    // countdown text does not flicker every second. The monotonic anchor
+    // still guarantees the value is accurate whenever it does update.
+    const tickMs = reducedMotion ? 15000 : 1000;
     const tick = window.setInterval(() => {
       read();
       setTickPerf(perfNow());
-    }, 1000);
+    }, tickMs);
     const onSync = () => read();
     window.addEventListener("badel:pref-sync", onSync as EventListener);
     return () => {

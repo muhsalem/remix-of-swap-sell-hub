@@ -326,16 +326,29 @@ export const listEscrowHolds = createServerFn({ method: "GET" })
 
 export const getPaymentsBreakdown = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        from: z.string().datetime().optional(),
+        to: z.string().datetime().optional(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
 
-    const { data, error } = await supabase
+    let q: any = supabase
       .from("payments")
       .select("amount,currency,status,purpose,paid_at,created_at")
       .order("created_at", { ascending: false })
       .limit(5000);
+    if (data.from) q = q.gte("created_at", data.from);
+    if (data.to) q = q.lte("created_at", data.to);
+    const { data: rowsData, error } = await q;
     if (error) throw new Error(error.message);
+    const data0 = rowsData;
+
     const rows = (data ?? []) as Array<{
       amount: number | string | null;
       currency: string | null;

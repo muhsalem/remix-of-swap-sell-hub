@@ -205,6 +205,17 @@ function PaymentsDashboard() {
             ))}
           </select>
         </label>
+        <label className="text-xs">
+          العملة
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background"
+          >
+            <option value="all">الكل</option>
+            <option value="SAR">SAR — ر.س</option>
+            <option value="EGP">EGP — ج.م</option>
+          </select>
         {scope === "all" && (
           <>
             <label className="text-xs">

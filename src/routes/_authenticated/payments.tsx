@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -9,7 +11,16 @@ import {
   listMyPaymentsHistory,
 } from "@/lib/payments/sandbox.functions";
 
+const paymentsSearchSchema = z.object({
+  scope: fallback(z.string(), "mine").default("mine"),
+  status: fallback(z.string(), "all").default("all"),
+  currency: fallback(z.string(), "all").default("all"),
+  purpose: fallback(z.string(), "all").default("all"),
+  q: fallback(z.string(), "").default(""),
+});
+
 export const Route = createFileRoute("/_authenticated/payments")({
+  validateSearch: zodValidator(paymentsSearchSchema),
   component: PaymentsDashboard,
   errorComponent: ({ error }) => (
     <div dir="rtl" className="p-8 text-destructive">

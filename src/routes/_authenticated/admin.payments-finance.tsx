@@ -214,8 +214,74 @@ function PaymentsFinanceDashboard() {
         </div>
       </div>
 
+      {/* Date range filter */}
+      <div className="mb-6 p-4 rounded-2xl border border-border bg-card flex flex-wrap gap-3 items-end">
+        <div className="flex gap-1 flex-wrap">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => {
+                setPreset(p.key);
+                setFromDate("");
+                setToDate("");
+              }}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                preset === p.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-muted"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setPreset("custom");
+              if (!fromDate)
+                setFromDate(toDateInput(new Date(Date.now() - 30 * 86400_000).toISOString()));
+              if (!toDate) setToDate(toDateInput(new Date().toISOString()));
+            }}
+            className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+              preset === "custom"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border hover:bg-muted"
+            }`}
+          >
+            مخصّص
+          </button>
+        </div>
+
+        {preset === "custom" && (
+          <div className="flex gap-2 items-end flex-wrap">
+            <label className="text-xs">
+              من
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="mt-1 block px-3 py-1.5 rounded-lg border border-border bg-background text-sm"
+              />
+            </label>
+            <label className="text-xs">
+              إلى
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="mt-1 block px-3 py-1.5 rounded-lg border border-border bg-background text-sm"
+              />
+            </label>
+          </div>
+        )}
+
+        <div className="text-xs text-muted-foreground ms-auto">
+          الفترة الحالية: <span className="font-bold text-foreground">{range.label}</span>
+        </div>
+      </div>
+
       {isLoading && <p className="text-sm text-muted-foreground">جارٍ التحميل…</p>}
       {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
+
 
       {data && (
         <>

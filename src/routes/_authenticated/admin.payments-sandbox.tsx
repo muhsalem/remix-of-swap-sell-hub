@@ -222,6 +222,24 @@ function PaymentsSandbox() {
               </span>
             </label>
             <button
+              onClick={() =>
+                exportPayments(paymentsQ.data ?? [], "json", revealSensitive)
+              }
+              disabled={!paymentsQ.data?.length}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              تصدير JSON ⬇
+            </button>
+            <button
+              onClick={() =>
+                exportPayments(paymentsQ.data ?? [], "csv", revealSensitive)
+              }
+              disabled={!paymentsQ.data?.length}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              تصدير CSV ⬇
+            </button>
+            <button
               onClick={() => paymentsQ.refetch()}
               className="text-xs text-primary font-bold hover:underline"
             >
@@ -418,4 +436,65 @@ function JsonBlock({
       )}
     </div>
   );
+}
+
+function triggerDownload(content: string, filename: string, mime: string) {
+  const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvCell(v: unknown): string {
+  if (v == null) return "";
+  const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+function exportPayments(
+  rows: Array<Record<string, unknown>>,
+  format: "json" | "csv",
+  reveal: boolean,
+) {
+  const cleaned = rows.map((r) => (reveal ? r : (redact(r) as Record<string, unknown>)));
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  if (format === "json") {
+    triggerDownload(
+      JSON.stringify(cleaned, null, 2),
+      `badel-webhooks-${stamp}.json`,
+      "application/json",
+    );
+    toast.success(`تم تصدير ${cleaned.length} عملية (JSON)`);
+    return;
+  }
+  const cols = [
+    "id",
+    "created_at",
+    "paid_at",
+    "status",
+    "purpose",
+    "amount",
+    "currency",
+    "country",
+    "provider",
+    "provider_ref",
+    "user_id",
+    "raw_request",
+    "raw_callback",
+  ];
+  const header = cols.join(",");
+  const body = cleaned
+    .map((r) => cols.map((c) => csvCell((r as Record<string, unknown>)[c])).join(","))
+    .join("\n");
+  triggerDownload(
+    `\uFEFF${header}\n${body}`,
+    `badel-webhooks-${stamp}.csv`,
+    "text/csv",
+  );
+  toast.success(`تم تصدير ${cleaned.length} عملية (CSV)`);
 }

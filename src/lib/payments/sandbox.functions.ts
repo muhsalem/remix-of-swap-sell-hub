@@ -17,21 +17,48 @@ export const listRecentPayments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
-      .object({ limit: z.number().int().min(1).max(100).default(30) })
+      .object({
+        limit: z.number().int().min(1).max(500).default(30),
+        offset: z.number().int().min(0).default(0),
+        status: z
+          .enum(["pending", "paid", "failed", "expired", "refunded"])
+          .optional(),
+        currency: z.string().trim().max(6).optional(),
+        search: z.string().trim().max(200).optional(),
+        from: z.string().datetime().optional(),
+        to: z.string().datetime().optional(),
+      })
       .parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { data: rows, error } = await supabase
+    let q: any = supabase
       .from("payments")
       .select(
         "id, user_id, provider, provider_invoice_id, provider_invoice_key, purpose, target_id, amount, currency, status, checkout_url, raw_request, raw_callback, paid_at, created_at, updated_at",
+        { count: "exact" },
       )
       .order("updated_at", { ascending: false })
-      .limit(data.limit);
+      .range(data.offset, data.offset + data.limit - 1);
+
+    if (data.status) q = q.eq("status", data.status);
+    if (data.currency) q = q.eq("currency", data.currency.toUpperCase());
+    if (data.from) q = q.gte("created_at", data.from);
+    if (data.to) q = q.lte("created_at", data.to);
+    if (data.search) {
+      const s = data.search.replace(/[,()]/g, " ").trim();
+      if (s) {
+        const uuid = isUuid(s) ? s : "00000000-0000-0000-0000-000000000000";
+        q = q.or(
+          `provider_invoice_id.ilike.%${s}%,purpose.ilike.%${s}%,id.eq.${uuid}`,
+        );
+      }
+    }
+
+    const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return { rows: rows ?? [], total: count ?? 0 };
   });
 
 export const getFawaterakMode = createServerFn({ method: "GET" })

@@ -62,12 +62,39 @@ function PaymentsSandbox() {
     );
   }, [revealSensitive]);
 
+  // Filters + pagination
+  const [fStatus, setFStatus] = useState<string>("");
+  const [fCurrency, setFCurrency] = useState<string>("");
+  const [fSearch, setFSearch] = useState<string>("");
+  const [fFrom, setFFrom] = useState<string>("");
+  const [fTo, setFTo] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(30);
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(fSearch.trim()), 300);
+    return () => clearTimeout(t);
+  }, [fSearch]);
+
+  const filterArgs = {
+    limit: pageSize,
+    offset: 0,
+    status: (fStatus || undefined) as
+      | "pending" | "paid" | "failed" | "expired" | "refunded" | undefined,
+    currency: fCurrency || undefined,
+    search: debouncedSearch || undefined,
+    from: fFrom ? new Date(fFrom).toISOString() : undefined,
+    to: fTo ? new Date(fTo + "T23:59:59").toISOString() : undefined,
+  };
+
   const modeQ = useQuery({ queryKey: ["fw-mode"], queryFn: () => modeFn() });
   const paymentsQ = useQuery({
-    queryKey: ["sandbox-payments"],
-    queryFn: () => list({ data: { limit: 30 } }),
+    queryKey: ["sandbox-payments", filterArgs],
+    queryFn: () => list({ data: filterArgs }),
     refetchInterval: 15_000,
   });
+  const rows = paymentsQ.data?.rows ?? [];
+  const total = paymentsQ.data?.total ?? 0;
+  const hasMore = rows.length < total;
 
   // إشعارات فورية عبر Realtime (يشمل كل صفوف الجدول لأن المشرف يرى الجميع).
   useEffect(() => {
@@ -208,8 +235,13 @@ function PaymentsSandbox() {
 
       <section>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h2 className="font-display text-xl font-extrabold">آخر عمليات الدفع و Webhooks</h2>
-          <div className="flex items-center gap-3">
+          <h2 className="font-display text-xl font-extrabold">
+            آخر عمليات الدفع و Webhooks
+            <span className="ms-2 text-xs font-normal text-muted-foreground">
+              ({rows.length}/{total})
+            </span>
+          </h2>
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="flex items-center gap-2 text-xs font-bold cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -222,19 +254,15 @@ function PaymentsSandbox() {
               </span>
             </label>
             <button
-              onClick={() =>
-                exportPayments(paymentsQ.data ?? [], "json", revealSensitive)
-              }
-              disabled={!paymentsQ.data?.length}
+              onClick={() => exportPayments(rows, "json", revealSensitive)}
+              disabled={!rows.length}
               className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
             >
               تصدير JSON ⬇
             </button>
             <button
-              onClick={() =>
-                exportPayments(paymentsQ.data ?? [], "csv", revealSensitive)
-              }
-              disabled={!paymentsQ.data?.length}
+              onClick={() => exportPayments(rows, "csv", revealSensitive)}
+              disabled={!rows.length}
               className="text-xs font-bold px-2.5 py-1 rounded-lg border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
             >
               تصدير CSV ⬇
@@ -248,6 +276,94 @@ function PaymentsSandbox() {
           </div>
         </div>
 
+        {/* Filters */}
+        <div className="grid md:grid-cols-5 gap-2 mb-3 p-3 rounded-xl border border-border bg-stone-soft/30">
+          <label className="text-[11px] font-bold">
+            الحالة
+            <select
+              value={fStatus}
+              onChange={(e) => {
+                setFStatus(e.target.value);
+                setPageSize(30);
+              }}
+              className="mt-1 w-full px-2 py-1.5 rounded-lg border border-border bg-background text-xs"
+            >
+              <option value="">الكل</option>
+              <option value="paid">مدفوعة</option>
+              <option value="pending">قيد الانتظار</option>
+              <option value="failed">فشلت</option>
+              <option value="expired">منتهية</option>
+              <option value="refunded">مستردة</option>
+            </select>
+          </label>
+          <label className="text-[11px] font-bold">
+            العملة
+            <select
+              value={fCurrency}
+              onChange={(e) => {
+                setFCurrency(e.target.value);
+                setPageSize(30);
+              }}
+              className="mt-1 w-full px-2 py-1.5 rounded-lg border border-border bg-background text-xs"
+            >
+              <option value="">الكل</option>
+              <option value="SAR">SAR</option>
+              <option value="EGP">EGP</option>
+            </select>
+          </label>
+          <label className="text-[11px] font-bold">
+            من تاريخ
+            <input
+              type="date"
+              value={fFrom}
+              onChange={(e) => {
+                setFFrom(e.target.value);
+                setPageSize(30);
+              }}
+              className="mt-1 w-full px-2 py-1.5 rounded-lg border border-border bg-background text-xs"
+            />
+          </label>
+          <label className="text-[11px] font-bold">
+            إلى تاريخ
+            <input
+              type="date"
+              value={fTo}
+              onChange={(e) => {
+                setFTo(e.target.value);
+                setPageSize(30);
+              }}
+              className="mt-1 w-full px-2 py-1.5 rounded-lg border border-border bg-background text-xs"
+            />
+          </label>
+          <label className="text-[11px] font-bold">
+            بحث (UUID / رقم فاتورة / غرض)
+            <input
+              value={fSearch}
+              onChange={(e) => {
+                setFSearch(e.target.value);
+                setPageSize(30);
+              }}
+              placeholder="🔎"
+              className="mt-1 w-full px-2 py-1.5 rounded-lg border border-border bg-background text-xs font-mono"
+            />
+          </label>
+          {(fStatus || fCurrency || fFrom || fTo || fSearch) && (
+            <button
+              onClick={() => {
+                setFStatus("");
+                setFCurrency("");
+                setFFrom("");
+                setFTo("");
+                setFSearch("");
+                setPageSize(30);
+              }}
+              className="md:col-span-5 justify-self-start text-[11px] text-primary font-bold hover:underline"
+            >
+              مسح الفلاتر
+            </button>
+          )}
+        </div>
+
         {!revealSensitive && (
           <p className="text-[11px] text-muted-foreground mb-3">
             بطاقات · توقيعات · مفاتيح · Tokens ستظهر كـ <code className="font-mono">••••</code>. فعّل "عرض كامل" للاطلاع الكامل (للتشخيص فقط).
@@ -255,12 +371,12 @@ function PaymentsSandbox() {
         )}
 
         {paymentsQ.isLoading && <p className="text-sm text-muted-foreground">جارٍ التحميل…</p>}
-        {paymentsQ.data?.length === 0 && (
-          <p className="text-sm text-muted-foreground">لا توجد عمليات دفع بعد.</p>
+        {!paymentsQ.isLoading && rows.length === 0 && (
+          <p className="text-sm text-muted-foreground">لا توجد عمليات دفع مطابقة.</p>
         )}
 
         <div className="space-y-3">
-          {paymentsQ.data?.map((p) => {
+          {rows.map((p: any) => {
             const open = expandedId === p.id;
             return (
               <div
@@ -362,6 +478,20 @@ function PaymentsSandbox() {
             );
           })}
         </div>
+
+        {hasMore && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => setPageSize((n) => n + 30)}
+              disabled={paymentsQ.isFetching}
+              className="text-xs font-bold px-4 py-2 rounded-xl border border-border bg-background hover:bg-stone-soft/40 disabled:opacity-50"
+            >
+              {paymentsQ.isFetching
+                ? "جارٍ التحميل…"
+                : `تحميل المزيد (${total - rows.length} متبقّية)`}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

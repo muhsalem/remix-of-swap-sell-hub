@@ -1031,6 +1031,7 @@ async def main():
             await _test_readable_failure_reason(browser)
             await _test_exhausted_message_offline_and_queued(browser)
             await _test_aria_live_announces_ready_now(browser)
+            await _test_aria_live_exact_at_zero(browser)
             await _test_axe_no_a11y_violations(browser)
 
         finally:

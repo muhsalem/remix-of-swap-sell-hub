@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -43,6 +44,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedAdminWaitlistRouteImport } from './routes/_authenticated/admin.waitlist'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
 import { Route as AuthenticatedAdminPaymentsSandboxRouteImport } from './routes/_authenticated/admin.payments-sandbox'
@@ -54,6 +56,11 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicWebhooksFawaterakRouteImport } from './routes/api/public/webhooks/fawaterak'
 
+const WaitlistRoute = WaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -227,6 +234,12 @@ const AuthenticatedOfferListingIdRoute =
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminWaitlistRoute =
+  AuthenticatedAdminWaitlistRouteImport.update({
+    id: '/waitlist',
+    path: '/waitlist',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSupportRoute =
   AuthenticatedAdminSupportRouteImport.update({
     id: '/support',
@@ -300,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -327,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -372,6 +388,7 @@ export interface FileRoutesByTo {
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -392,6 +409,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -419,6 +437,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
+  '/_authenticated/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
   '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
@@ -439,6 +458,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -466,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
+    | '/admin/waitlist'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -484,6 +505,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -511,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
+    | '/admin/waitlist'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -530,6 +553,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -557,6 +581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payments-sandbox'
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/admin/support'
+    | '/_authenticated/admin/waitlist'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
     | '/_authenticated/support/$id'
@@ -577,6 +602,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  WaitlistRoute: typeof WaitlistRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiRobotsDottxtRoute: typeof ApiRobotsDottxtRoute
@@ -591,6 +617,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/waitlist': {
+      id: '/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof WaitlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -829,6 +862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/waitlist': {
+      id: '/_authenticated/admin/waitlist'
+      path: '/waitlist'
+      fullPath: '/admin/waitlist'
+      preLoaderRoute: typeof AuthenticatedAdminWaitlistRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/support': {
       id: '/_authenticated/admin/support'
       path: '/support'
@@ -910,6 +950,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPaymentsSandboxRoute: typeof AuthenticatedAdminPaymentsSandboxRoute
   AuthenticatedAdminShippingCitiesRoute: typeof AuthenticatedAdminShippingCitiesRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
+  AuthenticatedAdminWaitlistRoute: typeof AuthenticatedAdminWaitlistRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -922,6 +963,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminPaymentsSandboxRoute,
   AuthenticatedAdminShippingCitiesRoute: AuthenticatedAdminShippingCitiesRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
+  AuthenticatedAdminWaitlistRoute: AuthenticatedAdminWaitlistRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -996,6 +1038,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  WaitlistRoute: WaitlistRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,

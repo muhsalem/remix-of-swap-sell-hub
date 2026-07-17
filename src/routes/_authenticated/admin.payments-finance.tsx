@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
 
@@ -138,11 +139,43 @@ function buildFinanceCsv(data: any): (string | number)[][] {
   return rows;
 }
 
+const PRESETS: { key: string; label: string; days: number | null }[] = [
+  { key: "7d", label: "٧ أيام", days: 7 },
+  { key: "30d", label: "٣٠ يوم", days: 30 },
+  { key: "90d", label: "٩٠ يوم", days: 90 },
+  { key: "all", label: "الكل", days: null },
+];
+
+function toDateInput(iso: string): string {
+  return iso ? iso.slice(0, 10) : "";
+}
+
 function PaymentsFinanceDashboard() {
   const fetchData = useServerFn(getPaymentsBreakdown);
+  const [preset, setPreset] = useState<string>("30d");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
+  const range = useMemo(() => {
+    if (preset === "custom") {
+      return {
+        from: fromDate ? new Date(fromDate + "T00:00:00Z").toISOString() : undefined,
+        to: toDate ? new Date(toDate + "T23:59:59Z").toISOString() : undefined,
+        label:
+          fromDate || toDate
+            ? `${fromDate || "…"} → ${toDate || "…"}`
+            : "الكل",
+      };
+    }
+    const p = PRESETS.find((x) => x.key === preset);
+    if (!p || p.days == null) return { from: undefined, to: undefined, label: "الكل" };
+    const from = new Date(Date.now() - p.days * 86400_000).toISOString();
+    return { from, to: undefined, label: `آخر ${p.label}` };
+  }, [preset, fromDate, toDate]);
+
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["admin-payments-finance"],
-    queryFn: () => fetchData(),
+    queryKey: ["admin-payments-finance", range.from ?? "-", range.to ?? "-"],
+    queryFn: () => fetchData({ data: { from: range.from, to: range.to } }),
     refetchInterval: 60_000,
   });
 
@@ -167,7 +200,9 @@ function PaymentsFinanceDashboard() {
             onClick={() => {
               if (!data) return;
               const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-              downloadCsv(`payments-finance-${stamp}.csv`, buildFinanceCsv(data));
+              const rows = buildFinanceCsv(data);
+              rows.splice(1, 0, [`النطاق الزمني: ${range.label}`]);
+              downloadCsv(`payments-finance-${stamp}.csv`, rows);
             }}
             disabled={!data}
             className="text-xs px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-bold hover:bg-primary/20 disabled:opacity-50"
@@ -181,8 +216,74 @@ function PaymentsFinanceDashboard() {
         </div>
       </div>
 
+      {/* Date range filter */}
+      <div className="mb-6 p-4 rounded-2xl border border-border bg-card flex flex-wrap gap-3 items-end">
+        <div className="flex gap-1 flex-wrap">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => {
+                setPreset(p.key);
+                setFromDate("");
+                setToDate("");
+              }}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+                preset === p.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-muted"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setPreset("custom");
+              if (!fromDate)
+                setFromDate(toDateInput(new Date(Date.now() - 30 * 86400_000).toISOString()));
+              if (!toDate) setToDate(toDateInput(new Date().toISOString()));
+            }}
+            className={`text-xs px-3 py-1.5 rounded-lg border transition ${
+              preset === "custom"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border hover:bg-muted"
+            }`}
+          >
+            مخصّص
+          </button>
+        </div>
+
+        {preset === "custom" && (
+          <div className="flex gap-2 items-end flex-wrap">
+            <label className="text-xs">
+              من
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="mt-1 block px-3 py-1.5 rounded-lg border border-border bg-background text-sm"
+              />
+            </label>
+            <label className="text-xs">
+              إلى
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="mt-1 block px-3 py-1.5 rounded-lg border border-border bg-background text-sm"
+              />
+            </label>
+          </div>
+        )}
+
+        <div className="text-xs text-muted-foreground ms-auto">
+          الفترة الحالية: <span className="font-bold text-foreground">{range.label}</span>
+        </div>
+      </div>
+
       {isLoading && <p className="text-sm text-muted-foreground">جارٍ التحميل…</p>}
       {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
+
 
       {data && (
         <>

@@ -742,6 +742,24 @@ export function CountryDetectedBanner() {
 
           {(syncStatus === "error" || syncStatus === "queued" || syncStatus === "offline") && (() => {
             const retryExhausted = !!pendingEntry && pendingEntry.attempts >= MAX_PREF_SYNC_ATTEMPTS && !pendingEntry.nextRetryAt;
+            // Mirror the aria-live announcement so screen readers hear a
+            // consistent message on the region and on the button itself
+            // whenever the schedule changes (ready ↔ waiting ↔ exhausted).
+            const anchor = anchorRef.current;
+            const key = pendingEntry?.nextRetryAt ?? "";
+            const nextMs = key && anchor && anchor.key === key
+              ? anchor.remainingAtAnchor - (tickPerf - anchor.anchorPerf)
+              : null;
+            const secs = nextMs !== null ? Math.max(0, Math.ceil(nextMs / 1000)) : null;
+            const isReadyNow = !!pendingEntry && !retryExhausted && !!pendingEntry.nextRetryAt && secs === 0;
+            const waiting = !!pendingEntry && !retryExhausted && !!pendingEntry.nextRetryAt && (secs ?? 0) > 0;
+            const label = retryExhausted
+              ? "استنفدت محاولات إعادة المزامنة التلقائية"
+              : isReadyNow
+                ? "جاهز لإعادة المحاولة الآن — إعادة مزامنة تفضيل العملة مع حسابي"
+                : waiting
+                  ? `الإعادة القادمة خلال ${secs} ثانية — إعادة مزامنة تفضيل العملة مع حسابي`
+                  : "إعادة محاولة مزامنة تفضيل العملة مع حسابي";
             return (
               <div className="mt-2 flex justify-end">
                 <button
@@ -750,9 +768,10 @@ export function CountryDetectedBanner() {
                   onClick={retrySync}
                   disabled={retryExhausted}
                   aria-disabled={retryExhausted}
-                  aria-label={retryExhausted ? "استنفدت محاولات إعادة المزامنة التلقائية" : "إعادة محاولة مزامنة تفضيل العملة مع حسابي"}
+                  aria-label={label}
                   title={retryExhausted ? "استنفدت المحاولات التلقائية (5/5)" : undefined}
                   data-retry-exhausted={retryExhausted ? "true" : "false"}
+                  data-retry-state={retryExhausted ? "exhausted" : isReadyNow ? "ready" : waiting ? "waiting" : "idle"}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 rounded-full border border-border bg-white text-[11px] font-bold hover:bg-stone-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
                 >
                   <RefreshCw className="size-3.5" aria-hidden />

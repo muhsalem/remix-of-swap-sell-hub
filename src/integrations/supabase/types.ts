@@ -1069,6 +1069,134 @@ export type Database = {
         }
         Relationships: []
       }
+      support_reply_templates: {
+        Row: {
+          active: boolean
+          body: string
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at: string
+          id: string
+          key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          id?: string
+          key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          id?: string
+          key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_id: string
+          template_key: string | null
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id: string
+          template_key?: string | null
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string
+          template_key?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_admin: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          closed_at: string | null
+          created_at: string
+          first_response_at: string | null
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          related_listing_id: string | null
+          related_offer_id: string | null
+          related_payment_id: string | null
+          resolved_at: string | null
+          sla_due_at: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_admin?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          closed_at?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          related_listing_id?: string | null
+          related_offer_id?: string | null
+          related_payment_id?: string | null
+          resolved_at?: string | null
+          sla_due_at: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_admin?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          closed_at?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          related_listing_id?: string | null
+          related_offer_id?: string | null
+          related_payment_id?: string | null
+          resolved_at?: string | null
+          sla_due_at?: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trade_offers: {
         Row: {
           anchor_expires_at: string | null
@@ -1483,6 +1611,16 @@ export type Database = {
         | "sub_store"
       subscription_status: "active" | "canceled" | "past_due" | "trialing"
       subscription_tier: "free" | "plus" | "pro" | "merchant" | "store"
+      ticket_category:
+        | "payment"
+        | "listing"
+        | "dispute"
+        | "account"
+        | "shipping"
+        | "technical"
+        | "other"
+      ticket_priority: "low" | "normal" | "high" | "urgent"
+      ticket_status: "open" | "pending" | "waiting_user" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1662,6 +1800,17 @@ export const Constants = {
       ],
       subscription_status: ["active", "canceled", "past_due", "trialing"],
       subscription_tier: ["free", "plus", "pro", "merchant", "store"],
+      ticket_category: [
+        "payment",
+        "listing",
+        "dispute",
+        "account",
+        "shipping",
+        "technical",
+        "other",
+      ],
+      ticket_priority: ["low", "normal", "high", "urgent"],
+      ticket_status: ["open", "pending", "waiting_user", "resolved", "closed"],
     },
   },
 } as const

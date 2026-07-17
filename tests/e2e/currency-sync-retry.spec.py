@@ -22,6 +22,9 @@ from pathlib import Path
 
 from playwright.async_api import async_playwright, expect, BrowserContext, Route
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _axe import run_axe  # noqa: E402
+
 BASE_URL = os.environ.get("E2E_BASE_URL", "http://localhost:8080")
 
 OUT = Path("/tmp/browser/currency-sync-retry")

@@ -62,12 +62,39 @@ function PaymentsSandbox() {
     );
   }, [revealSensitive]);
 
+  // Filters + pagination
+  const [fStatus, setFStatus] = useState<string>("");
+  const [fCurrency, setFCurrency] = useState<string>("");
+  const [fSearch, setFSearch] = useState<string>("");
+  const [fFrom, setFFrom] = useState<string>("");
+  const [fTo, setFTo] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(30);
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(fSearch.trim()), 300);
+    return () => clearTimeout(t);
+  }, [fSearch]);
+
+  const filterArgs = {
+    limit: pageSize,
+    offset: 0,
+    status: (fStatus || undefined) as
+      | "pending" | "paid" | "failed" | "expired" | "refunded" | undefined,
+    currency: fCurrency || undefined,
+    search: debouncedSearch || undefined,
+    from: fFrom ? new Date(fFrom).toISOString() : undefined,
+    to: fTo ? new Date(fTo + "T23:59:59").toISOString() : undefined,
+  };
+
   const modeQ = useQuery({ queryKey: ["fw-mode"], queryFn: () => modeFn() });
   const paymentsQ = useQuery({
-    queryKey: ["sandbox-payments"],
-    queryFn: () => list({ data: { limit: 30 } }),
+    queryKey: ["sandbox-payments", filterArgs],
+    queryFn: () => list({ data: filterArgs }),
     refetchInterval: 15_000,
   });
+  const rows = paymentsQ.data?.rows ?? [];
+  const total = paymentsQ.data?.total ?? 0;
+  const hasMore = rows.length < total;
 
   // إشعارات فورية عبر Realtime (يشمل كل صفوف الجدول لأن المشرف يرى الجميع).
   useEffect(() => {

@@ -96,6 +96,20 @@ export function CountryDetectedBanner() {
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const retryBtnRef = useRef<HTMLButtonElement | null>(null);
   const wasReadyRef = useRef<boolean>(false);
+  // Respect the user's OS-level "reduce motion" setting: throttle the
+  // per-second countdown tick and drop entrance / spinner animations so
+  // motion-sensitive users don't see rapidly changing numbers or spinners.
+  const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
   const titleId = useId();
   const descId = useId();
   const sourceId = useId();

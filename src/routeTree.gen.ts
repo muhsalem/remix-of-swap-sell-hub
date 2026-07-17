@@ -46,6 +46,7 @@ import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
 import { Route as AuthenticatedAdminPaymentsSandboxRouteImport } from './routes/_authenticated/admin.payments-sandbox'
+import { Route as AuthenticatedAdminPaymentsFinanceRouteImport } from './routes/_authenticated/admin.payments-finance'
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
 import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
@@ -244,6 +245,12 @@ const AuthenticatedAdminPaymentsSandboxRoute =
     path: '/payments-sandbox',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPaymentsFinanceRoute =
+  AuthenticatedAdminPaymentsFinanceRouteImport.update({
+    id: '/payments-finance',
+    path: '/payments-finance',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminMonitoringRoute =
   AuthenticatedAdminMonitoringRouteImport.update({
     id: '/monitoring',
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
+  '/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
@@ -360,6 +368,7 @@ export interface FileRoutesByTo {
   '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
+  '/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
@@ -406,6 +415,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
+  '/_authenticated/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/_authenticated/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/monitoring'
+    | '/admin/payments-finance'
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/monitoring'
+    | '/admin/payments-finance'
     | '/admin/payments-sandbox'
     | '/admin/shipping-cities'
     | '/admin/support'
@@ -541,6 +553,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/disputes'
     | '/_authenticated/admin/finance'
     | '/_authenticated/admin/monitoring'
+    | '/_authenticated/admin/payments-finance'
     | '/_authenticated/admin/payments-sandbox'
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/admin/support'
@@ -837,6 +850,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPaymentsSandboxRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/payments-finance': {
+      id: '/_authenticated/admin/payments-finance'
+      path: '/payments-finance'
+      fullPath: '/admin/payments-finance'
+      preLoaderRoute: typeof AuthenticatedAdminPaymentsFinanceRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/monitoring': {
       id: '/_authenticated/admin/monitoring'
       path: '/monitoring'
@@ -886,6 +906,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminDisputesRoute: typeof AuthenticatedAdminDisputesRoute
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRoute
   AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
+  AuthenticatedAdminPaymentsFinanceRoute: typeof AuthenticatedAdminPaymentsFinanceRoute
   AuthenticatedAdminPaymentsSandboxRoute: typeof AuthenticatedAdminPaymentsSandboxRoute
   AuthenticatedAdminShippingCitiesRoute: typeof AuthenticatedAdminShippingCitiesRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
@@ -895,6 +916,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminDisputesRoute: AuthenticatedAdminDisputesRoute,
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRoute,
   AuthenticatedAdminMonitoringRoute: AuthenticatedAdminMonitoringRoute,
+  AuthenticatedAdminPaymentsFinanceRoute:
+    AuthenticatedAdminPaymentsFinanceRoute,
   AuthenticatedAdminPaymentsSandboxRoute:
     AuthenticatedAdminPaymentsSandboxRoute,
   AuthenticatedAdminShippingCitiesRoute: AuthenticatedAdminShippingCitiesRoute,

@@ -96,6 +96,20 @@ export function CountryDetectedBanner() {
   const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
   const retryBtnRef = useRef<HTMLButtonElement | null>(null);
   const wasReadyRef = useRef<boolean>(false);
+  // Respect the user's OS-level "reduce motion" setting: throttle the
+  // per-second countdown tick and drop entrance / spinner animations so
+  // motion-sensitive users don't see rapidly changing numbers or spinners.
+  const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
   const titleId = useId();
   const descId = useId();
   const sourceId = useId();
@@ -252,17 +266,21 @@ export function CountryDetectedBanner() {
       }
     };
     read();
+    // Reduced-motion users get a much slower heartbeat (every 15s) so the
+    // countdown text does not flicker every second. The monotonic anchor
+    // still guarantees the value is accurate whenever it does update.
+    const tickMs = reducedMotion ? 15000 : 1000;
     const tick = window.setInterval(() => {
       read();
       setTickPerf(perfNow());
-    }, 1000);
+    }, tickMs);
     const onSync = () => read();
     window.addEventListener("badel:pref-sync", onSync as EventListener);
     return () => {
       window.clearInterval(tick);
       window.removeEventListener("badel:pref-sync", onSync as EventListener);
     };
-  }, [modalOpen, syncStatus]);
+  }, [modalOpen, syncStatus, reducedMotion]);
 
   // Focus management: when the countdown transitions to "الآن…" (ready),
   // move keyboard focus onto the "إعادة المحاولة" button so keyboard users
@@ -453,7 +471,7 @@ export function CountryDetectedBanner() {
   return (
     <>
       <section
-        className="fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:left-auto md:max-w-md z-40 rounded-2xl border border-border bg-white/95 backdrop-blur shadow-xl p-4 animate-in slide-in-from-bottom-4"
+        className={`fixed bottom-4 inset-x-4 md:inset-x-auto md:right-6 md:left-auto md:max-w-md z-40 rounded-2xl border border-border bg-white/95 backdrop-blur shadow-xl p-4${reducedMotion ? "" : " animate-in slide-in-from-bottom-4"}`}
         role="region"
         aria-labelledby={titleId}
         aria-describedby={`${descId} ${sourceId}`}
@@ -591,7 +609,7 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "syncing" && (
               <>
-                <Loader2 className="size-4 text-primary animate-spin shrink-0" aria-hidden />
+                <Loader2 className={`size-4 text-primary shrink-0${reducedMotion ? "" : " animate-spin"}`} aria-hidden />
                 <span className="text-foreground font-bold">جاري المزامنة مع حسابك…</span>
               </>
             )}
@@ -653,7 +671,7 @@ export function CountryDetectedBanner() {
             )}
             {syncStatus === "queued" && (
               <>
-                <Loader2 className="size-4 text-amber-600 animate-spin shrink-0" aria-hidden />
+                <Loader2 className={`size-4 text-amber-600 shrink-0${reducedMotion ? "" : " animate-spin"}`} aria-hidden />
                 <span className="text-amber-700 font-bold">
                   في طابور المزامنة — ستُعاد المحاولة تلقائياً.
                 </span>

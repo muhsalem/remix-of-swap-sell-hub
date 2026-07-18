@@ -156,6 +156,15 @@ function PaymentsFinanceDashboard() {
   const [preset, setPreset] = useState<string>("30d");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [selection, setSelection] = useState<ChartSelection | null>(null);
+
+  const handleSelect = (sel: ChartSelection) => {
+    setSelection((prev) =>
+      prev && prev.kind === sel.kind && prev.key === sel.key && prev.date === sel.date
+        ? null
+        : sel,
+    );
+  };
 
   const range = useMemo(() => {
     if (preset === "custom") {

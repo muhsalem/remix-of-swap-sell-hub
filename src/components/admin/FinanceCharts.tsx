@@ -348,7 +348,10 @@ export function FinanceCharts({
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
           <h3 className="font-display text-base font-extrabold">توزيع الحالات {granLabel[granularity]}</h3>
-          {GranularityToggle}
+          <div className="flex items-center gap-2">
+            <ExportBtn onClick={exportStatusCsv} label="تصدير بيانات المخطط CSV" />
+            {GranularityToggle}
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
           عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول

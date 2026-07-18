@@ -41,18 +41,28 @@ const STATUS_COLORS: Record<string, string> = {
 const CURRENCY_COLORS = ["#6366f1", "#ec4899", "#14b8a6", "#f97316", "#8b5cf6", "#0ea5e9"];
 
 function shortDate(d: string) {
-  // yyyy-mm-dd → mm-dd
   return d.length >= 10 ? d.slice(5) : d;
 }
+
+export type ChartSelection = {
+  kind: "status" | "currency";
+  key: string; // status name or currency code
+  date?: string; // full yyyy-mm-dd
+};
 
 export function FinanceCharts({
   daily,
   currencies,
+  onSelect,
+  active,
 }: {
   daily: DailyRow[];
   currencies: string[];
+  onSelect?: (sel: ChartSelection) => void;
+  active?: ChartSelection | null;
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
+  const shortToFull = new Map(daily.map((d) => [shortDate(d.date), d.date]));
 
   const barData = daily.map((d) => {
     const row: Record<string, number | string> = { date: shortDate(d.date) };
@@ -68,10 +78,27 @@ export function FinanceCharts({
 
   const empty = daily.length === 0;
 
+  const handleBarClick = (statusKey: string) => (payload: any) => {
+    if (!onSelect || !payload) return;
+    const shortD = payload?.payload?.date as string | undefined;
+    const full = shortD ? shortToFull.get(shortD) : undefined;
+    onSelect({ kind: "status", key: statusKey, date: full });
+  };
+
+  const handleDotClick = (currency: string) => (payload: any) => {
+    if (!onSelect || !payload) return;
+    const shortD = payload?.payload?.date as string | undefined;
+    const full = shortD ? shortToFull.get(shortD) : undefined;
+    onSelect({ kind: "currency", key: currency, date: full });
+  };
+
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="p-4 rounded-2xl border border-border bg-card">
-        <h3 className="font-display text-base font-extrabold mb-1">توزيع الحالات يومياً</h3>
+        <div className="flex items-center justify-between mb-1 gap-2">
+          <h3 className="font-display text-base font-extrabold">توزيع الحالات يومياً</h3>
+          <span className="text-[10px] text-muted-foreground">اضغط شريحة لفلترة الجدول</span>
+        </div>
         <p className="text-xs text-muted-foreground mb-3">
           عدد العمليات لكل حالة عبر أيام الفترة المختارة (مخطط أعمدة مكدّس)
         </p>
@@ -92,12 +119,27 @@ export function FinanceCharts({
                   labelFormatter={(l) => `اليوم: ${l}`}
                 />
                 <Legend
-                  wrapperStyle={{ fontSize: 11, direction: "rtl" }}
+                  wrapperStyle={{ fontSize: 11, direction: "rtl", cursor: "pointer" }}
                   formatter={(v) => STATUS_LABEL[v as string] || v}
+                  onClick={(o: any) =>
+                    onSelect && o?.value && onSelect({ kind: "status", key: String(o.value) })
+                  }
                 />
-                {statusKeys.map((s) => (
-                  <Bar key={s} dataKey={s} stackId="a" fill={STATUS_COLORS[s]} />
-                ))}
+                {statusKeys.map((s) => {
+                  const dim =
+                    active && active.kind === "status" && active.key !== s ? 0.25 : 1;
+                  return (
+                    <Bar
+                      key={s}
+                      dataKey={s}
+                      stackId="a"
+                      fill={STATUS_COLORS[s]}
+                      fillOpacity={dim}
+                      onClick={handleBarClick(s)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  );
+                })}
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -105,7 +147,10 @@ export function FinanceCharts({
       </div>
 
       <div className="p-4 rounded-2xl border border-border bg-card">
-        <h3 className="font-display text-base font-extrabold mb-1">إجمالي الإيرادات يومياً</h3>
+        <div className="flex items-center justify-between mb-1 gap-2">
+          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات يومياً</h3>
+          <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
+        </div>
         <p className="text-xs text-muted-foreground mb-3">
           الإيرادات المُحصّلة (حالة «مدفوعة») حسب اليوم لكل عملة (مخطط خطي)
         </p>
@@ -125,17 +170,32 @@ export function FinanceCharts({
                   formatter={(v: any, k: any) => [`${formatAmount(Number(v))} ${k}`, k]}
                   labelFormatter={(l) => `اليوم: ${l}`}
                 />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                {currencies.map((c, i) => (
-                  <Line
-                    key={c}
-                    type="monotone"
-                    dataKey={c}
-                    stroke={CURRENCY_COLORS[i % CURRENCY_COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                ))}
+                <Legend
+                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  onClick={(o: any) =>
+                    onSelect && o?.value && onSelect({ kind: "currency", key: String(o.value) })
+                  }
+                />
+                {currencies.map((c, i) => {
+                  const dim =
+                    active && active.kind === "currency" && active.key !== c ? 0.2 : 1;
+                  return (
+                    <Line
+                      key={c}
+                      type="monotone"
+                      dataKey={c}
+                      stroke={CURRENCY_COLORS[i % CURRENCY_COLORS.length]}
+                      strokeOpacity={dim}
+                      strokeWidth={2}
+                      dot={{ r: 3, style: { cursor: "pointer" } }}
+                      activeDot={{
+                        r: 6,
+                        style: { cursor: "pointer" },
+                        onClick: (_: any, payload: any) => handleDotClick(c)(payload),
+                      }}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           )}

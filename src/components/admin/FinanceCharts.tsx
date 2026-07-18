@@ -403,7 +403,10 @@ export function FinanceCharts({
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
           <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات {granLabel[granularity]}</h3>
-          <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
+          <div className="flex items-center gap-2">
+            <ExportBtn onClick={exportRevenueCsv} label="تصدير بيانات المخطط CSV" />
+            <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
           الإيرادات المُحصّلة (حالة «مدفوعة») لكل عملة، مُجمَّعة حسب {granUnit[granularity]} الفترة

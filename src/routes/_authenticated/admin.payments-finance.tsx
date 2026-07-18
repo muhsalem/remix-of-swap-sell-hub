@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
 import { FinanceCharts, type ChartSelection } from "@/components/admin/FinanceCharts";
+import { ChartDetailsModal } from "@/components/admin/ChartDetailsModal";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-finance")({
   component: PaymentsFinanceDashboard,
@@ -157,6 +158,7 @@ function PaymentsFinanceDashboard() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [selection, setSelection] = useState<ChartSelection | null>(null);
+  const [detailsFor, setDetailsFor] = useState<ChartSelection | null>(null);
 
   const handleSelect = (sel: ChartSelection) => {
     setSelection((prev) =>
@@ -164,6 +166,7 @@ function PaymentsFinanceDashboard() {
         ? null
         : sel,
     );
+    if (sel.date) setDetailsFor(sel);
   };
 
   const range = useMemo(() => {
@@ -575,6 +578,7 @@ function PaymentsFinanceDashboard() {
           </section>
         </>
       )}
+      <ChartDetailsModal selection={detailsFor} onClose={() => setDetailsFor(null)} />
     </div>
   );
 }

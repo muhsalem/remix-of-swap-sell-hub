@@ -405,10 +405,11 @@ export function FinanceCharts({
   };
 
   const exportRevenueCsv = () => {
-    const header = ["الفترة", "التاريخ", ...currencies.map((c) => `الإيراد (${c})`)];
+    const cols = visibleCurrencies;
+    const header = ["الفترة", "التاريخ", ...cols.map((c) => `الإيراد (${c})`)];
     const rows: (string | number)[][] = [header];
     for (const d of aggregated) {
-      const vals = currencies.map(
+      const vals = cols.map(
         (c) => Math.round((d.revenueByCurrency[c] || 0) * 100) / 100,
       );
       rows.push([granLabel[granularity], formatFullDate(d.date, granularity), ...vals]);

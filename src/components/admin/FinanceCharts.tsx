@@ -291,6 +291,58 @@ export function FinanceCharts({
     </div>
   );
 
+  const csvEscape = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const downloadCsv = (filename: string, rows: (string | number)[][]) => {
+    const body = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + body], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const stamp = () => new Date().toISOString().slice(0, 10);
+
+  const exportStatusCsv = () => {
+    const header = ["الفترة", "التاريخ", ...statusKeys.map((s) => STATUS_LABEL[s]), "الإجمالي"];
+    const rows: (string | number)[][] = [header];
+    for (const d of aggregated) {
+      const counts = statusKeys.map((s) => d.countsByStatus[s] || 0);
+      const total = counts.reduce((a, b) => a + b, 0);
+      rows.push([granLabel[granularity], formatFullDate(d.date, granularity), ...counts, total]);
+    }
+    downloadCsv(`charts-statuses-${granularity}-${stamp()}.csv`, rows);
+  };
+
+  const exportRevenueCsv = () => {
+    const header = ["الفترة", "التاريخ", ...currencies.map((c) => `الإيراد (${c})`)];
+    const rows: (string | number)[][] = [header];
+    for (const d of aggregated) {
+      const vals = currencies.map(
+        (c) => Math.round((d.revenueByCurrency[c] || 0) * 100) / 100,
+      );
+      rows.push([granLabel[granularity], formatFullDate(d.date, granularity), ...vals]);
+    }
+    downloadCsv(`charts-revenue-${granularity}-${stamp()}.csv`, rows);
+  };
+
+  const ExportBtn = ({ onClick, label }: { onClick: () => void; label: string }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={empty}
+      className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={label}
+      title={label}
+    >
+      ⬇ CSV
+    </button>
+  );
+
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="p-4 rounded-2xl border border-border bg-card">

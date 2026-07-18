@@ -112,7 +112,7 @@ function StatusTooltip({ active, payload, label, shortToFull, granularity }: any
       dir="rtl"
       className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[190px]"
     >
-      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="font-bold mb-1">{formatFullDate(full, granularity)}</div>
       <div className="text-[10px] text-muted-foreground mb-2">
         إجمالي العمليات: <span className="tabular-nums font-semibold">{total}</span>
       </div>

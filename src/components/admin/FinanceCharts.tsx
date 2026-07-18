@@ -199,45 +199,107 @@ export function FinanceCharts({
   active?: ChartSelection | null;
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
-  const shortToFull = new Map(daily.map((d) => [shortDate(d.date), d.date]));
+  const [granularity, setGranularity] = useState<Granularity>("day");
 
-  const barData = daily.map((d) => {
-    const row: Record<string, number | string> = { date: shortDate(d.date) };
+  const aggregated = useMemo<DailyRow[]>(() => {
+    if (granularity === "day") return daily;
+    const map = new Map<string, DailyRow>();
+    for (const d of daily) {
+      const key = bucketKey(d.date, granularity);
+      let row = map.get(key);
+      if (!row) {
+        row = { date: key, revenueByCurrency: {}, countsByStatus: {} };
+        map.set(key, row);
+      }
+      for (const [c, v] of Object.entries(d.revenueByCurrency || {})) {
+        row.revenueByCurrency[c] = (row.revenueByCurrency[c] || 0) + (v || 0);
+      }
+      for (const [s, v] of Object.entries(d.countsByStatus || {})) {
+        row.countsByStatus[s] = (row.countsByStatus[s] || 0) + (v || 0);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [daily, granularity]);
+
+  const shortToFull = useMemo(
+    () => new Map(aggregated.map((d) => [shortDate(d.date, granularity), d.date])),
+    [aggregated, granularity],
+  );
+
+  const barData = aggregated.map((d) => {
+    const row: Record<string, number | string> = { date: shortDate(d.date, granularity) };
     for (const s of statusKeys) row[s] = d.countsByStatus[s] || 0;
     return row;
   });
 
-  const lineData = daily.map((d) => {
-    const row: Record<string, number | string> = { date: shortDate(d.date) };
+  const lineData = aggregated.map((d) => {
+    const row: Record<string, number | string> = { date: shortDate(d.date, granularity) };
     for (const c of currencies) row[c] = Math.round((d.revenueByCurrency[c] || 0) * 100) / 100;
     return row;
   });
 
-  const empty = daily.length === 0;
+  const empty = aggregated.length === 0;
 
   const handleBarClick = (statusKey: string) => (payload: any) => {
     if (!onSelect || !payload) return;
+    // Only pass a date filter in daily mode; buckets don't map to exact dates.
     const shortD = payload?.payload?.date as string | undefined;
-    const full = shortD ? shortToFull.get(shortD) : undefined;
+    const full = granularity === "day" && shortD ? shortToFull.get(shortD) : undefined;
     onSelect({ kind: "status", key: statusKey, date: full });
   };
 
   const handleDotClick = (currency: string) => (payload: any) => {
     if (!onSelect || !payload) return;
     const shortD = payload?.payload?.date as string | undefined;
-    const full = shortD ? shortToFull.get(shortD) : undefined;
+    const full = granularity === "day" && shortD ? shortToFull.get(shortD) : undefined;
     onSelect({ kind: "currency", key: currency, date: full });
   };
+
+  const granLabel: Record<Granularity, string> = {
+    day: "يومياً",
+    week: "أسبوعياً",
+    month: "شهرياً",
+  };
+  const granUnit: Record<Granularity, string> = {
+    day: "أيام",
+    week: "أسابيع",
+    month: "أشهر",
+  };
+
+  const GranularityToggle = (
+    <div
+      role="tablist"
+      aria-label="تجميع البيانات"
+      className="inline-flex items-center rounded-lg border border-border bg-background p-0.5 text-[11px]"
+    >
+      {(["day", "week", "month"] as Granularity[]).map((g) => (
+        <button
+          key={g}
+          role="tab"
+          aria-selected={granularity === g}
+          onClick={() => setGranularity(g)}
+          className={
+            "px-2.5 py-1 rounded-md transition " +
+            (granularity === g
+              ? "bg-primary text-primary-foreground font-bold"
+              : "text-muted-foreground hover:bg-muted")
+          }
+        >
+          {granLabel[g]}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">توزيع الحالات يومياً</h3>
-          <span className="text-[10px] text-muted-foreground">اضغط شريحة لفلترة الجدول</span>
+          <h3 className="font-display text-base font-extrabold">توزيع الحالات {granLabel[granularity]}</h3>
+          {GranularityToggle}
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          عدد العمليات لكل حالة عبر أيام الفترة المختارة (مخطط أعمدة مكدّس)
+          عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول
         </p>
         <div className="h-72" dir="ltr">
           {empty ? (

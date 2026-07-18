@@ -578,6 +578,7 @@ function PaymentsFinanceDashboard() {
           </section>
         </>
       )}
+      <ChartDetailsModal selection={detailsFor} onClose={() => setDetailsFor(null)} />
     </div>
   );
 }

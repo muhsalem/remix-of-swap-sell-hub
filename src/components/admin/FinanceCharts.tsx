@@ -208,10 +208,10 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, direction: "rtl" }}
-                  formatter={(v: any, k: any) => [v, STATUS_LABEL[k as string] || k]}
-                  labelFormatter={(l) => `اليوم: ${l}`}
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
+                  content={<StatusTooltip shortToFull={shortToFull} />}
                 />
+
                 <Legend
                   wrapperStyle={{ fontSize: 11, direction: "rtl", cursor: "pointer" }}
                   formatter={(v) => STATUS_LABEL[v as string] || v}

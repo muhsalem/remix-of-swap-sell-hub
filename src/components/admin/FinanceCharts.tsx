@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -40,14 +41,56 @@ const STATUS_COLORS: Record<string, string> = {
 
 const CURRENCY_COLORS = ["#6366f1", "#ec4899", "#14b8a6", "#f97316", "#8b5cf6", "#0ea5e9"];
 
-function shortDate(d: string) {
-  return d.length >= 10 ? d.slice(5) : d;
+type Granularity = "day" | "week" | "month";
+
+function pad2(n: number) {
+  return n < 10 ? `0${n}` : String(n);
 }
 
-function formatFullDate(iso?: string) {
+function parseISO(d: string) {
+  return new Date(d + "T00:00:00");
+}
+
+function isoDate(dt: Date) {
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
+}
+
+// Week starts on Saturday (Arabic locale)
+function weekStart(dt: Date) {
+  const copy = new Date(dt);
+  const dow = copy.getDay(); // 0=Sun..6=Sat
+  const diff = (dow - 6 + 7) % 7; // days since Saturday
+  copy.setDate(copy.getDate() - diff);
+  return copy;
+}
+
+function bucketKey(iso: string, g: Granularity) {
+  const dt = parseISO(iso);
+  if (g === "day") return iso;
+  if (g === "month") return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-01`;
+  return isoDate(weekStart(dt));
+}
+
+function shortDate(d: string, g: Granularity = "day") {
+  if (!d || d.length < 10) return d;
+  if (g === "month") return d.slice(0, 7); // yyyy-mm
+  return d.slice(5); // mm-dd
+}
+
+function formatFullDate(iso?: string, g: Granularity = "day") {
   if (!iso) return "";
   try {
-    const dt = new Date(iso + "T00:00:00");
+    const dt = parseISO(iso);
+    if (g === "month") {
+      return dt.toLocaleDateString("ar", { year: "numeric", month: "long" });
+    }
+    if (g === "week") {
+      const end = new Date(dt);
+      end.setDate(end.getDate() + 6);
+      const fmt = (x: Date) =>
+        x.toLocaleDateString("ar", { day: "numeric", month: "short" });
+      return `الأسبوع ${fmt(dt)} — ${fmt(end)}`;
+    }
     return dt.toLocaleDateString("ar", {
       weekday: "long",
       year: "numeric",
@@ -59,7 +102,7 @@ function formatFullDate(iso?: string) {
   }
 }
 
-function StatusTooltip({ active, payload, label, shortToFull }: any) {
+function StatusTooltip({ active, payload, label, shortToFull, granularity }: any) {
   if (!active || !payload || !payload.length) return null;
   const full = shortToFull.get(label) || label;
   const rows = payload.filter((p: any) => Number(p.value) > 0);
@@ -69,7 +112,7 @@ function StatusTooltip({ active, payload, label, shortToFull }: any) {
       dir="rtl"
       className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[190px]"
     >
-      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="font-bold mb-1">{formatFullDate(full, granularity)}</div>
       <div className="text-[10px] text-muted-foreground mb-2">
         إجمالي العمليات: <span className="tabular-nums font-semibold">{total}</span>
       </div>
@@ -101,7 +144,7 @@ function StatusTooltip({ active, payload, label, shortToFull }: any) {
   );
 }
 
-function RevenueTooltip({ active, payload, label, shortToFull }: any) {
+function RevenueTooltip({ active, payload, label, shortToFull, granularity }: any) {
   if (!active || !payload || !payload.length) return null;
   const full = shortToFull.get(label) || label;
   const rows = payload.filter((p: any) => Number(p.value) > 0);
@@ -110,7 +153,7 @@ function RevenueTooltip({ active, payload, label, shortToFull }: any) {
       dir="rtl"
       className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[210px]"
     >
-      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="font-bold mb-1">{formatFullDate(full, granularity)}</div>
       <div className="text-[10px] text-muted-foreground mb-2">
         الإيرادات المُحصّلة (حالة «مدفوعة»)
       </div>
@@ -156,45 +199,107 @@ export function FinanceCharts({
   active?: ChartSelection | null;
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
-  const shortToFull = new Map(daily.map((d) => [shortDate(d.date), d.date]));
+  const [granularity, setGranularity] = useState<Granularity>("day");
 
-  const barData = daily.map((d) => {
-    const row: Record<string, number | string> = { date: shortDate(d.date) };
+  const aggregated = useMemo<DailyRow[]>(() => {
+    if (granularity === "day") return daily;
+    const map = new Map<string, DailyRow>();
+    for (const d of daily) {
+      const key = bucketKey(d.date, granularity);
+      let row = map.get(key);
+      if (!row) {
+        row = { date: key, revenueByCurrency: {}, countsByStatus: {} };
+        map.set(key, row);
+      }
+      for (const [c, v] of Object.entries(d.revenueByCurrency || {})) {
+        row.revenueByCurrency[c] = (row.revenueByCurrency[c] || 0) + (v || 0);
+      }
+      for (const [s, v] of Object.entries(d.countsByStatus || {})) {
+        row.countsByStatus[s] = (row.countsByStatus[s] || 0) + (v || 0);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [daily, granularity]);
+
+  const shortToFull = useMemo(
+    () => new Map(aggregated.map((d) => [shortDate(d.date, granularity), d.date])),
+    [aggregated, granularity],
+  );
+
+  const barData = aggregated.map((d) => {
+    const row: Record<string, number | string> = { date: shortDate(d.date, granularity) };
     for (const s of statusKeys) row[s] = d.countsByStatus[s] || 0;
     return row;
   });
 
-  const lineData = daily.map((d) => {
-    const row: Record<string, number | string> = { date: shortDate(d.date) };
+  const lineData = aggregated.map((d) => {
+    const row: Record<string, number | string> = { date: shortDate(d.date, granularity) };
     for (const c of currencies) row[c] = Math.round((d.revenueByCurrency[c] || 0) * 100) / 100;
     return row;
   });
 
-  const empty = daily.length === 0;
+  const empty = aggregated.length === 0;
 
   const handleBarClick = (statusKey: string) => (payload: any) => {
     if (!onSelect || !payload) return;
+    // Only pass a date filter in daily mode; buckets don't map to exact dates.
     const shortD = payload?.payload?.date as string | undefined;
-    const full = shortD ? shortToFull.get(shortD) : undefined;
+    const full = granularity === "day" && shortD ? shortToFull.get(shortD) : undefined;
     onSelect({ kind: "status", key: statusKey, date: full });
   };
 
   const handleDotClick = (currency: string) => (payload: any) => {
     if (!onSelect || !payload) return;
     const shortD = payload?.payload?.date as string | undefined;
-    const full = shortD ? shortToFull.get(shortD) : undefined;
+    const full = granularity === "day" && shortD ? shortToFull.get(shortD) : undefined;
     onSelect({ kind: "currency", key: currency, date: full });
   };
+
+  const granLabel: Record<Granularity, string> = {
+    day: "يومياً",
+    week: "أسبوعياً",
+    month: "شهرياً",
+  };
+  const granUnit: Record<Granularity, string> = {
+    day: "أيام",
+    week: "أسابيع",
+    month: "أشهر",
+  };
+
+  const GranularityToggle = (
+    <div
+      role="tablist"
+      aria-label="تجميع البيانات"
+      className="inline-flex items-center rounded-lg border border-border bg-background p-0.5 text-[11px]"
+    >
+      {(["day", "week", "month"] as Granularity[]).map((g) => (
+        <button
+          key={g}
+          role="tab"
+          aria-selected={granularity === g}
+          onClick={() => setGranularity(g)}
+          className={
+            "px-2.5 py-1 rounded-md transition " +
+            (granularity === g
+              ? "bg-primary text-primary-foreground font-bold"
+              : "text-muted-foreground hover:bg-muted")
+          }
+        >
+          {granLabel[g]}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">توزيع الحالات يومياً</h3>
-          <span className="text-[10px] text-muted-foreground">اضغط شريحة لفلترة الجدول</span>
+          <h3 className="font-display text-base font-extrabold">توزيع الحالات {granLabel[granularity]}</h3>
+          {GranularityToggle}
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          عدد العمليات لكل حالة عبر أيام الفترة المختارة (مخطط أعمدة مكدّس)
+          عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول
         </p>
         <div className="h-72" dir="ltr">
           {empty ? (
@@ -209,7 +314,7 @@ export function FinanceCharts({
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
-                  content={<StatusTooltip shortToFull={shortToFull} />}
+                  content={<StatusTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend
@@ -242,11 +347,11 @@ export function FinanceCharts({
 
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات يومياً</h3>
+          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات {granLabel[granularity]}</h3>
           <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          الإيرادات المُحصّلة (حالة «مدفوعة») حسب اليوم لكل عملة (مخطط خطي)
+          الإيرادات المُحصّلة (حالة «مدفوعة») لكل عملة، مُجمَّعة حسب {granUnit[granularity]} الفترة
         </p>
         <div className="h-72" dir="ltr">
           {empty || currencies.length === 0 ? (
@@ -261,7 +366,7 @@ export function FinanceCharts({
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatAmount(Number(v))} />
                 <Tooltip
                   cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
-                  content={<RevenueTooltip shortToFull={shortToFull} />}
+                  content={<RevenueTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend

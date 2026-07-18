@@ -263,6 +263,7 @@ export function ChartDetailsModal({
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 

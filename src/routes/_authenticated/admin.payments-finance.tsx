@@ -158,6 +158,7 @@ function PaymentsFinanceDashboard() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [selection, setSelection] = useState<ChartSelection | null>(null);
+  const [detailsFor, setDetailsFor] = useState<ChartSelection | null>(null);
 
   const handleSelect = (sel: ChartSelection) => {
     setSelection((prev) =>
@@ -165,6 +166,7 @@ function PaymentsFinanceDashboard() {
         ? null
         : sel,
     );
+    if (sel.date) setDetailsFor(sel);
   };
 
   const range = useMemo(() => {

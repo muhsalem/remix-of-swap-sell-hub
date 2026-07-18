@@ -314,7 +314,7 @@ export function FinanceCharts({
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
-                  content={<StatusTooltip shortToFull={shortToFull} />}
+                  content={<StatusTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend

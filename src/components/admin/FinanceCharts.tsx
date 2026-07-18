@@ -44,6 +44,100 @@ function shortDate(d: string) {
   return d.length >= 10 ? d.slice(5) : d;
 }
 
+function formatFullDate(iso?: string) {
+  if (!iso) return "";
+  try {
+    const dt = new Date(iso + "T00:00:00");
+    return dt.toLocaleDateString("ar", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function StatusTooltip({ active, payload, label, shortToFull }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const full = shortToFull.get(label) || label;
+  const rows = payload.filter((p: any) => Number(p.value) > 0);
+  const total = rows.reduce((a: number, r: any) => a + Number(r.value || 0), 0);
+  return (
+    <div
+      dir="rtl"
+      className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[190px]"
+    >
+      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="text-[10px] text-muted-foreground mb-2">
+        إجمالي العمليات: <span className="tabular-nums font-semibold">{total}</span>
+      </div>
+      {rows.length === 0 ? (
+        <div className="text-muted-foreground">لا توجد عمليات</div>
+      ) : (
+        <ul className="space-y-1">
+          {rows.map((r: any) => {
+            const k = r.dataKey as string;
+            const pct = total ? Math.round((Number(r.value) / total) * 100) : 0;
+            return (
+              <li key={k} className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-sm"
+                    style={{ background: r.color || STATUS_COLORS[k] }}
+                  />
+                  {STATUS_LABEL[k] || k}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {r.value} <span className="text-muted-foreground">({pct}%)</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RevenueTooltip({ active, payload, label, shortToFull }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const full = shortToFull.get(label) || label;
+  const rows = payload.filter((p: any) => Number(p.value) > 0);
+  return (
+    <div
+      dir="rtl"
+      className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[210px]"
+    >
+      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="text-[10px] text-muted-foreground mb-2">
+        الإيرادات المُحصّلة (حالة «مدفوعة»)
+      </div>
+      {rows.length === 0 ? (
+        <div className="text-muted-foreground">لا إيرادات في هذا اليوم</div>
+      ) : (
+        <ul className="space-y-1">
+          {rows.map((r: any) => (
+            <li key={r.dataKey} className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full"
+                  style={{ background: r.color }}
+                />
+                {r.dataKey}
+              </span>
+              <span className="font-semibold tabular-nums">
+                {formatAmount(Number(r.value))} {r.dataKey}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export type ChartSelection = {
   kind: "status" | "currency";
   key: string; // status name or currency code
@@ -114,10 +208,10 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, direction: "rtl" }}
-                  formatter={(v: any, k: any) => [v, STATUS_LABEL[k as string] || k]}
-                  labelFormatter={(l) => `اليوم: ${l}`}
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
+                  content={<StatusTooltip shortToFull={shortToFull} />}
                 />
+
                 <Legend
                   wrapperStyle={{ fontSize: 11, direction: "rtl", cursor: "pointer" }}
                   formatter={(v) => STATUS_LABEL[v as string] || v}
@@ -166,10 +260,10 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatAmount(Number(v))} />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, direction: "rtl" }}
-                  formatter={(v: any, k: any) => [`${formatAmount(Number(v))} ${k}`, k]}
-                  labelFormatter={(l) => `اليوم: ${l}`}
+                  cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
+                  content={<RevenueTooltip shortToFull={shortToFull} />}
                 />
+
                 <Legend
                   wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
                   onClick={(o: any) =>

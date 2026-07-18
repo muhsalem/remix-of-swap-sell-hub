@@ -102,7 +102,7 @@ function formatFullDate(iso?: string, g: Granularity = "day") {
   }
 }
 
-function StatusTooltip({ active, payload, label, shortToFull }: any) {
+function StatusTooltip({ active, payload, label, shortToFull, granularity }: any) {
   if (!active || !payload || !payload.length) return null;
   const full = shortToFull.get(label) || label;
   const rows = payload.filter((p: any) => Number(p.value) > 0);

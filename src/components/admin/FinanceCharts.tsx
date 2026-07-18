@@ -41,14 +41,56 @@ const STATUS_COLORS: Record<string, string> = {
 
 const CURRENCY_COLORS = ["#6366f1", "#ec4899", "#14b8a6", "#f97316", "#8b5cf6", "#0ea5e9"];
 
-function shortDate(d: string) {
-  return d.length >= 10 ? d.slice(5) : d;
+type Granularity = "day" | "week" | "month";
+
+function pad2(n: number) {
+  return n < 10 ? `0${n}` : String(n);
 }
 
-function formatFullDate(iso?: string) {
+function parseISO(d: string) {
+  return new Date(d + "T00:00:00");
+}
+
+function isoDate(dt: Date) {
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
+}
+
+// Week starts on Saturday (Arabic locale)
+function weekStart(dt: Date) {
+  const copy = new Date(dt);
+  const dow = copy.getDay(); // 0=Sun..6=Sat
+  const diff = (dow - 6 + 7) % 7; // days since Saturday
+  copy.setDate(copy.getDate() - diff);
+  return copy;
+}
+
+function bucketKey(iso: string, g: Granularity) {
+  const dt = parseISO(iso);
+  if (g === "day") return iso;
+  if (g === "month") return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-01`;
+  return isoDate(weekStart(dt));
+}
+
+function shortDate(d: string, g: Granularity = "day") {
+  if (!d || d.length < 10) return d;
+  if (g === "month") return d.slice(0, 7); // yyyy-mm
+  return d.slice(5); // mm-dd
+}
+
+function formatFullDate(iso?: string, g: Granularity = "day") {
   if (!iso) return "";
   try {
-    const dt = new Date(iso + "T00:00:00");
+    const dt = parseISO(iso);
+    if (g === "month") {
+      return dt.toLocaleDateString("ar", { year: "numeric", month: "long" });
+    }
+    if (g === "week") {
+      const end = new Date(dt);
+      end.setDate(end.getDate() + 6);
+      const fmt = (x: Date) =>
+        x.toLocaleDateString("ar", { day: "numeric", month: "short" });
+      return `الأسبوع ${fmt(dt)} — ${fmt(end)}`;
+    }
     return dt.toLocaleDateString("ar", {
       weekday: "long",
       year: "numeric",

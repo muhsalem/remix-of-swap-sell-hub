@@ -531,7 +531,7 @@ export function FinanceCharts({
             )}
           </div>
         )}
-        <div className={chartHeight} dir="ltr">
+        <div className={chartHeight} dir="ltr" {...touchHandlers} style={{ touchAction: "pan-y" }}>
           {empty || visibleCurrencies.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               {currencies.length === 0
@@ -549,6 +549,7 @@ export function FinanceCharts({
                   width={isMobile ? 44 : 60}
                 />
                 <Tooltip
+                  trigger={tooltipTrigger}
                   cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
                   content={<RevenueTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />

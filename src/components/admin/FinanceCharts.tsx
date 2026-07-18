@@ -260,10 +260,10 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatAmount(Number(v))} />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, direction: "rtl" }}
-                  formatter={(v: any, k: any) => [`${formatAmount(Number(v))} ${k}`, k]}
-                  labelFormatter={(l) => `اليوم: ${l}`}
+                  cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
+                  content={<RevenueTooltip shortToFull={shortToFull} />}
                 />
+
                 <Legend
                   wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
                   onClick={(o: any) =>

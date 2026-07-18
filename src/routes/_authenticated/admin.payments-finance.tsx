@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
-import { FinanceCharts } from "@/components/admin/FinanceCharts";
+import { FinanceCharts, type ChartSelection } from "@/components/admin/FinanceCharts";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-finance")({
   component: PaymentsFinanceDashboard,

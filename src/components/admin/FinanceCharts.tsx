@@ -153,7 +153,7 @@ function RevenueTooltip({ active, payload, label, shortToFull, granularity }: an
       dir="rtl"
       className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[210px]"
     >
-      <div className="font-bold mb-1">{formatFullDate(full)}</div>
+      <div className="font-bold mb-1">{formatFullDate(full, granularity)}</div>
       <div className="text-[10px] text-muted-foreground mb-2">
         الإيرادات المُحصّلة (حالة «مدفوعة»)
       </div>

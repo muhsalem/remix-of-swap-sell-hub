@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
-import { FinanceCharts } from "@/components/admin/FinanceCharts";
+import { FinanceCharts, type ChartSelection } from "@/components/admin/FinanceCharts";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-finance")({
   component: PaymentsFinanceDashboard,
@@ -156,6 +156,15 @@ function PaymentsFinanceDashboard() {
   const [preset, setPreset] = useState<string>("30d");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [selection, setSelection] = useState<ChartSelection | null>(null);
+
+  const handleSelect = (sel: ChartSelection) => {
+    setSelection((prev) =>
+      prev && prev.kind === sel.kind && prev.key === sel.key && prev.date === sel.date
+        ? null
+        : sel,
+    );
+  };
 
   const range = useMemo(() => {
     if (preset === "custom") {
@@ -292,7 +301,28 @@ function PaymentsFinanceDashboard() {
           <FinanceCharts
             daily={(data as any).daily ?? []}
             currencies={(data as any).currencies ?? Object.keys(data.byCurrency)}
+            onSelect={handleSelect}
+            active={selection}
           />
+
+          {selection && (
+            <div className="mb-4 flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">فلتر نشط من المخطط:</span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-bold">
+                {selection.kind === "status"
+                  ? `الحالة: ${STATUS_LABEL[selection.key] || selection.key}`
+                  : `العملة: ${selection.key}`}
+                {selection.date && ` · ${selection.date}`}
+                <button
+                  onClick={() => setSelection(null)}
+                  className="w-5 h-5 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center"
+                  aria-label="إلغاء الفلتر"
+                >
+                  ×
+                </button>
+              </span>
+            </div>
+          )}
 
           {/* Summary */}
           <section className="mb-8">
@@ -471,7 +501,17 @@ function PaymentsFinanceDashboard() {
 
           {/* Recent */}
           <section className="mb-8">
-            <h2 className="font-display text-lg font-extrabold mb-3">أحدث العمليات</h2>
+            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+              <h2 className="font-display text-lg font-extrabold">أحدث العمليات</h2>
+              {selection && (
+                <button
+                  onClick={() => setSelection(null)}
+                  className="text-xs px-3 py-1 rounded-lg border border-border hover:bg-muted"
+                >
+                  إظهار الكل
+                </button>
+              )}
+            </div>
             <div className="rounded-2xl border border-border bg-card overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
@@ -483,33 +523,52 @@ function PaymentsFinanceDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.recent.map((r: any, i: number) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(r.created_at).toLocaleString("ar")}
-                      </td>
-                      <td className="p-3">{PURPOSE_LABEL[r.purpose] || r.purpose || "—"}</td>
-                      <td className="p-3 font-bold">
-                        {fmtMoney(Number(r.amount || 0), (r.currency || "SAR").toUpperCase())}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-[11px] border ${
-                            STATUS_STYLES[r.status] || "bg-muted border-border"
-                          }`}
-                        >
-                          {STATUS_LABEL[r.status] || r.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {data.recent.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                        لا توجد عمليات بعد.
-                      </td>
-                    </tr>
-                  )}
+                  {(() => {
+                    const filtered = (data.recent as any[]).filter((r) => {
+                      if (!selection) return true;
+                      if (selection.date) {
+                        const d = new Date(r.created_at).toISOString().slice(0, 10);
+                        if (d !== selection.date) return false;
+                      }
+                      if (selection.kind === "status") {
+                        if ((r.status || "unknown") !== selection.key) return false;
+                        return true;
+                      }
+                      // currency selection: only show paid rows in that currency
+                      if ((r.currency || "SAR").toUpperCase() !== selection.key) return false;
+                      if ((r.status || "") !== "paid") return false;
+                      return true;
+                    });
+                    if (filtered.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-muted-foreground">
+                            {selection ? "لا توجد عمليات مطابقة للفلتر." : "لا توجد عمليات بعد."}
+                          </td>
+                        </tr>
+                      );
+                    }
+                    return filtered.map((r: any, i: number) => (
+                      <tr key={i} className="border-t border-border">
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(r.created_at).toLocaleString("ar")}
+                        </td>
+                        <td className="p-3">{PURPOSE_LABEL[r.purpose] || r.purpose || "—"}</td>
+                        <td className="p-3 font-bold">
+                          {fmtMoney(Number(r.amount || 0), (r.currency || "SAR").toUpperCase())}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-1 rounded-full text-[11px] border ${
+                              STATUS_STYLES[r.status] || "bg-muted border-border"
+                            }`}
+                          >
+                            {STATUS_LABEL[r.status] || r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>

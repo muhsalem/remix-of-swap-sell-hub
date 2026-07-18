@@ -200,6 +200,28 @@ export function FinanceCharts({
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
   const [granularity, setGranularity] = useState<Granularity>("day");
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 640px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  const tickFontSize = isMobile ? 9 : 11;
+  const legendFontSize = isMobile ? 10 : 11;
+  const chartHeight = isMobile ? "h-56" : "h-72";
+  const visibleCurrencies = currencies.filter((c) => !hiddenCurrencies.has(c));
+  const toggleCurrency = (c: string) => {
+    setHiddenCurrencies((prev) => {
+      const next = new Set(prev);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
+      return next;
+    });
+  };
 
   const aggregated = useMemo<DailyRow[]>(() => {
     if (granularity === "day") return daily;

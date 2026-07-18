@@ -200,7 +200,23 @@ export function FinanceCharts({
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
   const [granularity, setGranularity] = useState<Granularity>("day");
-  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
+  const HIDDEN_CCY_KEY = "badel:finance-charts:hidden-currencies";
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = window.localStorage.getItem(HIDDEN_CCY_KEY);
+      const arr = raw ? (JSON.parse(raw) as unknown) : null;
+      return Array.isArray(arr) ? new Set(arr.filter((x): x is string => typeof x === "string")) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(HIDDEN_CCY_KEY, JSON.stringify(Array.from(hiddenCurrencies)));
+    } catch {}
+  }, [hiddenCurrencies]);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;

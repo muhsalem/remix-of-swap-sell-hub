@@ -93,6 +93,31 @@ export function ChartDetailsModal({
   const rows: any[] = (data as any)?.rows ?? [];
   const total: number = (data as any)?.total ?? 0;
 
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "status">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const STATUS_ORDER: Record<string, number> = {
+    paid: 1, pending: 2, failed: 3, refunded: 4, expired: 5, cancelled: 6, unknown: 7,
+  };
+
+  const sortedRows = useMemo(() => {
+    const copy = [...rows];
+    copy.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === "date") {
+        cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else if (sortBy === "amount") {
+        cmp = Number(a.amount || 0) - Number(b.amount || 0);
+      } else {
+        const sa = STATUS_ORDER[String(a.status || "unknown")] ?? 99;
+        const sb = STATUS_ORDER[String(b.status || "unknown")] ?? 99;
+        cmp = sa - sb;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return copy;
+  }, [rows, sortBy, sortDir]);
+
   const title =
     selection.kind === "status"
       ? `الحالة: ${STATUS_LABEL[selection.key] || selection.key}`

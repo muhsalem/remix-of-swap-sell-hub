@@ -301,7 +301,28 @@ function PaymentsFinanceDashboard() {
           <FinanceCharts
             daily={(data as any).daily ?? []}
             currencies={(data as any).currencies ?? Object.keys(data.byCurrency)}
+            onSelect={handleSelect}
+            active={selection}
           />
+
+          {selection && (
+            <div className="mb-4 flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">فلتر نشط من المخطط:</span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-bold">
+                {selection.kind === "status"
+                  ? `الحالة: ${STATUS_LABEL[selection.key] || selection.key}`
+                  : `العملة: ${selection.key}`}
+                {selection.date && ` · ${selection.date}`}
+                <button
+                  onClick={() => setSelection(null)}
+                  className="w-5 h-5 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center"
+                  aria-label="إلغاء الفلتر"
+                >
+                  ×
+                </button>
+              </span>
+            </div>
+          )}
 
           {/* Summary */}
           <section className="mb-8">

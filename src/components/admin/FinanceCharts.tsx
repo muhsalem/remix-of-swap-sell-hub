@@ -347,11 +347,11 @@ export function FinanceCharts({
 
       <div className="p-4 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات يومياً</h3>
+          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات {granLabel[granularity]}</h3>
           <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          الإيرادات المُحصّلة (حالة «مدفوعة») حسب اليوم لكل عملة (مخطط خطي)
+          الإيرادات المُحصّلة (حالة «مدفوعة») لكل عملة، مُجمَّعة حسب {granUnit[granularity]} الفترة
         </p>
         <div className="h-72" dir="ltr">
           {empty || currencies.length === 0 ? (

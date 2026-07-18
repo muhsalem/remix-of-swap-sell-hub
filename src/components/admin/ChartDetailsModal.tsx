@@ -188,6 +188,37 @@ export function ChartDetailsModal({
             </p>
           )}
           {rows.length > 0 && (
+            <>
+              <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px]">
+                <span className="text-muted-foreground font-bold">فرز حسب:</span>
+                {([
+                  ["date", "التاريخ"],
+                  ["amount", "المبلغ"],
+                  ["status", "الحالة"],
+                ] as const).map(([k, lbl]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setSortBy(k)}
+                    className={`px-2 py-1 rounded-lg border font-bold ${
+                      sortBy === k
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+                <span className="mx-1 h-4 w-px bg-border" />
+                <button
+                  type="button"
+                  onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                  aria-label="تبديل اتجاه الفرز"
+                  className="px-2 py-1 rounded-lg border border-border font-bold hover:bg-muted"
+                >
+                  {sortDir === "asc" ? "تصاعدي ↑" : "تنازلي ↓"}
+                </button>
+              </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="text-muted-foreground">
@@ -200,7 +231,7 @@ export function ChartDetailsModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => {
+                  {sortedRows.map((r) => {
                     const st = String(r.status || "unknown");
                     return (
                       <tr key={r.id} className="border-b border-border/60 last:border-0">

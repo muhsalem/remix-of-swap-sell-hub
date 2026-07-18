@@ -213,6 +213,7 @@ export function FinanceCharts({
   const tickFontSize = isMobile ? 9 : 11;
   const legendFontSize = isMobile ? 10 : 11;
   const chartHeight = isMobile ? "h-56" : "h-72";
+  const tooltipTrigger: "hover" | "click" = isMobile ? "click" : "hover";
   const visibleCurrencies = currencies.filter((c) => !hiddenCurrencies.has(c));
   const toggleCurrency = (c: string) => {
     setHiddenCurrencies((prev) => {
@@ -221,6 +222,53 @@ export function FinanceCharts({
       else next.add(c);
       return next;
     });
+  };
+
+  // Long-press on mobile: hold ~350ms on a bar/dot to open the tooltip immediately.
+  const longPress = useMemo(
+    () => ({ id: 0 as any, x: 0, y: 0, moved: false }),
+    [],
+  );
+  const startLongPress = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isMobile) return;
+    const t = e.touches[0];
+    if (!t) return;
+    longPress.x = t.clientX;
+    longPress.y = t.clientY;
+    longPress.moved = false;
+    clearTimeout(longPress.id);
+    longPress.id = setTimeout(() => {
+      if (longPress.moved) return;
+      const node = document.elementFromPoint(longPress.x, longPress.y) as HTMLElement | null;
+      if (!node) return;
+      const opts: MouseEventInit = {
+        bubbles: true,
+        cancelable: true,
+        clientX: longPress.x,
+        clientY: longPress.y,
+      };
+      node.dispatchEvent(new MouseEvent("mouseover", opts));
+      node.dispatchEvent(new MouseEvent("mousemove", opts));
+      node.dispatchEvent(new MouseEvent("click", opts));
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { (navigator as any).vibrate?.(15); } catch {}
+      }
+    }, 350);
+  };
+  const moveLongPress = (e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    if (!t) return;
+    if (Math.hypot(t.clientX - longPress.x, t.clientY - longPress.y) > 8) {
+      longPress.moved = true;
+      clearTimeout(longPress.id);
+    }
+  };
+  const endLongPress = () => clearTimeout(longPress.id);
+  const touchHandlers = {
+    onTouchStart: startLongPress,
+    onTouchMove: moveLongPress,
+    onTouchEnd: endLongPress,
+    onTouchCancel: endLongPress,
   };
 
   const aggregated = useMemo<DailyRow[]>(() => {
@@ -380,7 +428,7 @@ export function FinanceCharts({
         <p className="text-xs text-muted-foreground mb-3">
           عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول
         </p>
-        <div className={chartHeight} dir="ltr">
+        <div className={chartHeight} dir="ltr" {...touchHandlers} style={{ touchAction: "pan-y" }}>
           {empty ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               لا توجد بيانات في هذه الفترة
@@ -392,9 +440,11 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} interval="preserveStartEnd" minTickGap={isMobile ? 12 : 4} />
                 <YAxis tick={{ fontSize: tickFontSize }} allowDecimals={false} width={isMobile ? 28 : 40} />
                 <Tooltip
+                  trigger={tooltipTrigger}
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
                   content={<StatusTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
+
 
                 <Legend
                   wrapperStyle={{ fontSize: legendFontSize, direction: "rtl", cursor: "pointer" }}
@@ -481,7 +531,7 @@ export function FinanceCharts({
             )}
           </div>
         )}
-        <div className={chartHeight} dir="ltr">
+        <div className={chartHeight} dir="ltr" {...touchHandlers} style={{ touchAction: "pan-y" }}>
           {empty || visibleCurrencies.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               {currencies.length === 0
@@ -499,6 +549,7 @@ export function FinanceCharts({
                   width={isMobile ? 44 : 60}
                 />
                 <Tooltip
+                  trigger={tooltipTrigger}
                   cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
                   content={<RevenueTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />

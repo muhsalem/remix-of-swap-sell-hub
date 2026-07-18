@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { getPaymentsBreakdown } from "@/lib/admin.functions";
 import { formatAmount } from "@/lib/format-price";
 import { FinanceCharts, type ChartSelection } from "@/components/admin/FinanceCharts";
+import { ChartDetailsModal } from "@/components/admin/ChartDetailsModal";
 
 export const Route = createFileRoute("/_authenticated/admin/payments-finance")({
   component: PaymentsFinanceDashboard,

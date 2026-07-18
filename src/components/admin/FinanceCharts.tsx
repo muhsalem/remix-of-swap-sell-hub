@@ -366,7 +366,7 @@ export function FinanceCharts({
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatAmount(Number(v))} />
                 <Tooltip
                   cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
-                  content={<RevenueTooltip shortToFull={shortToFull} />}
+                  content={<RevenueTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend

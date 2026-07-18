@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -200,6 +200,28 @@ export function FinanceCharts({
 }) {
   const statusKeys = Object.keys(STATUS_LABEL);
   const [granularity, setGranularity] = useState<Granularity>("day");
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 640px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  const tickFontSize = isMobile ? 9 : 11;
+  const legendFontSize = isMobile ? 10 : 11;
+  const chartHeight = isMobile ? "h-56" : "h-72";
+  const visibleCurrencies = currencies.filter((c) => !hiddenCurrencies.has(c));
+  const toggleCurrency = (c: string) => {
+    setHiddenCurrencies((prev) => {
+      const next = new Set(prev);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
+      return next;
+    });
+  };
 
   const aggregated = useMemo<DailyRow[]>(() => {
     if (granularity === "day") return daily;
@@ -345,10 +367,12 @@ export function FinanceCharts({
 
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="p-4 rounded-2xl border border-border bg-card">
-        <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">توزيع الحالات {granLabel[granularity]}</h3>
-          <div className="flex items-center gap-2">
+      <div className="p-3 sm:p-4 rounded-2xl border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between mb-1 gap-2">
+          <h3 className="font-display text-sm sm:text-base font-extrabold min-w-0 truncate">
+            توزيع الحالات {granLabel[granularity]}
+          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
             <ExportBtn onClick={exportStatusCsv} label="تصدير بيانات المخطط CSV" />
             {GranularityToggle}
           </div>
@@ -356,24 +380,25 @@ export function FinanceCharts({
         <p className="text-xs text-muted-foreground mb-3">
           عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول
         </p>
-        <div className="h-72" dir="ltr">
+        <div className={chartHeight} dir="ltr">
           {empty ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               لا توجد بيانات في هذه الفترة
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <BarChart data={barData} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} interval="preserveStartEnd" minTickGap={isMobile ? 12 : 4} />
+                <YAxis tick={{ fontSize: tickFontSize }} allowDecimals={false} width={isMobile ? 28 : 40} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
                   content={<StatusTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend
-                  wrapperStyle={{ fontSize: 11, direction: "rtl", cursor: "pointer" }}
+                  wrapperStyle={{ fontSize: legendFontSize, direction: "rtl", cursor: "pointer" }}
+                  iconSize={isMobile ? 8 : 12}
                   formatter={(v) => STATUS_LABEL[v as string] || v}
                   onClick={(o: any) =>
                     onSelect && o?.value && onSelect({ kind: "status", key: String(o.value) })
@@ -400,40 +425,93 @@ export function FinanceCharts({
         </div>
       </div>
 
-      <div className="p-4 rounded-2xl border border-border bg-card">
-        <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">إجمالي الإيرادات {granLabel[granularity]}</h3>
-          <div className="flex items-center gap-2">
+      <div className="p-3 sm:p-4 rounded-2xl border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between mb-1 gap-2">
+          <h3 className="font-display text-sm sm:text-base font-extrabold min-w-0 truncate">
+            إجمالي الإيرادات {granLabel[granularity]}
+          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
             <ExportBtn onClick={exportRevenueCsv} label="تصدير بيانات المخطط CSV" />
-            <span className="text-[10px] text-muted-foreground">اضغط نقطة لفلترة الجدول</span>
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              اضغط نقطة لفلترة الجدول
+            </span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-xs text-muted-foreground mb-2">
           الإيرادات المُحصّلة (حالة «مدفوعة») لكل عملة، مُجمَّعة حسب {granUnit[granularity]} الفترة
         </p>
-        <div className="h-72" dir="ltr">
-          {empty || currencies.length === 0 ? (
+        {currencies.length > 0 && (
+          <div
+            className="flex flex-wrap items-center gap-1.5 mb-3"
+            role="group"
+            aria-label="إظهار/إخفاء العملات"
+          >
+            {currencies.map((c, i) => {
+              const hidden = hiddenCurrencies.has(c);
+              const color = CURRENCY_COLORS[i % CURRENCY_COLORS.length];
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => toggleCurrency(c)}
+                  aria-pressed={!hidden}
+                  className={
+                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] sm:text-[11px] transition " +
+                    (hidden
+                      ? "border-border bg-background text-muted-foreground line-through opacity-60"
+                      : "border-border bg-muted/50 text-foreground font-semibold")
+                  }
+                >
+                  <span
+                    className="inline-block h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: hidden ? "transparent" : color, borderColor: color, borderWidth: 1 }}
+                  />
+                  {c}
+                </button>
+              );
+            })}
+            {hiddenCurrencies.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setHiddenCurrencies(new Set())}
+                className="text-[10px] text-primary underline mx-1"
+              >
+                إظهار الكل
+              </button>
+            )}
+          </div>
+        )}
+        <div className={chartHeight} dir="ltr">
+          {empty || visibleCurrencies.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-              لا توجد إيرادات في هذه الفترة
+              {currencies.length === 0
+                ? "لا توجد إيرادات في هذه الفترة"
+                : "لا توجد عملات مُختارة للعرض"}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <LineChart data={lineData} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatAmount(Number(v))} />
+                <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} interval="preserveStartEnd" minTickGap={isMobile ? 12 : 4} />
+                <YAxis
+                  tick={{ fontSize: tickFontSize }}
+                  tickFormatter={(v) => formatAmount(Number(v))}
+                  width={isMobile ? 44 : 60}
+                />
                 <Tooltip
                   cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.35 }}
                   content={<RevenueTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
 
                 <Legend
-                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  wrapperStyle={{ fontSize: legendFontSize, cursor: "pointer" }}
+                  iconSize={isMobile ? 8 : 12}
                   onClick={(o: any) =>
                     onSelect && o?.value && onSelect({ kind: "currency", key: String(o.value) })
                   }
                 />
-                {currencies.map((c, i) => {
+                {visibleCurrencies.map((c) => {
+                  const i = currencies.indexOf(c);
                   const dim =
                     active && active.kind === "currency" && active.key !== c ? 0.2 : 1;
                   return (
@@ -444,9 +522,9 @@ export function FinanceCharts({
                       stroke={CURRENCY_COLORS[i % CURRENCY_COLORS.length]}
                       strokeOpacity={dim}
                       strokeWidth={2}
-                      dot={{ r: 3, style: { cursor: "pointer" } }}
+                      dot={{ r: isMobile ? 2 : 3, style: { cursor: "pointer" } }}
                       activeDot={{
-                        r: 6,
+                        r: isMobile ? 5 : 6,
                         style: { cursor: "pointer" },
                         onClick: (_: any, payload: any) => handleDotClick(c)(payload),
                       }}

@@ -367,10 +367,12 @@ export function FinanceCharts({
 
   return (
     <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="p-4 rounded-2xl border border-border bg-card">
-        <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-display text-base font-extrabold">توزيع الحالات {granLabel[granularity]}</h3>
-          <div className="flex items-center gap-2">
+      <div className="p-3 sm:p-4 rounded-2xl border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between mb-1 gap-2">
+          <h3 className="font-display text-sm sm:text-base font-extrabold min-w-0 truncate">
+            توزيع الحالات {granLabel[granularity]}
+          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
             <ExportBtn onClick={exportStatusCsv} label="تصدير بيانات المخطط CSV" />
             {GranularityToggle}
           </div>

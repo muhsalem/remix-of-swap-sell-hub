@@ -187,7 +187,7 @@ export function ChartDetailsModal({
                         </td>
                         <td className="py-2 px-2">{r.purpose || "—"}</td>
                         <td className="py-2 px-2 font-bold tabular-nums">
-                          {formatAmount(Number(r.amount || 0), String(r.currency || "SAR"))}
+                          {formatAmount(Number(r.amount || 0))} {String(r.currency || "SAR").toUpperCase()}
                         </td>
                         <td className="py-2 px-2">
                           <span

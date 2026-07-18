@@ -428,7 +428,7 @@ export function FinanceCharts({
         <p className="text-xs text-muted-foreground mb-3">
           عدد العمليات لكل حالة عبر {granUnit[granularity]} الفترة المختارة — اضغط شريحة لفلترة الجدول
         </p>
-        <div className={chartHeight} dir="ltr">
+        <div className={chartHeight} dir="ltr" {...touchHandlers} style={{ touchAction: "pan-y" }}>
           {empty ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
               لا توجد بيانات في هذه الفترة
@@ -440,9 +440,11 @@ export function FinanceCharts({
                 <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} interval="preserveStartEnd" minTickGap={isMobile ? 12 : 4} />
                 <YAxis tick={{ fontSize: tickFontSize }} allowDecimals={false} width={isMobile ? 28 : 40} />
                 <Tooltip
+                  trigger={tooltipTrigger}
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
                   content={<StatusTooltip shortToFull={shortToFull} granularity={granularity} />}
                 />
+
 
                 <Legend
                   wrapperStyle={{ fontSize: legendFontSize, direction: "rtl", cursor: "pointer" }}

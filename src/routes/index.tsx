@@ -14,6 +14,9 @@ import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
+import { Testimonials } from "@/components/Testimonials";
+import { VideoDemo } from "@/components/VideoDemo";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 import { addWishlistAlert } from "@/lib/wishlist.functions";

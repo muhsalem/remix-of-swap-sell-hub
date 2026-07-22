@@ -14,6 +14,9 @@ import { ListingImage } from "@/components/ListingImage";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
+import { Testimonials } from "@/components/Testimonials";
+import { VideoDemo } from "@/components/VideoDemo";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 
 import { listActiveListings, matchListings } from "@/lib/listings.functions";
 import { addWishlistAlert } from "@/lib/wishlist.functions";
@@ -548,6 +551,10 @@ function Index() {
           </div>
         </section>
       </main>
+
+      <Testimonials />
+      <VideoDemo />
+      <ExitIntentPopup />
 
       <footer className="py-12 border-t border-border mt-16 bg-card">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">

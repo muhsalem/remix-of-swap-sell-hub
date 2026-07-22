@@ -19,6 +19,7 @@ import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as DigitalCurrencyRouteImport } from './routes/digital-currency'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -26,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentsCallbackRouteImport } from './routes/payments/callback'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiSitemapDotxmlRouteImport } from './routes/api/sitemap[.]xml'
 import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
@@ -107,6 +109,11 @@ const DigitalCurrencyRoute = DigitalCurrencyRouteImport.update({
   path: '/digital-currency',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -140,6 +147,11 @@ const LegalDocRoute = LegalDocRouteImport.update({
   id: '/legal/$doc',
   path: '/legal/$doc',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const ApiSitemapDotxmlRoute = ApiSitemapDotxmlRouteImport.update({
   id: '/api/sitemap.xml',
@@ -310,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/digital-currency': typeof DigitalCurrencyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
@@ -336,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
@@ -358,6 +372,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/digital-currency': typeof DigitalCurrencyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
@@ -384,6 +399,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
@@ -408,6 +424,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
   '/digital-currency': typeof DigitalCurrencyRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mcp': typeof McpRoute
@@ -434,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/api/robots.txt': typeof ApiRobotsDottxtRoute
   '/api/sitemap.xml': typeof ApiSitemapDotxmlRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
@@ -458,6 +476,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/blog'
     | '/digital-currency'
     | '/leaderboard'
     | '/mcp'
@@ -484,6 +503,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
+    | '/blog/$slug'
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
@@ -506,6 +526,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/blog'
     | '/digital-currency'
     | '/leaderboard'
     | '/mcp'
@@ -532,6 +553,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
+    | '/blog/$slug'
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
@@ -555,6 +577,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/blog'
     | '/digital-currency'
     | '/leaderboard'
     | '/mcp'
@@ -581,6 +604,7 @@ export interface FileRouteTypes {
     | '/_authenticated/transactions'
     | '/api/robots.txt'
     | '/api/sitemap.xml'
+    | '/blog/$slug'
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
@@ -605,6 +629,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
   DigitalCurrencyRoute: typeof DigitalCurrencyRoute
   LeaderboardRoute: typeof LeaderboardRoute
   McpRoute: typeof McpRoute
@@ -699,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DigitalCurrencyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -747,6 +779,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/legal/$doc'
       preLoaderRoute: typeof LegalDocRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/api/sitemap.xml': {
       id: '/api/sitemap.xml'
@@ -1045,11 +1084,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
   DigitalCurrencyRoute: DigitalCurrencyRoute,
   LeaderboardRoute: LeaderboardRoute,
   McpRoute: McpRoute,

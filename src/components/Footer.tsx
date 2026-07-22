@@ -10,6 +10,7 @@ export function Footer() {
             <li><Link to="/about" className="hover:text-primary">من نحن</Link></li>
             <li><Link to="/sharia-committee" className="hover:text-primary">الهيئة الشرعية</Link></li>
             <li><Link to="/pricing-engine" className="hover:text-primary">محرك التسعير</Link></li>
+            <li><Link to="/blog" className="hover:text-primary">المدونة</Link></li>
           </ul>
         </div>
         <div>

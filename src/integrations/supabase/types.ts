@@ -86,6 +86,39 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+        }
+        Relationships: []
+      }
       consent_log: {
         Row: {
           accepted_at: string
@@ -203,6 +236,51 @@ export type Database = {
           period?: string
           source?: string | null
           value?: number
+        }
+        Relationships: []
+      }
+      email_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          id: string
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template: string
+          to_email: string
+          user_id: string | null
+          variables: Json
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template: string
+          to_email: string
+          user_id?: string | null
+          variables?: Json
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          id?: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template?: string
+          to_email?: string
+          user_id?: string | null
+          variables?: Json
         }
         Relationships: []
       }

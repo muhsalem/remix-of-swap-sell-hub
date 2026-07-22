@@ -43,6 +43,8 @@ function AdminDashboard() {
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
           <Link to="/admin/shipping-cities" className="text-primary font-bold hover:underline">مدن الشحن →</Link>
           <Link to="/admin/payments-sandbox" className="text-primary font-bold hover:underline">مختبر المدفوعات →</Link>
+          <Link to="/admin/audit" className="text-primary font-bold hover:underline">سجل التدقيق →</Link>
+          <Link to="/admin/emails" className="text-primary font-bold hover:underline">طابور البريد →</Link>
         </div>
       </div>
 

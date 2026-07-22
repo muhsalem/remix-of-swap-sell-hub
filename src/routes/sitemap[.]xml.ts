@@ -5,6 +5,7 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async ({ request }) => {
         const origin = new URL(request.url).origin;
+        const { BLOG_POSTS } = await import("@/lib/blog-content");
         const staticPaths = [
           "",
           "/about",
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/premium",
           "/digital-currency",
           "/sharia-committee",
+          "/blog",
+          ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
           "/legal/terms",
           "/legal/privacy",
           "/legal/barter-agreement",

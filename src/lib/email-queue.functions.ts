@@ -25,17 +25,17 @@ export const enqueueEmail = createServerFn({ method: "POST" })
     const rendered = renderEmail(data.template as EmailTemplate, data.variables ?? {});
     const scheduled_at = new Date(Date.now() + (data.delay_minutes ?? 0) * 60_000).toISOString();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin.from("email_queue").insert({
+    const { data: row, error } = await (supabaseAdmin as any).from("email_queue").insert({
       user_id: data.user_id ?? null,
       to_email: data.to_email,
       template: data.template,
       subject: rendered.subject,
-      variables: data.variables ?? {},
+      variables: (data.variables ?? {}) as any,
       scheduled_at,
       status: "pending",
     }).select("id").single();
     if (error) throw new Error(error.message);
-    return { id: row.id, scheduled_at };
+    return { id: (row as any).id as string, scheduled_at };
   });
 
 export const listEmailQueue = createServerFn({ method: "GET" })
@@ -52,7 +52,7 @@ export const listEmailQueue = createServerFn({ method: "GET" })
       .from("user_roles").select("role")
       .eq("user_id", userId).eq("role", "admin").maybeSingle();
     if (!role) throw new Error("غير مصرّح");
-    let q = supabase.from("email_queue").select("*").order("created_at", { ascending: false }).limit(data.limit ?? 100);
+    let q: any = (supabase as any).from("email_queue").select("*").order("created_at", { ascending: false }).limit(data.limit ?? 100);
     if (data.status && data.status !== "all") q = q.eq("status", data.status);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
@@ -69,7 +69,7 @@ export const cancelQueuedEmail = createServerFn({ method: "POST" })
       .eq("user_id", userId).eq("role", "admin").maybeSingle();
     if (!role) throw new Error("غير مصرّح");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("email_queue")
+    const { error } = await (supabaseAdmin as any).from("email_queue")
       .update({ status: "cancelled" }).eq("id", data.id).eq("status", "pending");
     if (error) throw new Error(error.message);
     return { ok: true };

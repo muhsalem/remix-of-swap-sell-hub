@@ -9,17 +9,17 @@ export const logAuditAction = createServerFn({ method: "POST" })
       action: z.string().min(1).max(80),
       entity_type: z.string().min(1).max(60),
       entity_id: z.string().max(120).optional(),
-      metadata: z.record(z.string(), z.unknown()).optional(),
+      metadata: z.record(z.string(), z.any()).optional(),
     }).parse(i),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("audit_logs").insert({
+    const { error } = await (supabase as any).from("audit_logs").insert({
       actor_id: userId,
       action: data.action,
       entity_type: data.entity_type,
       entity_id: data.entity_id ?? null,
-      metadata: data.metadata ?? {},
+      metadata: (data.metadata ?? {}) as any,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -41,7 +41,7 @@ export const listAuditLogs = createServerFn({ method: "GET" })
       .eq("user_id", userId).eq("role", "admin").maybeSingle();
     if (!role) throw new Error("غير مصرّح: صلاحية المشرف مطلوبة");
 
-    let q = supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(data.limit ?? 100);
+    let q: any = (supabase as any).from("audit_logs").select("*").order("created_at", { ascending: false }).limit(data.limit ?? 100);
     if (data.action) q = q.eq("action", data.action);
     if (data.entity_type) q = q.eq("entity_type", data.entity_type);
     const { data: rows, error } = await q;

@@ -115,7 +115,7 @@ function BlogArticle() {
         <p className="text-lg text-muted-foreground mb-10 leading-relaxed">{post.description}</p>
 
         <article className="prose-content space-y-5 text-base leading-loose">
-          {post.content.split("\n\n").map((block, i) => {
+          {post.content.split("\n\n").map((block: string, i: number) => {
             if (block.startsWith("## ")) {
               return (
                 <h2 key={i} className="font-display text-2xl font-extrabold mt-8 mb-2">
@@ -124,10 +124,10 @@ function BlogArticle() {
               );
             }
             if (block.startsWith("- ")) {
-              const items = block.split("\n").map((l) => l.replace(/^- /, ""));
+              const items = block.split("\n").map((l: string) => l.replace(/^- /, ""));
               return (
                 <ul key={i} className="list-disc pr-6 space-y-1.5">
-                  {items.map((it, j) => (
+                  {items.map((it: string, j: number) => (
                     <li key={j}>{it}</li>
                   ))}
                 </ul>

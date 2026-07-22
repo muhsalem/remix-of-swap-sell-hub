@@ -549,6 +549,10 @@ function Index() {
         </section>
       </main>
 
+      <Testimonials />
+      <VideoDemo />
+      <ExitIntentPopup />
+
       <footer className="py-12 border-t border-border mt-16 bg-card">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <span className="font-display text-xl font-extrabold tracking-tighter opacity-40">بادل</span>

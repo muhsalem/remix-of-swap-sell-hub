@@ -6,7 +6,7 @@ import { Sparkles, Star, Repeat2 } from "lucide-react";
 import { matchListings } from "@/lib/listings.functions";
 import { ListingImage } from "@/components/ListingImage";
 import { LocalPrice } from "@/components/LocalPrice";
-import { PricingEngine } from "@/components/PricingEngine";
+import { BarterPricingEngine } from "@/components/BarterPricingEngine";
 
 export function MatchFinder() {
   const fn = useServerFn(matchListings);
@@ -34,7 +34,7 @@ export function MatchFinder() {
       {/* ===== Pricing engine ===== */}
       <div id="match-finder-search" className="bg-card rounded-3xl ring-1 ring-black/5 shadow-xl overflow-hidden scroll-mt-20">
         <div className="p-4 md:p-6 bg-stone-soft/30">
-          <PricingEngine embedded />
+          <BarterPricingEngine embedded />
         </div>
       </div>
 

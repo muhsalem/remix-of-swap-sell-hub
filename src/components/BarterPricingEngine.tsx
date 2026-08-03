@@ -235,12 +235,43 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
   const liqLabel = (l: number) => (l >= 0.8 ? "مرتفع" : l < 0.55 ? "منخفض" : "متوسط");
 
   // ── المخزون ──
+  // ── المخزون: فلترة + ترتيب ذكي (القرب الجغرافي ثم درجة التوافق) ──
+  const PROX_LABELS: Record<number, string> = {
+    0: "📍 نفس البلد",
+    1: "🌐 نفس المنطقة",
+    2: "🌍 منطقة قريبة",
+    3: "✈️ دولي",
+  };
+
   const inventory = INVENTORY.filter((i) => {
     const q = query.trim().toLowerCase();
     const okQ = !q || i.nameAr.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q);
     const okC = !filterCat || i.category === filterCat;
     return okQ && okC;
-  });
+  })
+    .map((item) => {
+      const comp = solveCompatibility(userAsset, {
+        type: item.type,
+        name: item.nameAr,
+        nameEn: item.nameEn,
+        nameAr: item.nameAr,
+        category: item.category,
+        subcategory: item.subcategory,
+        value: item.value,
+        liquidity: inventoryLiquidity(item),
+        desiredCategory: item.desiredCategory,
+        countryCode: item.countryCode,
+      });
+      return { item, score: comp.totalScore, shippingFee: comp.shippingFee, prox: proximityScore(country, item.countryCode) };
+    })
+    .sort((a, b) => (a.prox !== b.prox ? a.prox - b.prox : b.score - a.score));
+
+  // ── اقتراحات قريبة من قيمة التقييم (±25%، أقرب 3) ──
+  const suggestions = INVENTORY
+    .filter((l) => cp.usd > 0 && l.value >= cp.usd * 0.75 && l.value <= cp.usd * 1.25)
+    .sort((a, b) => Math.abs(a.value - cp.usd) - Math.abs(b.value - cp.usd))
+    .slice(0, 3);
+
 
   return (
     <div dir="rtl" className={embedded ? "space-y-4" : "space-y-4 p-4 md:p-6"}>

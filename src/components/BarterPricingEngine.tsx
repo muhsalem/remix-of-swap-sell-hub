@@ -494,7 +494,35 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
               </Select>
             </div>
           </div>
+
+          {/* اقتراحات مقايضة قريبة من قيمتك */}
+          {suggestions.length > 0 && (
+            <div className="mt-4">
+              <div className="mb-2 text-xs font-extrabold text-foreground">⇄ عروض قريبة من قيمتك</div>
+              <div className="space-y-2">
+                {suggestions.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => setSelectedTargetId(l.id)}
+                    className={`flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-right transition hover:border-primary/60 ${
+                      selectedTargetId === l.id ? "border-primary bg-primary/5" : "border-border bg-background"
+                    }`}
+                  >
+                    <span className="text-lg">📦</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-foreground">{l.nameAr}</span>
+                      <span className="block truncate text-[0.68rem] text-muted-foreground">
+                        {catLabel(l.category)} · <b>{fmtLocal(getCountryPrice(l.value, country, l.category).local, country)}</b>
+                      </span>
+                    </span>
+                    <span className="text-sm font-extrabold text-primary">⇄</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
+
 
         {/* ══ العمود الأيسر ══ */}
         <div className="space-y-4">

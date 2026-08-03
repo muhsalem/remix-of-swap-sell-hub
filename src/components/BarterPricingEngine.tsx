@@ -1,13 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { Camera, Loader2, Scale, Globe2, X, Lightbulb, Search } from "lucide-react";
 import {
   CATEGORIES, COUNTRIES, COUNTRY_CODES, INVENTORY, MULTIPLIERS, TAX_BY_COUNTRY,
   catLabel, subLabel, clamp, fmtLocal, fmtUSD, getCountryPrice, compareCountries,
-  checkSharia, solveCompatibility, valueGood, valueService, inventoryLiquidity,
-  type InventoryItem,
+  checkSharia, solveCompatibility, valueGood, valueService, inventoryLiquidity, proximityScore,
 } from "@/lib/barter-engine";
+
+
 import { analyzeProductImage } from "@/lib/vision.functions";
 
 const GOOD_CATS = Object.keys(CATEGORIES).filter((k) => !CATEGORIES[k].isService);
@@ -235,12 +236,43 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
   const liqLabel = (l: number) => (l >= 0.8 ? "مرتفع" : l < 0.55 ? "منخفض" : "متوسط");
 
   // ── المخزون ──
+  // ── المخزون: فلترة + ترتيب ذكي (القرب الجغرافي ثم درجة التوافق) ──
+  const PROX_LABELS: Record<number, string> = {
+    0: "📍 نفس البلد",
+    1: "🌐 نفس المنطقة",
+    2: "🌍 منطقة قريبة",
+    3: "✈️ دولي",
+  };
+
   const inventory = INVENTORY.filter((i) => {
     const q = query.trim().toLowerCase();
     const okQ = !q || i.nameAr.toLowerCase().includes(q) || i.nameEn.toLowerCase().includes(q);
     const okC = !filterCat || i.category === filterCat;
     return okQ && okC;
-  });
+  })
+    .map((item) => {
+      const comp = solveCompatibility(userAsset, {
+        type: item.type,
+        name: item.nameAr,
+        nameEn: item.nameEn,
+        nameAr: item.nameAr,
+        category: item.category,
+        subcategory: item.subcategory,
+        value: item.value,
+        liquidity: inventoryLiquidity(item),
+        desiredCategory: item.desiredCategory,
+        countryCode: item.countryCode,
+      });
+      return { item, score: comp.totalScore, shippingFee: comp.shippingFee, prox: proximityScore(country, item.countryCode) };
+    })
+    .sort((a, b) => (a.prox !== b.prox ? a.prox - b.prox : b.score - a.score));
+
+  // ── اقتراحات قريبة من قيمة التقييم (±25%، أقرب 3) ──
+  const suggestions = INVENTORY
+    .filter((l) => cp.usd > 0 && l.value >= cp.usd * 0.75 && l.value <= cp.usd * 1.25)
+    .sort((a, b) => Math.abs(a.value - cp.usd) - Math.abs(b.value - cp.usd))
+    .slice(0, 3);
+
 
   return (
     <div dir="rtl" className={embedded ? "space-y-4" : "space-y-4 p-4 md:p-6"}>
@@ -462,7 +494,35 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
               </Select>
             </div>
           </div>
+
+          {/* اقتراحات مقايضة قريبة من قيمتك */}
+          {suggestions.length > 0 && (
+            <div className="mt-4">
+              <div className="mb-2 text-xs font-extrabold text-foreground">⇄ عروض قريبة من قيمتك</div>
+              <div className="space-y-2">
+                {suggestions.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => setSelectedTargetId(l.id)}
+                    className={`flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-right transition hover:border-primary/60 ${
+                      selectedTargetId === l.id ? "border-primary bg-primary/5" : "border-border bg-background"
+                    }`}
+                  >
+                    <span className="text-lg">📦</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-foreground">{l.nameAr}</span>
+                      <span className="block truncate text-[0.68rem] text-muted-foreground">
+                        {catLabel(l.category)} · <b>{fmtLocal(getCountryPrice(l.value, country, l.category).local, country)}</b>
+                      </span>
+                    </span>
+                    <span className="text-sm font-extrabold text-primary">⇄</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
+
 
         {/* ══ العمود الأيسر ══ */}
         <div className="space-y-4">
@@ -491,7 +551,12 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                   <div className="text-xs font-bold text-muted-foreground">{COUNTRIES[s.code].nameAr}</div>
                   <div className="mt-1 text-lg font-extrabold tabular-nums text-primary">{fmtLocal(s.r.local, s.code)}</div>
                   <div className="text-[0.68rem] text-muted-foreground">{s.r.affordability}% من الدخل الشهري</div>
-                  {i === 0 && null}
+                  {betterCode === s.code && absDiff >= 2 && (
+                    <div className="mt-1.5 inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-emerald-600">
+                      أرخص بـ {absDiff}%
+                    </div>
+                  )}
+
                 </div>
               ))}
             </div>
@@ -712,39 +777,59 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {inventory.map((item: InventoryItem) => {
+              {inventory.map(({ item, score, shippingFee, prox }, idx) => {
                 const active = item.id === selectedTargetId;
+                const showHeader = idx === 0 || inventory[idx - 1].prox !== prox;
+                const local = getCountryPrice(item.value, country, item.category);
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => setSelectedTargetId(active ? null : item.id)}
-                    className={`rounded-2xl border p-3 text-right transition hover:border-primary/60 ${
-                      active ? "border-primary bg-primary/5" : "border-border bg-card"
-                    }`}
-                  >
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <span className="text-lg">{CATEGORIES[item.category]?.icon}</span>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6rem] font-bold text-muted-foreground">
-                        {item.type === "good" ? "سلعة" : "خدمة"} · {COUNTRIES[item.countryCode]?.flag}
-                      </span>
-                    </div>
-                    <div className="truncate text-xs font-bold text-foreground">{item.nameAr}</div>
-                    <div className="truncate text-[0.65rem] text-muted-foreground">
-                      {catLabel(item.category)} ➔ {subLabel(item.category, item.subcategory)}
-                    </div>
-                    <div className="mt-1 text-sm font-extrabold tabular-nums text-primary">
-                      {fmtLocal(item.value * rate, country)}
-                    </div>
-                    <div className="text-[0.62rem] text-muted-foreground">
-                      يرغب في: {catLabel(item.desiredCategory)}
-                    </div>
-                  </button>
+                  <Fragment key={item.id}>
+                    {showHeader && (
+                      <div className="col-span-full mt-1 text-[0.7rem] font-extrabold text-muted-foreground">
+                        {PROX_LABELS[prox]}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setSelectedTargetId(active ? null : item.id)}
+                      className={`rounded-2xl border p-3 text-right transition hover:border-primary/60 ${
+                        active ? "border-primary bg-primary/5" : "border-border bg-card"
+                      }`}
+                    >
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <span className="text-lg">{CATEGORIES[item.category]?.icon}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6rem] font-bold text-muted-foreground">
+                          {item.type === "good" ? "سلعة" : "خدمة"} · {COUNTRIES[item.countryCode]?.flag}
+                          {prox === 0 ? " 📍" : ""}
+                        </span>
+                      </div>
+                      <div className="truncate text-xs font-bold text-foreground">{item.nameAr}</div>
+                      <div className="truncate text-[0.65rem] text-muted-foreground">
+                        {catLabel(item.category)} ➔ {subLabel(item.category, item.subcategory)}
+                      </div>
+                      <div className="mt-1 text-sm font-extrabold tabular-nums text-primary">
+                        {fmtLocal(local.local, country)}
+                        <span className="ms-1 text-[0.62rem] font-semibold text-muted-foreground">{fmtUSD(item.value)}</span>
+                      </div>
+                      {shippingFee > 0 && item.countryCode !== country && (
+                        <div className="text-[0.62rem] font-semibold text-amber-600">
+                          ✈️ + {fmtLocal(shippingFee * rate, country)} شحن ونقل
+                        </div>
+                      )}
+                      <div className="text-[0.62rem] text-muted-foreground">
+                        يرغب في: {catLabel(item.desiredCategory)}
+                      </div>
+                      <div className="mt-1.5 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-primary">
+                        {score}% توافق
+                      </div>
+                    </button>
+                  </Fragment>
                 );
+
               })}
               {inventory.length === 0 && (
                 <p className="col-span-full py-8 text-center text-xs text-muted-foreground">لا توجد نتائج مطابقة.</p>
               )}
             </div>
+
           </Card>
         </div>
       </div>

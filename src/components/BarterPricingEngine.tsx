@@ -700,6 +700,61 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
             </div>
           </Card>
 
+          {/* مقارنة الأسعار — تظهر فقط عندما تكون السلعة/الخدمة من بلد آخر */}
+          {crossBorder && (
+            <Card title="مقارنة الأسعار بين البلدان" icon={<Globe2 className="size-4 text-primary" aria-hidden />}>
+              <div className="mb-4 flex gap-3">
+                <Field label="البلد الأول">
+                  <Select value={compareA} onChange={(e) => setCompareA(e.target.value)}>
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c} value={c}>{COUNTRIES[c].nameAr} ({COUNTRIES[c].currency})</option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="البلد الثاني">
+                  <Select value={compareB} onChange={(e) => setCompareB(e.target.value)}>
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c} value={c}>{COUNTRIES[c].nameAr} ({COUNTRIES[c].currency})</option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+              <div className="flex items-center gap-3">
+                {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => (
+                  <div key={s.code + i} className="flex-1 rounded-2xl border border-border bg-muted/30 p-4 text-center">
+                    <div className="text-xl font-extrabold text-foreground">{COUNTRIES[s.code].flag}</div>
+                    <div className="text-xs font-bold text-muted-foreground">{COUNTRIES[s.code].nameAr}</div>
+                    <div className="mt-1 text-lg font-extrabold tabular-nums text-primary">{fmtLocal(s.r.local, s.code)}</div>
+                    <div className="text-[0.68rem] text-muted-foreground">{s.r.affordability}% من الدخل الشهري</div>
+                    {betterCode === s.code && absDiff >= 2 && (
+                      <div className="mt-1.5 inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-emerald-600">
+                        أرخص بـ {absDiff}%
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 text-center">
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold ${
+                    absDiff < 2 ? "bg-muted text-muted-foreground" : "bg-emerald-500/10 text-emerald-600"
+                  }`}
+                >
+                  {absDiff < 2
+                    ? "≈ صفقة متكافئة"
+                    : `${COUNTRIES[cmp.diffPct > 0 ? compareA : compareB].nameAr} ${absDiff}% أرخص`}
+                </span>
+              </div>
+              <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
+                {betterCode && worseCode
+                  ? `قيمة المقايضة أقل بنسبة ${absDiff}% في ${COUNTRIES[betterCode].nameAr} مقارنة بـ ${COUNTRIES[worseCode].nameAr} — مما يجعلها صفقة أفضل للمشتري في ${COUNTRIES[betterCode].nameAr}.`
+                  : "القيمة متكافئة بين البلدين."}
+              </p>
+            </Card>
+          )}
+
+
+
           {/* المخزون */}
           <Card
             title="السلع والخدمات المتاحة للمقايضة"

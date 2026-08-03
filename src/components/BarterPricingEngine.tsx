@@ -5,9 +5,10 @@ import { Camera, Loader2, Scale, Globe2, X, Lightbulb, Search } from "lucide-rea
 import {
   CATEGORIES, COUNTRIES, COUNTRY_CODES, INVENTORY, MULTIPLIERS, TAX_BY_COUNTRY,
   catLabel, subLabel, clamp, fmtLocal, fmtUSD, getCountryPrice, compareCountries,
-  checkSharia, solveCompatibility, valueGood, valueService, inventoryLiquidity,
+  checkSharia, solveCompatibility, valueGood, valueService, inventoryLiquidity, proximityScore,
   type InventoryItem,
 } from "@/lib/barter-engine";
+
 import { analyzeProductImage } from "@/lib/vision.functions";
 
 const GOOD_CATS = Object.keys(CATEGORIES).filter((k) => !CATEGORIES[k].isService);

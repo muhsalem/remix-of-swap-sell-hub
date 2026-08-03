@@ -749,47 +749,48 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                 const showHeader = idx === 0 || inventory[idx - 1].prox !== prox;
                 const local = getCountryPrice(item.value, country, item.category);
                 return (
-                  <div key={item.id} className={showHeader ? "col-span-full sm:col-span-2 xl:col-span-3" : "contents"}>
+                  <Fragment key={item.id}>
                     {showHeader && (
-                      <div className="mb-1 mt-1 text-[0.7rem] font-extrabold text-muted-foreground">{PROX_LABELS[prox]}</div>
+                      <div className="col-span-full mt-1 text-[0.7rem] font-extrabold text-muted-foreground">
+                        {PROX_LABELS[prox]}
+                      </div>
                     )}
-                    <div className={showHeader ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3" : "contents"}>
-                      <button
-                        onClick={() => setSelectedTargetId(active ? null : item.id)}
-                        className={`rounded-2xl border p-3 text-right transition hover:border-primary/60 ${
-                          active ? "border-primary bg-primary/5" : "border-border bg-card"
-                        }`}
-                      >
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <span className="text-lg">{CATEGORIES[item.category]?.icon}</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6rem] font-bold text-muted-foreground">
-                            {item.type === "good" ? "سلعة" : "خدمة"} · {COUNTRIES[item.countryCode]?.flag}
-                            {prox === 0 ? " 📍" : ""}
-                          </span>
+                    <button
+                      onClick={() => setSelectedTargetId(active ? null : item.id)}
+                      className={`rounded-2xl border p-3 text-right transition hover:border-primary/60 ${
+                        active ? "border-primary bg-primary/5" : "border-border bg-card"
+                      }`}
+                    >
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <span className="text-lg">{CATEGORIES[item.category]?.icon}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6rem] font-bold text-muted-foreground">
+                          {item.type === "good" ? "سلعة" : "خدمة"} · {COUNTRIES[item.countryCode]?.flag}
+                          {prox === 0 ? " 📍" : ""}
+                        </span>
+                      </div>
+                      <div className="truncate text-xs font-bold text-foreground">{item.nameAr}</div>
+                      <div className="truncate text-[0.65rem] text-muted-foreground">
+                        {catLabel(item.category)} ➔ {subLabel(item.category, item.subcategory)}
+                      </div>
+                      <div className="mt-1 text-sm font-extrabold tabular-nums text-primary">
+                        {fmtLocal(local.local, country)}
+                        <span className="ms-1 text-[0.62rem] font-semibold text-muted-foreground">{fmtUSD(item.value)}</span>
+                      </div>
+                      {shippingFee > 0 && item.countryCode !== country && (
+                        <div className="text-[0.62rem] font-semibold text-amber-600">
+                          ✈️ + {fmtLocal(shippingFee * rate, country)} شحن ونقل
                         </div>
-                        <div className="truncate text-xs font-bold text-foreground">{item.nameAr}</div>
-                        <div className="truncate text-[0.65rem] text-muted-foreground">
-                          {catLabel(item.category)} ➔ {subLabel(item.category, item.subcategory)}
-                        </div>
-                        <div className="mt-1 text-sm font-extrabold tabular-nums text-primary">
-                          {fmtLocal(local.local, country)}
-                          <span className="ms-1 text-[0.62rem] font-semibold text-muted-foreground">{fmtUSD(item.value)}</span>
-                        </div>
-                        {shippingFee > 0 && item.countryCode !== country && (
-                          <div className="text-[0.62rem] font-semibold text-amber-600">
-                            ✈️ + {fmtLocal(shippingFee * rate, country)} شحن ونقل
-                          </div>
-                        )}
-                        <div className="text-[0.62rem] text-muted-foreground">
-                          يرغب في: {catLabel(item.desiredCategory)}
-                        </div>
-                        <div className="mt-1.5 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-primary">
-                          {score}% توافق
-                        </div>
-                      </button>
-                    </div>
-                  </div>
+                      )}
+                      <div className="text-[0.62rem] text-muted-foreground">
+                        يرغب في: {catLabel(item.desiredCategory)}
+                      </div>
+                      <div className="mt-1.5 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-primary">
+                        {score}% توافق
+                      </div>
+                    </button>
+                  </Fragment>
                 );
+
               })}
               {inventory.length === 0 && (
                 <p className="col-span-full py-8 text-center text-xs text-muted-foreground">لا توجد نتائج مطابقة.</p>

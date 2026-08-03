@@ -199,6 +199,16 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
   // المقارنة بين البلدان تظهر فقط عندما تكون السلعة/الخدمة المعروضة من بلد آخر
   const crossBorder = !!target && target.countryCode !== country;
 
+  // مزامنة بلدي المقارنة مع بلدك وبلد العرض المختار
+  const targetCountry = target?.countryCode ?? null;
+  useEffect(() => {
+    if (targetCountry && targetCountry !== country) {
+      setCompareA(country);
+      setCompareB(targetCountry);
+    }
+  }, [targetCountry, country]);
+
+
   const userAsset = {
     type: activeType,
     name: valuation.name,

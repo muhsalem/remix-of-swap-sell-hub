@@ -196,6 +196,9 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
 
   // ── المطابقة ──
   const target = INVENTORY.find((i) => i.id === selectedTargetId) ?? null;
+  // المقارنة بين البلدان تظهر فقط عندما تكون السلعة/الخدمة المعروضة من بلد آخر
+  const crossBorder = !!target && target.countryCode !== country;
+
   const userAsset = {
     type: activeType,
     name: valuation.name,

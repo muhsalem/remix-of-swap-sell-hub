@@ -551,7 +551,12 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                   <div className="text-xs font-bold text-muted-foreground">{COUNTRIES[s.code].nameAr}</div>
                   <div className="mt-1 text-lg font-extrabold tabular-nums text-primary">{fmtLocal(s.r.local, s.code)}</div>
                   <div className="text-[0.68rem] text-muted-foreground">{s.r.affordability}% من الدخل الشهري</div>
-                  {i === 0 && null}
+                  {betterCode === s.code && absDiff >= 2 && (
+                    <div className="mt-1.5 inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-emerald-600">
+                      أرخص بـ {absDiff}%
+                    </div>
+                  )}
+
                 </div>
               ))}
             </div>

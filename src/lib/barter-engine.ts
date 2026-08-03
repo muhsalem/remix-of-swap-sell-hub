@@ -67,23 +67,38 @@ export function fmtLocal(v: number, code: string): string {
 
 // ── تطبيع أسماء الموديلات لاكتشاف المقايضات المتطابقة ──
 function normalizeModelName(name: string): string {
-  return (name || "")
-    .toLowerCase()
-    .replace(/[()\-_,،]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  if (!name) return "";
+  let s = String(name).toLowerCase().trim();
+  const arNums = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  for (let i = 0; i < 10; i++) s = s.split(arNums[i]).join(String(i));
+  s = s.replace(/[أإآ]/g, "ا");
+  s = s.replace(/ى/g, "ي");
+  s = s.replace(/ة/g, "ه");
+  s = s.replace(/ايفون/g, "iphone");
+  s = s.replace(/سامسونج/g, "samsung");
+  s = s.replace(/شاومي/g, "xiaomi");
+  s = s.replace(/برو ماكس/g, "pro max");
+  s = s.replace(/برو/g, "pro");
+  s = s.replace(/ماكس/g, "max");
+  s = s.replace(/بلس/g, "plus");
+  s = s.replace(/جيجا/g, "gb");
+  s = s.replace(/تيرا/g, "tb");
+  s = s.replace(/[\-_,(){}[\]./\\]/g, " ");
+  s = s.replace(/\s+/g, " ");
+  return s.trim();
 }
 export function areIdenticalModels(a: string, b: string): boolean {
-  const na = normalizeModelName(a);
-  const nb = normalizeModelName(b);
-  if (!na || !nb) return false;
-  if (na === nb) return true;
-  const ta = na.split(" ").filter((w) => w.length > 2);
-  const tb = nb.split(" ").filter((w) => w.length > 2);
-  if (ta.length < 2 || tb.length < 2) return false;
-  const shared = ta.filter((w) => tb.includes(w)).length;
-  return shared / Math.min(ta.length, tb.length) >= 0.8;
+  const n1 = normalizeModelName(a);
+  const n2 = normalizeModelName(b);
+  if (!n1 || !n2) return false;
+  if (n1 === n2) return true;
+  const clean = (str: string) =>
+    str.replace(/\b\d+\s*(gb|tb|mb|جيجا|تيرا)\b/g, "").replace(/\s+/g, " ").trim();
+  const c1 = clean(n1);
+  const c2 = clean(n2);
+  return !!c1 && !!c2 && c1 === c2;
 }
+
 
 // ── القرب الجغرافي ──
 const REGIONS: Record<string, string[]> = { gulf: ["SA"], north_africa: ["EG"] };

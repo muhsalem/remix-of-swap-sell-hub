@@ -54,6 +54,16 @@ async def assert_below_compat(page, label: str):
     assert order == "after", f"[{label}] ترتيب DOM خاطئ: {order}"
 
 
+async def set_my_country(page, code: str):
+    """ضبط «بلدك» مع تثبيته (قد يعيد اكتشاف الدولة ضبطه بعد الترطيب)."""
+    for _ in range(5):
+        await page.get_by_label("بلدك").select_option(code)
+        await page.wait_for_timeout(400)
+        if await page.get_by_label("بلدك").input_value() == code:
+            return
+    raise AssertionError(f"تعذّر تثبيت بلدك على {code}")
+
+
 async def pick_item(page, item_id: str):
     await page.locator(f'[data-testid="inventory-item"][data-item-id="{item_id}"]').first.click()
     await page.wait_for_timeout(250)
@@ -63,8 +73,8 @@ async def run_for_country(page, my_country: str):
     print(f"\n=== بلدك = {my_country} ===")
     await page.goto(f"{BASE_URL}/pricing-engine", wait_until="domcontentloaded")
     await page.wait_for_selector('[data-testid="inventory-item"]', timeout=20_000)
-    await page.get_by_label("بلدك").select_option(my_country)
-    await page.wait_for_timeout(300)
+    await page.wait_for_timeout(1200)  # انتظار اكتشاف الدولة قبل الضبط اليدوي
+    await set_my_country(page, my_country)
 
     # 1) بدون اختيار → البطاقة مخفية
     assert not await compare_visible(page), f"[{my_country}] ظهرت البطاقة بدون اختيار عنصر"
@@ -102,14 +112,12 @@ async def run_for_country(page, my_country: str):
     await pick_item(page, target["id"])
     await assert_below_compat(page, f"{my_country}/switch-before")
     await page.screenshot(path=str(OUT / f"{my_country}_cross_border.png"))
-    await page.get_by_label("بلدك").select_option(target["country"])
-    await page.wait_for_timeout(350)
+    await set_my_country(page, target["country"])
     assert not await compare_visible(page), (
         f"[{my_country}] البطاقة بقيت بعد جعل بلدك = بلد العرض"
     )
     # ثم العودة → تظهر مجدداً أسفل المختبر
-    await page.get_by_label("بلدك").select_option(my_country)
-    await page.wait_for_timeout(350)
+    await set_my_country(page, my_country)
     await assert_below_compat(page, f"{my_country}/switch-back")
     print("  ✓ تتفاعل بشكل صحيح مع تبديل بلدك ذهاباً وإياباً")
 

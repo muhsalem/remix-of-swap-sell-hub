@@ -13,9 +13,9 @@ function isSafeRelativePath(p: unknown): p is string {
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: isSafeRelativePath(s.next) ? s.next : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } =>
+    isSafeRelativePath(s.next) ? { next: s.next } : {},
+
   head: () => ({
     meta: [
       { title: "تسجيل الدخول — بادل بادل" },

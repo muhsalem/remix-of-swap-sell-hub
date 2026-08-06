@@ -54,9 +54,9 @@ function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     />
   );
 }
-function Card({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Card({ title, icon, children, testId }: { title: string; icon?: React.ReactNode; children: React.ReactNode; testId?: string }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 md:p-5 shadow-sm">
+    <section data-testid={testId} className="rounded-2xl border border-border bg-card p-4 md:p-5 shadow-sm">
       <header className="mb-4 flex items-center justify-between gap-2">
         <h3 className="text-sm font-extrabold text-foreground">{title}</h3>
         {icon}
@@ -575,6 +575,7 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
           {/* مختبر توافق المقايضات */}
           <Card
             title="مختبر توافق المقايضات"
+            testId="compat-lab"
             icon={
               match ? (
                 <span
@@ -747,7 +748,7 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
 
           {/* مقارنة الأسعار — تظهر فقط عندما تكون السلعة/الخدمة من بلد آخر */}
           {crossBorder && (
-            <Card title="مقارنة الأسعار بين البلدان" icon={<Globe2 className="size-4 text-primary" aria-hidden />}>
+            <Card testId="country-compare" title="مقارنة الأسعار بين البلدان" icon={<Globe2 className="size-4 text-primary" aria-hidden />}>
               <div className="mb-4 flex gap-3">
                 <Field label="البلد الأول">
                   <Select value={compareA} onChange={(e) => setCompareA(e.target.value)}>
@@ -888,6 +889,9 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                     )}
                     <button
                       onClick={() => setSelectedTargetId(active ? null : item.id)}
+                      data-testid="inventory-item"
+                      data-item-id={item.id}
+                      data-country={item.countryCode}
                       className={`rounded-2xl border p-3 text-right transition hover:border-primary/60 ${
                         active ? "border-primary bg-primary/5" : "border-border bg-card"
                       }`}

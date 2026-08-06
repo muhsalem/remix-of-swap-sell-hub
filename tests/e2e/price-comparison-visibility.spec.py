@@ -119,6 +119,12 @@ async def main():
         browser = await pw.chromium.launch(headless=True)
         ctx = await browser.new_context(viewport={"width": 1280, "height": 1800})
         page = await ctx.new_page()
+        # تخطّي الجولة التعريفية وبانر الدولة حتى لا يحجبا النقرات
+        await page.goto(BASE_URL, wait_until="domcontentloaded")
+        await page.evaluate(
+            """() => { localStorage.setItem('badel_onboarding_v1','1');
+                       localStorage.setItem('badel:country','EGP'); }"""
+        )
         for c in COUNTRIES:
             await run_for_country(page, c)
         await browser.close()

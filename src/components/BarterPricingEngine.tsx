@@ -254,6 +254,30 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
   const score = match?.totalScore ?? 0;
   const gaugeColor = score >= 70 ? "hsl(145 80% 40%)" : score >= 45 ? "hsl(45 90% 45%)" : "hsl(355 80% 55%)";
 
+  // ── تفصيل التكلفة لكل بلد (جمارك + VAT + عمولة + شحن دولي) ──
+  const costBreakdown = (code: string, r: { local: number; dutyFactor: number }) => {
+    const t = TAX_BY_COUNTRY[code] ?? { vat: 0, fee: 0.03, auth: "—" };
+    const preDuty = r.dutyFactor > 0 ? r.local / r.dutyFactor : r.local;
+    const duty = r.local - preDuty;
+    const fee = r.local * t.fee;
+    const vat = fee * t.vat;
+    const fx = COUNTRIES[code]?.exchangeRate ?? 1;
+    // الشحن الدولي يتحمّله البلد المستورِد (البلد المختلف عن بلد العرض)
+    const shipping =
+      match && target && target.countryCode !== code ? match.shippingFee * fx : 0;
+    return {
+      tax: t,
+      preDuty,
+      duty,
+      dutyPct: Math.round((r.dutyFactor - 1) * 1000) / 10,
+      fee,
+      vat,
+      shipping,
+      total: r.local + fee + vat + shipping,
+    };
+  };
+
+
   const liqLabel = (l: number) => (l >= 0.8 ? "مرتفع" : l < 0.55 ? "منخفض" : "متوسط");
 
   // ── المخزون ──

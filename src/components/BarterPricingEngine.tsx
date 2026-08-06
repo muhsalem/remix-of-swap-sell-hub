@@ -779,6 +779,55 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                   </div>
                 ))}
               </div>
+
+              {/* تفصيل التكاليف لكل بلد */}
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => {
+                  const b = costBreakdown(s.code, s.r);
+                  const rows = [
+                    { l: "السعر قبل الجمارك", v: fmtLocal(b.preDuty, s.code) },
+                    {
+                      l: `الرسوم الجمركية ${b.dutyPct > 0 ? `(${b.dutyPct}%)` : "(معفاة)"}`,
+                      v: b.duty > 0 ? `+ ${fmtLocal(b.duty, s.code)}` : "—",
+                    },
+                    {
+                      l: `عمولة المنصة (${Math.round(b.tax.fee * 100)}%)`,
+                      v: `+ ${fmtLocal(b.fee, s.code)}`,
+                    },
+                    {
+                      l: b.tax.vat > 0
+                        ? `ضريبة القيمة المضافة ${Math.round(b.tax.vat * 100)}% (${b.tax.auth})`
+                        : `ضريبة القيمة المضافة (لا تُطبَّق — ${b.tax.auth})`,
+                      v: b.vat > 0 ? `+ ${fmtLocal(b.vat, s.code)}` : "—",
+                    },
+                    {
+                      l: "الشحن الدولي",
+                      v: b.shipping > 0 ? `+ ${fmtLocal(b.shipping, s.code)}` : "— (محلي)",
+                    },
+                  ];
+                  return (
+                    <div key={s.code + i + "-bd"} className="rounded-2xl border border-border bg-card p-3">
+                      <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-foreground">
+                        <span>{COUNTRIES[s.code].flag} {COUNTRIES[s.code].nameAr}</span>
+                        <span className="text-[0.62rem] font-bold text-muted-foreground">{COUNTRIES[s.code].currency}</span>
+                      </div>
+                      <dl className="space-y-1">
+                        {rows.map((row) => (
+                          <div key={row.l} className="flex items-baseline justify-between gap-2 text-[0.7rem]">
+                            <dt className="text-muted-foreground">{row.l}</dt>
+                            <dd className="font-bold tabular-nums text-foreground">{row.v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2 text-xs">
+                        <span className="font-extrabold text-foreground">الإجمالي التقديري</span>
+                        <span className="font-extrabold tabular-nums text-primary">{fmtLocal(b.total, s.code)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="mt-3 text-center">
                 <span
                   className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold ${

@@ -199,14 +199,22 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
   // المقارنة بين البلدان تظهر فقط عندما تكون السلعة/الخدمة المعروضة من بلد آخر
   const crossBorder = !!target && target.countryCode !== country;
 
-  // مزامنة بلدي المقارنة مع بلدك وبلد العرض المختار
+  // مزامنة بلدي المقارنة مع بلدك وبلد العرض المختار — مرة واحدة لكل زوج (بلدك ← بلد العرض)
+  // حتى لا تُلغى تعديلات المستخدم اليدوية على القائمتين.
   const targetCountry = target?.countryCode ?? null;
+  const lastSyncedPair = useRef<string | null>(null);
   useEffect(() => {
-    if (targetCountry && targetCountry !== country) {
-      setCompareA(country);
-      setCompareB(targetCountry);
+    if (!targetCountry || targetCountry === country) {
+      lastSyncedPair.current = null; // إعادة التهيئة لأي اختيار عابر للحدود لاحق
+      return;
     }
+    const key = `${country}>${targetCountry}`;
+    if (lastSyncedPair.current === key) return; // المستخدم عدّل يدوياً → لا نكتب فوقه
+    lastSyncedPair.current = key;
+    setCompareA(country);
+    setCompareB(targetCountry);
   }, [targetCountry, country]);
+
 
 
   const userAsset = {

@@ -190,7 +190,15 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
       : valuation.deprModel === "rapid_decay" ? "📉⚡ تلف سريع" : "📉 إهلاك";
   const dutyText = cp.dutyFactor > 1 ? ` · رسوم ${Math.round((cp.dutyFactor - 1) * 100)}%` : "";
 
-  // ── مقارنة الدول (مع حالات فشل صريحة) ──
+  // ── مقارنة الدول (مع حالات تحميل/نقص بيانات/فشل صريحة) ──
+  const [cmpNonce, setCmpNonce] = useState(0);
+  const [cmpLoading, setCmpLoading] = useState(false);
+  useEffect(() => {
+    setCmpLoading(true);
+    const t = setTimeout(() => setCmpLoading(false), 220);
+    return () => clearTimeout(t);
+  }, [compareA, compareB, valuation.usd, valuation.categoryKey, cmpNonce]);
+
   const cmpResult = useMemo(() => {
     try {
       const c = compareCountries(valuation.usd, compareA, compareB, valuation.categoryKey);

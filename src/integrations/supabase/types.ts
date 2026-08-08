@@ -1721,6 +1721,18 @@ export type Database = {
     }
     Functions: {
       di_balance: { Args: { _user_id: string }; Returns: number }
+      di_statement: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          amount_di: number
+          balance_after: number
+          created_at: string
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id: string
+          note: string
+          reference_offer: string
+        }[]
+      }
       expire_promotions: { Args: never; Returns: undefined }
       get_follow_counts: {
         Args: { _user: string }
@@ -1745,6 +1757,7 @@ export type Database = {
           rating: number
         }[]
       }
+      grant_welcome_bonus: { Args: { _user_id: string }; Returns: undefined }
       grant_welcome_referral_coupon: {
         Args: { _referral_id: string }
         Returns: undefined

@@ -132,19 +132,67 @@ function ProfilePage() {
       </div>
 
       {diOn ? (
-        <div className="rounded-3xl p-6 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.5)]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-sm opacity-90">
-              <Wallet className="size-5" /> محفظة DI Credit
+        <div className="space-y-4">
+          <div className="rounded-3xl p-6 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.5)]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-sm opacity-90">
+                <Wallet className="size-5" /> محفظة DI Credit
+              </div>
+              <Sparkles className="size-5 opacity-80" />
             </div>
-            <Sparkles className="size-5 opacity-80" />
+            <div className="flex items-baseline gap-3">
+              <div className="text-5xl font-extrabold tracking-tight">{diBalance.toFixed(2)}</div>
+              <div className="text-lg opacity-90">DI</div>
+            </div>
+            <div className="text-sm opacity-80 mt-2">
+              ≈ {(diBalance * SAR_PER_DI).toFixed(2)} ر.س &middot; 1 DI = {SAR_PER_DI} ر.س
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl bg-white/10 px-3 py-2">
+                <div className="opacity-80">إجمالي الإيداعات</div>
+                <div className="font-mono font-bold">+{data.ledger.credits.toFixed(2)} DI</div>
+              </div>
+              <div className="rounded-xl bg-white/10 px-3 py-2">
+                <div className="opacity-80">إجمالي الخصومات</div>
+                <div className="font-mono font-bold">{data.ledger.debits.toFixed(2)} DI</div>
+              </div>
+            </div>
+            <div className="mt-2 text-[11px] opacity-80">
+              {data.ledger.reconciled ? "✔ الرصيد مطابق لدفتر القيود (wallet_ledger)" : "⚠ تعذّرت مطابقة الرصيد مع دفتر القيود — يرجى مراجعة الدعم"}
+            </div>
           </div>
-          <div className="flex items-baseline gap-3">
-            <div className="text-5xl font-extrabold tracking-tight">{diBalance.toFixed(2)}</div>
-            <div className="text-lg opacity-90">DI</div>
-          </div>
-          <div className="text-sm opacity-80 mt-2">
-            ≈ {(diBalance * SAR_PER_DI).toFixed(2)} ر.س &middot; 1 DI = {SAR_PER_DI} ر.س
+
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold flex items-center gap-2"><History className="size-4" /> كشف حساب DI</h2>
+              <span className="text-xs text-muted-foreground">{data.ledger.entries.length} قيد</span>
+            </div>
+            {data.ledger.entries.length === 0 ? (
+              <p className="text-sm text-muted-foreground">لا توجد قيود بعد.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {data.ledger.entries.map((e) => (
+                  <li key={e.id} className="py-2 flex items-center justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{LEDGER_LABELS[e.entry_type] ?? e.entry_type}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {e.note ?? "—"} · {new Date(e.created_at).toLocaleString("ar", { dateStyle: "short", timeStyle: "short" })}
+                        {e.reference_offer ? ` · مرجع: ${e.reference_offer.slice(0, 8)}` : ""}
+                      </div>
+                    </div>
+                    <div className="text-left shrink-0">
+                      <div className={`font-mono font-bold ${e.amount_di >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {e.amount_di >= 0 ? "+" : ""}{e.amount_di.toFixed(2)} DI
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-mono">الرصيد: {e.balance_after.toFixed(2)}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {data.ledger.truncated && (
+              <p className="text-[11px] text-muted-foreground mt-2">يعرض آخر 100 قيد فقط.</p>
+            )}
           </div>
         </div>
       ) : (
@@ -158,6 +206,7 @@ function ProfilePage() {
           </p>
         </div>
       )}
+
 
       {/* آخر تحليل توافق مقايضة — مربوط بـ PricingEngine */}
       {lastAnalysis && (

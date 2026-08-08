@@ -14,6 +14,15 @@ const walletQO = queryOptions({ queryKey: ["wallet-stats"], queryFn: () => getWa
 const pricingQO = queryOptions({ queryKey: ["pricing"], queryFn: () => getPricing() });
 const socialQO = queryOptions({ queryKey: ["social-self"], queryFn: () => getFollowStats({ data: {} }) });
 
+const LEDGER_LABELS: Record<string, string> = {
+  welcome_bonus: "مكافأة ترحيب",
+  trade_completed: "مكافأة إتمام صفقة",
+  fee_charge: "خصم رسوم/ترقية",
+  manual_adjust: "تسوية إدارية",
+  refund: "استرداد",
+};
+
+
 const BADGE_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   verified_id:      { label: "موثّق الهوية",  icon: BadgeCheck,  color: "text-primary" },
   first_trade:      { label: "أول صفقة",       icon: Sparkles,    color: "text-accent" },

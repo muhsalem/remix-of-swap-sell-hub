@@ -799,86 +799,134 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                   </Select>
                 </Field>
               </div>
-              <div className="flex items-center gap-3">
-                {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => (
-                  <div key={s.code + i} className="flex-1 rounded-2xl border border-border bg-muted/30 p-4 text-center">
-                    <div className="text-xl font-extrabold text-foreground">{COUNTRIES[s.code].flag}</div>
-                    <div className="text-xs font-bold text-muted-foreground">{COUNTRIES[s.code].nameAr}</div>
-                    <div className="mt-1 text-lg font-extrabold tabular-nums text-primary">{fmtLocal(s.r.local, s.code)}</div>
-                    <div className="text-[0.68rem] text-muted-foreground">{s.r.affordability}% من الدخل الشهري</div>
-                    {betterCode === s.code && absDiff >= 2 && (
-                      <div className="mt-1.5 inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-emerald-600">
-                        أرخص بـ {absDiff}%
-                      </div>
-                    )}
+              {cmpLoading ? (
+                <div data-testid="compare-loading" className="space-y-3" aria-busy="true">
+                  <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden /> جارٍ حساب المقارنة…
                   </div>
-                ))}
-              </div>
-
-              {/* تفصيل التكاليف لكل بلد */}
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => {
-                  const b = costBreakdown(s.code, s.r);
-                  const rows = [
-                    { l: "السعر قبل الجمارك", v: fmtLocal(b.preDuty, s.code) },
-                    {
-                      l: `الرسوم الجمركية ${b.dutyPct > 0 ? `(${b.dutyPct}%)` : "(معفاة)"}`,
-                      v: b.duty > 0 ? `+ ${fmtLocal(b.duty, s.code)}` : "—",
-                    },
-                    {
-                      l: `عمولة المنصة (${Math.round(b.tax.fee * 100)}%)`,
-                      v: `+ ${fmtLocal(b.fee, s.code)}`,
-                    },
-                    {
-                      l: b.tax.vat > 0
-                        ? `ضريبة القيمة المضافة ${Math.round(b.tax.vat * 100)}% (${b.tax.auth})`
-                        : `ضريبة القيمة المضافة (لا تُطبَّق — ${b.tax.auth})`,
-                      v: b.vat > 0 ? `+ ${fmtLocal(b.vat, s.code)}` : "—",
-                    },
-                    {
-                      l: "الشحن الدولي",
-                      v: b.shipping > 0 ? `+ ${fmtLocal(b.shipping, s.code)}` : "— (محلي)",
-                    },
-                  ];
-                  return (
-                    <div key={s.code + i + "-bd"} className="rounded-2xl border border-border bg-card p-3">
-                      <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-foreground">
-                        <span>{COUNTRIES[s.code].flag} {COUNTRIES[s.code].nameAr}</span>
-                        <span className="text-[0.62rem] font-bold text-muted-foreground">{COUNTRIES[s.code].currency}</span>
-                      </div>
-                      <dl className="space-y-1">
-                        {rows.map((row) => (
-                          <div key={row.l} className="flex items-baseline justify-between gap-2 text-[0.7rem]">
-                            <dt className="text-muted-foreground">{row.l}</dt>
-                            <dd className="font-bold tabular-nums text-foreground">{row.v}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2 text-xs">
-                        <span className="font-extrabold text-foreground">الإجمالي التقديري</span>
-                        <span className="font-extrabold tabular-nums text-primary">{fmtLocal(b.total, s.code)}</span>
-                      </div>
+                  <div className="flex gap-3">
+                    <div className="h-28 flex-1 animate-pulse rounded-2xl bg-muted" />
+                    <div className="h-28 flex-1 animate-pulse rounded-2xl bg-muted" />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="h-36 animate-pulse rounded-2xl bg-muted" />
+                    <div className="h-36 animate-pulse rounded-2xl bg-muted" />
+                  </div>
+                </div>
+              ) : !cmp ? (
+                <div data-testid="compare-error" className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+                  <div className="text-sm font-extrabold text-destructive">تعذّر حساب مقارنة الأسعار</div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {cmpResult.error || "حدث خطأ غير متوقع أثناء المقارنة."} — تحقق من بيانات التقييم أو أعد المحاولة.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCmpNonce((n) => n + 1)}
+                    className="mt-3 rounded-xl bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground hover:opacity-90"
+                  >
+                    إعادة المحاولة
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {compareGaps.length > 0 && (
+                    <div data-testid="compare-gaps" className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3">
+                      <div className="text-[0.72rem] font-extrabold text-amber-600">بيانات ناقصة — النتائج تقديرية</div>
+                      <ul className="mt-1 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
+                        {compareGaps.map((g) => <li key={g}>{g}</li>)}
+                      </ul>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => (
+                      <div key={s.code + i} className="flex-1 rounded-2xl border border-border bg-muted/30 p-4 text-center">
+                        <div className="text-xl font-extrabold text-foreground">{COUNTRIES[s.code]?.flag ?? "🏳️"}</div>
+                        <div className="text-xs font-bold text-muted-foreground">{COUNTRIES[s.code]?.nameAr ?? s.code}</div>
+                        <div className="mt-1 text-lg font-extrabold tabular-nums text-primary">
+                          {Number.isFinite(s.r.local) && s.r.local > 0 ? fmtLocal(s.r.local, s.code) : "غير متوفر"}
+                        </div>
+                        <div className="text-[0.68rem] text-muted-foreground">
+                          {s.r.affordability > 0 ? `${s.r.affordability}% من الدخل الشهري` : "نسبة الدخل غير متوفرة"}
+                        </div>
+                        {betterCode === s.code && absDiff >= 2 && (
+                          <div className="mt-1.5 inline-block rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.62rem] font-extrabold text-emerald-600">
+                            أرخص بـ {absDiff}%
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
 
-              <div className="mt-3 text-center">
-                <span
-                  className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold ${
-                    absDiff < 2 ? "bg-muted text-muted-foreground" : "bg-emerald-500/10 text-emerald-600"
-                  }`}
-                >
-                  {absDiff < 2
-                    ? "≈ صفقة متكافئة"
-                    : `${COUNTRIES[cmp.diffPct > 0 ? compareA : compareB].nameAr} ${absDiff}% أرخص`}
-                </span>
-              </div>
-              <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
-                {betterCode && worseCode
-                  ? `قيمة المقايضة أقل بنسبة ${absDiff}% في ${COUNTRIES[betterCode].nameAr} مقارنة بـ ${COUNTRIES[worseCode].nameAr} — مما يجعلها صفقة أفضل للمشتري في ${COUNTRIES[betterCode].nameAr}.`
-                  : "القيمة متكافئة بين البلدين."}
-              </p>
+                  {/* تفصيل التكاليف لكل بلد */}
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => {
+                      const b = costBreakdown(s.code, s.r);
+                      const hasTax = !!TAX_BY_COUNTRY[s.code];
+                      const rows = [
+                        { l: "السعر قبل الجمارك", v: fmtLocal(b.preDuty, s.code) },
+                        {
+                          l: `الرسوم الجمركية ${b.dutyPct > 0 ? `(${b.dutyPct}%)` : "(معفاة)"}`,
+                          v: b.duty > 0 ? `+ ${fmtLocal(b.duty, s.code)}` : "—",
+                        },
+                        {
+                          l: `عمولة المنصة (${Math.round(b.tax.fee * 100)}%)${hasTax ? "" : " — افتراضية"}`,
+                          v: `+ ${fmtLocal(b.fee, s.code)}`,
+                        },
+                        {
+                          l: !hasTax
+                            ? "ضريبة القيمة المضافة (غير متوفرة لهذا البلد)"
+                            : b.tax.vat > 0
+                              ? `ضريبة القيمة المضافة ${Math.round(b.tax.vat * 100)}% (${b.tax.auth})`
+                              : `ضريبة القيمة المضافة (لا تُطبَّق — ${b.tax.auth})`,
+                          v: !hasTax ? "غير متوفر" : b.vat > 0 ? `+ ${fmtLocal(b.vat, s.code)}` : "—",
+                        },
+                        {
+                          l: "الشحن الدولي",
+                          v: b.shipping > 0 ? `+ ${fmtLocal(b.shipping, s.code)}` : "— (محلي)",
+                        },
+                      ];
+                      return (
+                        <div key={s.code + i + "-bd"} className="rounded-2xl border border-border bg-card p-3">
+                          <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-foreground">
+                            <span>{COUNTRIES[s.code]?.flag} {COUNTRIES[s.code]?.nameAr ?? s.code}</span>
+                            <span className="text-[0.62rem] font-bold text-muted-foreground">{COUNTRIES[s.code]?.currency ?? "USD"}</span>
+                          </div>
+                          <dl className="space-y-1">
+                            {rows.map((row) => (
+                              <div key={row.l} className="flex items-baseline justify-between gap-2 text-[0.7rem]">
+                                <dt className="text-muted-foreground">{row.l}</dt>
+                                <dd className="font-bold tabular-nums text-foreground">{row.v}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2 text-xs">
+                            <span className="font-extrabold text-foreground">الإجمالي التقديري</span>
+                            <span className="font-extrabold tabular-nums text-primary">{fmtLocal(b.total, s.code)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3 text-center">
+                    <span
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold ${
+                        absDiff < 2 ? "bg-muted text-muted-foreground" : "bg-emerald-500/10 text-emerald-600"
+                      }`}
+                    >
+                      {absDiff < 2
+                        ? "≈ صفقة متكافئة"
+                        : `${COUNTRIES[cmp.diffPct > 0 ? compareA : compareB]?.nameAr ?? ""} ${absDiff}% أرخص`}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-center text-xs leading-relaxed text-muted-foreground">
+                    {betterCode && worseCode
+                      ? `قيمة المقايضة أقل بنسبة ${absDiff}% في ${COUNTRIES[betterCode]?.nameAr} مقارنة بـ ${COUNTRIES[worseCode]?.nameAr} — مما يجعلها صفقة أفضل للمشتري في ${COUNTRIES[betterCode]?.nameAr}.`
+                      : "القيمة متكافئة بين البلدين."}
+                  </p>
+                </>
+              )}
+
             </Card>
           )}
 

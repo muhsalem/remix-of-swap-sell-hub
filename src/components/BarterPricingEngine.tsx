@@ -209,7 +209,7 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
     } catch (e) {
       return { ok: false as const, cmp: null, error: e instanceof Error ? e.message : "خطأ غير معروف" };
     }
-  }, [valuation.usd, valuation.categoryKey, compareA, compareB]);
+  }, [valuation.usd, valuation.categoryKey, compareA, compareB, cmpNonce]);
 
   const cmp = cmpResult.cmp;
   const absDiff = cmp ? Math.abs(cmp.diffPct) : 0;

@@ -7,6 +7,8 @@ import {
   catLabel, subLabel, clamp, fmtLocal, fmtUSD, getCountryPrice, compareCountries,
   checkSharia, solveCompatibility, valueGood, valueService, inventoryLiquidity, proximityScore,
 } from "@/lib/barter-engine";
+import { IMPORT_DUTIES } from "@/lib/barter-engine-data";
+
 
 
 import { analyzeProductImage } from "@/lib/vision.functions";

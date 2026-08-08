@@ -188,11 +188,45 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
       : valuation.deprModel === "rapid_decay" ? "📉⚡ تلف سريع" : "📉 إهلاك";
   const dutyText = cp.dutyFactor > 1 ? ` · رسوم ${Math.round((cp.dutyFactor - 1) * 100)}%` : "";
 
-  // ── مقارنة الدول ──
-  const cmp = compareCountries(valuation.usd, compareA, compareB, valuation.categoryKey);
-  const absDiff = Math.abs(cmp.diffPct);
-  const betterCode = cmp.betterDeal === "equal" ? null : cmp.betterDeal;
+  // ── مقارنة الدول (مع حالات فشل صريحة) ──
+  const cmpResult = useMemo(() => {
+    try {
+      const c = compareCountries(valuation.usd, compareA, compareB, valuation.categoryKey);
+      if (!c || !Number.isFinite(c.a?.local) || !Number.isFinite(c.b?.local)) {
+        throw new Error("نتيجة مقارنة غير صالحة");
+      }
+      return { ok: true as const, cmp: c, error: null as string | null };
+    } catch (e) {
+      return { ok: false as const, cmp: null, error: e instanceof Error ? e.message : "خطأ غير معروف" };
+    }
+  }, [valuation.usd, valuation.categoryKey, compareA, compareB]);
+
+  const cmp = cmpResult.cmp;
+  const absDiff = cmp ? Math.abs(cmp.diffPct) : 0;
+  const betterCode = cmp && cmp.betterDeal !== "equal" ? cmp.betterDeal : null;
   const worseCode = betterCode ? (betterCode === compareA ? compareB : compareA) : null;
+
+  // بيانات ناقصة لبعض الدول أو الفئات
+  const compareGaps = useMemo(() => {
+    const gaps: string[] = [];
+    for (const code of [compareA, compareB]) {
+      const c = COUNTRIES[code];
+      if (!c) { gaps.push(`لا توجد بيانات اقتصادية للبلد (${code}) — استُخدمت قيم افتراضية بالدولار.`); continue; }
+      if (!c.exchangeRate || c.exchangeRate <= 0) gaps.push(`سعر صرف ${c.nameAr} غير متوفر — الأسعار تقريبية.`);
+      if (!c.avgMonthlyIncome || c.avgMonthlyIncome <= 0) gaps.push(`متوسط الدخل الشهري لـ${c.nameAr} غير متوفر — تعذّر حساب نسبة القدرة الشرائية.`);
+      if (!c.costOfLivingIndex) gaps.push(`مؤشر تكلفة المعيشة لـ${c.nameAr} غير متوفر.`);
+      if (!TAX_BY_COUNTRY[code]) gaps.push(`لا توجد معايير ضريبية معتمدة لـ${c.nameAr} — طُبّقت عمولة افتراضية 3% بدون VAT.`);
+      const duties = (IMPORT_DUTIES as Record<string, Record<string, number>>)[valuation.categoryKey];
+      if (!duties) {
+        gaps.push(`لا توجد جداول جمركية لفئة «${catLabel(valuation.categoryKey)}» — احتُسبت بدون رسوم.`);
+      } else if (duties[code] === undefined && duties._default === undefined) {
+        gaps.push(`لا توجد رسوم جمركية معرّفة لفئة «${catLabel(valuation.categoryKey)}» في ${c.nameAr}.`);
+      }
+    }
+    if (!(valuation.usd > 0)) gaps.push("قيمة الأصل صفر أو غير محددة — أدخل بيانات التقييم للحصول على مقارنة ذات معنى.");
+    return Array.from(new Set(gaps));
+  }, [compareA, compareB, valuation.categoryKey, valuation.usd]);
+
 
   // ── المطابقة ──
   const target = INVENTORY.find((i) => i.id === selectedTargetId) ?? null;

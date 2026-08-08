@@ -1,19 +1,31 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const WELCOME_BONUS_DI = 100;
-const PER_TRADE_DI = 50;
+export const SAR_PER_DI = 5;
 
+export type LedgerEntry = {
+  id: string;
+  entry_type: string;
+  amount_di: number;
+  balance_after: number;
+  reference_offer: string | null;
+  note: string | null;
+  created_at: string;
+};
+
+/** DI wallet backed 1:1 by public.wallet_ledger — no in-memory estimation. */
 export const getWalletStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [profileRes, offersRes, reviewsRes, listingsRes] = await Promise.all([
+    const [profileRes, offersRes, reviewsRes, listingsRes, balanceRes, statementRes] = await Promise.all([
       supabase.from("profiles").select("display_name,avatar_url,bio,rating,trades_count,created_at,account_type,company_name,company_verified").eq("id", userId).maybeSingle(),
       supabase.from("trade_offers").select("id,status,cash_balance,from_user,to_user,created_at").or(`from_user.eq.${userId},to_user.eq.${userId}`),
       supabase.from("reviews").select("id,rating,comment,created_at,reviewer_id").eq("reviewed_user", userId).order("created_at", { ascending: false }).limit(10),
       supabase.from("listings").select("id,status").eq("owner_id", userId),
+      supabase.rpc("di_balance", { _user_id: userId }),
+      supabase.rpc("di_statement", { _user_id: userId, _limit: 100 }),
     ]);
 
     const profile = profileRes.data;
@@ -25,14 +37,29 @@ export const getWalletStats = createServerFn({ method: "GET" })
     const pending = offers.filter((o) => o.status === "pending");
     const activeListings = listings.filter((l) => l.status === "active").length;
 
-    // DI Balance (افتراضي): مكافأة ترحيب + 50 DI لكل صفقة مكتملة - الرصيد النقدي المدفوع
-    const earned = WELCOME_BONUS_DI + completed.length * PER_TRADE_DI;
-    const cashFlow = completed.reduce((acc, o) => {
-      const amt = Number(o.cash_balance ?? 0);
-      // إذا كان المستخدم الدافع (from_user عادةً يدفع الفرق) نخصم، وإلا نضيف
-      return acc + (o.from_user === userId ? -amt : amt);
-    }, 0);
-    const diBalance = Math.max(0, Math.round((earned + cashFlow / 5) * 100) / 100); // 1 DI ≈ 5 ر.س
+    const statement = ((statementRes.data ?? []) as LedgerEntry[]).map((e) => ({
+      ...e,
+      amount_di: Number(e.amount_di),
+      balance_after: Number(e.balance_after),
+    }));
+
+    // Ledger is the single source of truth.
+    const diBalance = Math.round(Number(balanceRes.data ?? 0) * 100) / 100;
+
+    // Accounting proof: credits + debits must reconcile to the reported balance.
+    const credits = statement.filter((e) => e.amount_di > 0).reduce((s, e) => s + e.amount_di, 0);
+    const debits = statement.filter((e) => e.amount_di < 0).reduce((s, e) => s + e.amount_di, 0);
+    const statementSum = Math.round((credits + debits) * 100) / 100;
+    const truncated = statement.length >= 100;
+    const reconciled = truncated || Math.abs(statementSum - diBalance) < 0.01;
+
+    const byType = statement.reduce<Record<string, { count: number; total: number }>>((acc, e) => {
+      const row = acc[e.entry_type] ?? { count: 0, total: 0 };
+      row.count += 1;
+      row.total = Math.round((row.total + e.amount_di) * 100) / 100;
+      acc[e.entry_type] = row;
+      return acc;
+    }, {});
 
     const rating = Number(profile?.rating ?? 0);
     const tradesCount = Number(profile?.trades_count ?? completed.length);
@@ -48,6 +75,15 @@ export const getWalletStats = createServerFn({ method: "GET" })
     return {
       profile,
       diBalance,
+      diValueSar: Math.round(diBalance * SAR_PER_DI * 100) / 100,
+      ledger: {
+        entries: statement,
+        credits: Math.round(credits * 100) / 100,
+        debits: Math.round(debits * 100) / 100,
+        byType,
+        reconciled,
+        truncated,
+      },
       reputationScore,
       impactScore,
       trustLevel,

@@ -237,6 +237,40 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
     return Array.from(new Set(gaps));
   }, [compareA, compareB, valuation.categoryKey, valuation.usd]);
 
+  // ── وضع الحساب التقديري: نسبة ثقة + الافتراضات البديلة + موعد التحديث التلقائي ──
+  const estimation = useMemo(() => {
+    const weights: { test: (g: string) => boolean; penalty: number; assume: string }[] = [
+      { test: (g) => g.includes("سعر صرف"), penalty: 25, assume: "استُخدم آخر سعر صرف مرجعي محفوظ بدل السعر اللحظي." },
+      { test: (g) => g.includes("الدخل الشهري"), penalty: 15, assume: "قُدّرت القدرة الشرائية من متوسط إقليمي بدل دخل البلد." },
+      { test: (g) => g.includes("تكلفة المعيشة"), penalty: 12, assume: "افتُرض مؤشر معيشة محايد (100) للبلد." },
+      { test: (g) => g.includes("ضريبية"), penalty: 10, assume: "طُبّقت عمولة افتراضية 3% بدون ضريبة قيمة مضافة." },
+      { test: (g) => g.includes("جمرك"), penalty: 10, assume: "احتُسبت الرسوم الجمركية بمعامل افتراضي (بدون رسوم إضافية)." },
+      { test: (g) => g.includes("قيمة الأصل"), penalty: 30, assume: "لا توجد قيمة مُدخلة — المقارنة هيكلية فقط." },
+    ];
+    const assumptions: string[] = [];
+    let penalty = 0;
+    for (const w of weights) {
+      if (compareGaps.some(w.test)) { penalty += w.penalty; assumptions.push(w.assume); }
+    }
+    const confidence = clamp(Math.round(100 - penalty), 15, 100);
+    // تحديث تلقائي يومي لأسعار الصرف والمعايير الاقتصادية (00:00 UTC)
+    const next = new Date();
+    next.setUTCHours(24, 0, 0, 0);
+    const mins = Math.max(1, Math.round((next.getTime() - Date.now()) / 60000));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return {
+      isEstimate: assumptions.length > 0,
+      confidence,
+      level: confidence >= 85 ? "عالية" : confidence >= 60 ? "متوسطة" : "منخفضة",
+      assumptions,
+      nextRefreshIn: h > 0 ? `${h} ساعة${m ? ` و${m} دقيقة` : ""}` : `${m} دقيقة`,
+      nextRefreshAt: next.toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
+    };
+  }, [compareGaps]);
+
+
+
 
   // ── المطابقة ──
   const target = INVENTORY.find((i) => i.id === selectedTargetId) ?? null;
@@ -841,12 +875,44 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                 <>
                   {compareGaps.length > 0 && (
                     <div data-testid="compare-gaps" className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3">
-                      <div className="text-[0.72rem] font-extrabold text-amber-600">بيانات ناقصة — النتائج تقديرية</div>
-                      <ul className="mt-1 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-[0.72rem] font-extrabold text-amber-600">
+                          وضع الحساب التقديري — بعض المعايير غير متاحة
+                        </div>
+                        <span
+                          data-testid="estimate-confidence"
+                          className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[0.62rem] font-extrabold text-amber-700"
+                        >
+                          ثقة {estimation.confidence}% · {estimation.level}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-amber-500 transition-all"
+                          style={{ width: `${estimation.confidence}%` }}
+                        />
+                      </div>
+                      {estimation.assumptions.length > 0 && (
+                        <>
+                          <div className="mt-2 text-[0.68rem] font-bold text-muted-foreground">الافتراضات البديلة المستخدمة:</div>
+                          <ul className="mt-0.5 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
+                            {estimation.assumptions.map((a) => <li key={a}>{a}</li>)}
+                          </ul>
+                        </>
+                      )}
+                      <div className="mt-2 text-[0.68rem] font-bold text-muted-foreground">المعايير الناقصة:</div>
+                      <ul className="mt-0.5 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
                         {compareGaps.map((g) => <li key={g}>{g}</li>)}
                       </ul>
+                      <div data-testid="estimate-refresh" className="mt-2 text-[0.66rem] text-muted-foreground">
+                        🔄 يُحدَّث تلقائياً خلال {estimation.nextRefreshIn} (نحو {estimation.nextRefreshAt}) عند تحديث أسعار الصرف والمعايير الاقتصادية —
+                        <button type="button" onClick={() => setCmpNonce((n) => n + 1)} className="mx-1 font-extrabold text-primary underline">
+                          حدِّث الآن
+                        </button>
+                      </div>
                     </div>
                   )}
+
                   <div className="flex items-center gap-3">
                     {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => (
                       <div key={s.code + i} className="flex-1 rounded-2xl border border-border bg-muted/30 p-4 text-center">

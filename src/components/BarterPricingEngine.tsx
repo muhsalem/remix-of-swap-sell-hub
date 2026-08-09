@@ -875,12 +875,44 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
                 <>
                   {compareGaps.length > 0 && (
                     <div data-testid="compare-gaps" className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3">
-                      <div className="text-[0.72rem] font-extrabold text-amber-600">بيانات ناقصة — النتائج تقديرية</div>
-                      <ul className="mt-1 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-[0.72rem] font-extrabold text-amber-600">
+                          وضع الحساب التقديري — بعض المعايير غير متاحة
+                        </div>
+                        <span
+                          data-testid="estimate-confidence"
+                          className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[0.62rem] font-extrabold text-amber-700"
+                        >
+                          ثقة {estimation.confidence}% · {estimation.level}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-amber-500 transition-all"
+                          style={{ width: `${estimation.confidence}%` }}
+                        />
+                      </div>
+                      {estimation.assumptions.length > 0 && (
+                        <>
+                          <div className="mt-2 text-[0.68rem] font-bold text-muted-foreground">الافتراضات البديلة المستخدمة:</div>
+                          <ul className="mt-0.5 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
+                            {estimation.assumptions.map((a) => <li key={a}>{a}</li>)}
+                          </ul>
+                        </>
+                      )}
+                      <div className="mt-2 text-[0.68rem] font-bold text-muted-foreground">المعايير الناقصة:</div>
+                      <ul className="mt-0.5 list-disc space-y-0.5 pr-4 text-[0.68rem] leading-relaxed text-muted-foreground">
                         {compareGaps.map((g) => <li key={g}>{g}</li>)}
                       </ul>
+                      <div data-testid="estimate-refresh" className="mt-2 text-[0.66rem] text-muted-foreground">
+                        🔄 يُحدَّث تلقائياً خلال {estimation.nextRefreshIn} (نحو {estimation.nextRefreshAt}) عند تحديث أسعار الصرف والمعايير الاقتصادية —
+                        <button type="button" onClick={() => setCmpNonce((n) => n + 1)} className="mx-1 font-extrabold text-primary underline">
+                          حدِّث الآن
+                        </button>
+                      </div>
                     </div>
                   )}
+
                   <div className="flex items-center gap-3">
                     {[{ code: compareA, r: cmp.a }, { code: compareB, r: cmp.b }].map((s, i) => (
                       <div key={s.code + i} className="flex-1 rounded-2xl border border-border bg-muted/30 p-4 text-center">

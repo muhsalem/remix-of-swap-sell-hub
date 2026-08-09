@@ -237,6 +237,40 @@ export function BarterPricingEngine({ embedded = false }: { embedded?: boolean }
     return Array.from(new Set(gaps));
   }, [compareA, compareB, valuation.categoryKey, valuation.usd]);
 
+  // ── وضع الحساب التقديري: نسبة ثقة + الافتراضات البديلة + موعد التحديث التلقائي ──
+  const estimation = useMemo(() => {
+    const weights: { test: (g: string) => boolean; penalty: number; assume: string }[] = [
+      { test: (g) => g.includes("سعر صرف"), penalty: 25, assume: "استُخدم آخر سعر صرف مرجعي محفوظ بدل السعر اللحظي." },
+      { test: (g) => g.includes("الدخل الشهري"), penalty: 15, assume: "قُدّرت القدرة الشرائية من متوسط إقليمي بدل دخل البلد." },
+      { test: (g) => g.includes("تكلفة المعيشة"), penalty: 12, assume: "افتُرض مؤشر معيشة محايد (100) للبلد." },
+      { test: (g) => g.includes("ضريبية"), penalty: 10, assume: "طُبّقت عمولة افتراضية 3% بدون ضريبة قيمة مضافة." },
+      { test: (g) => g.includes("جمرك"), penalty: 10, assume: "احتُسبت الرسوم الجمركية بمعامل افتراضي (بدون رسوم إضافية)." },
+      { test: (g) => g.includes("قيمة الأصل"), penalty: 30, assume: "لا توجد قيمة مُدخلة — المقارنة هيكلية فقط." },
+    ];
+    const assumptions: string[] = [];
+    let penalty = 0;
+    for (const w of weights) {
+      if (compareGaps.some(w.test)) { penalty += w.penalty; assumptions.push(w.assume); }
+    }
+    const confidence = clamp(Math.round(100 - penalty), 15, 100);
+    // تحديث تلقائي يومي لأسعار الصرف والمعايير الاقتصادية (00:00 UTC)
+    const next = new Date();
+    next.setUTCHours(24, 0, 0, 0);
+    const mins = Math.max(1, Math.round((next.getTime() - Date.now()) / 60000));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return {
+      isEstimate: assumptions.length > 0,
+      confidence,
+      level: confidence >= 85 ? "عالية" : confidence >= 60 ? "متوسطة" : "منخفضة",
+      assumptions,
+      nextRefreshIn: h > 0 ? `${h} ساعة${m ? ` و${m} دقيقة` : ""}` : `${m} دقيقة`,
+      nextRefreshAt: next.toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
+    };
+  }, [compareGaps]);
+
+
+
 
   // ── المطابقة ──
   const target = INVENTORY.find((i) => i.id === selectedTargetId) ?? null;

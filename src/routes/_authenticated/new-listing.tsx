@@ -79,9 +79,11 @@ function NewListing() {
       },
     }),
     onSuccess: (r) => {
-      toast.success("تم نشر عرضك!");
+      if (r.note) toast.warning(r.note, { duration: 8000 });
+      else toast.success("تم نشر عرضك!");
       navigate({ to: "/listings/$id", params: { id: r.id } });
     },
+
     onError: (e) => toast.error(e instanceof Error ? e.message : "فشل النشر"),
   });
 

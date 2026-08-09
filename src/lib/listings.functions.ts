@@ -75,42 +75,54 @@ export const createListing = createServerFn({ method: "POST" })
       );
     }
 
+    // تقييد السعر بمرجع Fair Market Value وتسجيل مصدر السعر
+    const { resolveFmvReference, applyFmvGuard } = await import("./fmv.server");
+    const { reference, refSource } = await resolveFmvReference(supabase as never, {
+      category: data.category,
+      title: data.title,
+    });
+    const fmv = applyFmvGuard(data.market_price, reference);
+
     const { data: row, error } = await supabase
       .from("listings")
-      .insert({ ...data, owner_id: userId })
+      .insert({
+        ...data,
+        market_price: fmv.price,
+        price_input_sar: fmv.input,
+        price_reference_sar: fmv.reference,
+        price_source: fmv.source,
+        price_deviation_pct: fmv.deviationPct,
+        owner_id: userId,
+      })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
 
-    // Price Oracle auto-alert: warn owner if price deviates >30% from market avg
+    // إشعار المالك عند تعديل السعر أو انحرافه الكبير عن المرجع
     try {
-      const key = data.title.toLowerCase().trim();
-      const { data: history } = await supabase
-        .from("price_history")
-        .select("price")
-        .eq("category", data.category)
-        .eq("title_key", key)
-        .order("recorded_at", { ascending: false })
-        .limit(30);
-      const prices = (history ?? []).map((r: any) => Number(r.price)).filter((n) => n > 0);
-      if (prices.length >= 3) {
-        const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-        const dev = Math.abs(data.market_price - avg) / avg;
-        if (dev > 0.3) {
-          const direction = data.market_price > avg ? "أعلى" : "أقل";
-          await supabase.from("notifications").insert({
-            user_id: userId,
-            type: "price_alert",
-            title: "تنبيه: سعر منتجك خارج المتوسط",
-            body: `سعرك (${data.market_price} ر.س) ${direction} من متوسط السوق (${Math.round(avg)} ر.س) بنسبة ${Math.round(dev * 100)}%.`,
-            link: `/listings/${row.id}`,
-          });
-        }
+      if (fmv.clamped) {
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type: "price_alert",
+          title: "تم تعديل سعر إعلانك وفق مرجع السوق",
+          body: fmv.note,
+          link: `/listings/${row.id}`,
+        });
+      } else if (fmv.deviationPct !== null && Math.abs(fmv.deviationPct) > 30) {
+        const direction = fmv.deviationPct > 0 ? "أعلى" : "أقل";
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type: "price_alert",
+          title: "تنبيه: سعر منتجك خارج المتوسط",
+          body: `سعرك (${fmv.price} ر.س) ${direction} من مرجع السوق (${fmv.reference} ر.س) بنسبة ${Math.abs(fmv.deviationPct)}% (المصدر: ${refSource}).`,
+          link: `/listings/${row.id}`,
+        });
       }
     } catch { /* non-blocking */ }
 
-    return { id: row.id };
+    return { id: row.id, price: fmv.price, priceSource: fmv.source, reference: fmv.reference, note: fmv.note };
   });
+
 
 export const deleteListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

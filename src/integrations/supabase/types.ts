@@ -405,6 +405,10 @@ export type Database = {
           market_price: number
           owner_id: string
           pinned_until: string | null
+          price_deviation_pct: number | null
+          price_input_sar: number | null
+          price_reference_sar: number | null
+          price_source: string
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
@@ -429,6 +433,10 @@ export type Database = {
           market_price: number
           owner_id: string
           pinned_until?: string | null
+          price_deviation_pct?: number | null
+          price_input_sar?: number | null
+          price_reference_sar?: number | null
+          price_source?: string
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
@@ -453,6 +461,10 @@ export type Database = {
           market_price?: number
           owner_id?: string
           pinned_until?: string | null
+          price_deviation_pct?: number | null
+          price_input_sar?: number | null
+          price_reference_sar?: number | null
+          price_source?: string
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string

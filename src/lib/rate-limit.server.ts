@@ -9,10 +9,15 @@ type Options = {
   limit: number;
   /** Window length in seconds */
   windowSec: number;
+  /** Financial/sensitive actions must reject when the limiter itself fails. */
+  failClosed?: boolean;
 };
 
 export async function enforceRateLimit(userId: string | null, opts: Options): Promise<void> {
-  if (!userId) return; // anonymous calls — not rate-limited here
+  if (!userId) {
+    if (opts.failClosed) throw new Error("🚦 تعذّر التحقق من الحد المسموح — يلزم تسجيل الدخول.");
+    return; // anonymous calls — not rate-limited here
+  }
   const since = new Date(Date.now() - opts.windowSec * 1000).toISOString();
 
   const { count, error } = await supabaseAdmin
@@ -24,8 +29,12 @@ export async function enforceRateLimit(userId: string | null, opts: Options): Pr
 
   if (error) {
     console.error("[rate-limit] query failed", error);
-    return; // fail-open
+    if (opts.failClosed) {
+      throw new Error("🚦 تعذّر التحقق من حد العمليات حالياً — لأمان العمليات المالية تم إيقاف الطلب مؤقتاً، حاول لاحقاً.");
+    }
+    return; // fail-open for non-financial actions
   }
+
 
   if ((count ?? 0) >= opts.limit) {
     throw new Error(

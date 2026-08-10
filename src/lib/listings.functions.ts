@@ -62,6 +62,10 @@ export const createListing = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    const { enforceRateLimit } = await import("./rate-limit.server");
+    await enforceRateLimit(userId, { action: "create_listing", limit: 15, windowSec: 3600 });
+
+
     // فحص شرعي/قانوني للسلع المحرّمة قبل الإدراج
     const haram = checkHaram({
       title: data.title,

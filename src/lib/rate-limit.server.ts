@@ -42,12 +42,16 @@ export async function enforceRateLimit(userId: string | null, opts: Options): Pr
     );
   }
 
-  await supabaseAdmin
+  const { error: insErr } = await supabaseAdmin
     .from("rate_limits")
-    .insert({ user_id: userId, action: opts.action })
-    .then(({ error: insErr }) => {
-      if (insErr) console.error("[rate-limit] insert failed", insErr);
-    });
+    .insert({ user_id: userId, action: opts.action });
+  if (insErr) {
+    console.error("[rate-limit] insert failed", insErr);
+    if (opts.failClosed) {
+      throw new Error("🚦 تعذّر تسجيل العملية ضمن حدود الاستخدام — تم إيقاف الطلب المالي مؤقتاً، حاول لاحقاً.");
+    }
+  }
+
 
   // Opportunistic cleanup (~1% of calls): purge entries older than 24h
   // so the table never grows unbounded.

@@ -66,9 +66,18 @@ export const createPaymentIntent = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { purpose, targetId, country } = data;
 
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit(userId, {
+      action: "create_payment_intent",
+      limit: 8,
+      windowSec: 600,
+      failClosed: true,
+    });
+
     if (NEEDS_LISTING.has(purpose) && !targetId) {
       throw new Error("target_id_required");
     }
+
 
     // Fetch pricing from platform_config.cash_pricing (SAR base).
     const { data: cfg } = await supabase

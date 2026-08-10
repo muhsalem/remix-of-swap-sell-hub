@@ -9,10 +9,15 @@ type Options = {
   limit: number;
   /** Window length in seconds */
   windowSec: number;
+  /** Financial/sensitive actions must reject when the limiter itself fails. */
+  failClosed?: boolean;
 };
 
 export async function enforceRateLimit(userId: string | null, opts: Options): Promise<void> {
-  if (!userId) return; // anonymous calls — not rate-limited here
+  if (!userId) {
+    if (opts.failClosed) throw new Error("🚦 تعذّر التحقق من الحد المسموح — يلزم تسجيل الدخول.");
+    return; // anonymous calls — not rate-limited here
+  }
   const since = new Date(Date.now() - opts.windowSec * 1000).toISOString();
 
   const { count, error } = await supabaseAdmin
@@ -24,8 +29,12 @@ export async function enforceRateLimit(userId: string | null, opts: Options): Pr
 
   if (error) {
     console.error("[rate-limit] query failed", error);
-    return; // fail-open
+    if (opts.failClosed) {
+      throw new Error("🚦 تعذّر التحقق من حد العمليات حالياً — لأمان العمليات المالية تم إيقاف الطلب مؤقتاً، حاول لاحقاً.");
+    }
+    return; // fail-open for non-financial actions
   }
+
 
   if ((count ?? 0) >= opts.limit) {
     throw new Error(
@@ -33,12 +42,16 @@ export async function enforceRateLimit(userId: string | null, opts: Options): Pr
     );
   }
 
-  await supabaseAdmin
+  const { error: insErr } = await supabaseAdmin
     .from("rate_limits")
-    .insert({ user_id: userId, action: opts.action })
-    .then(({ error: insErr }) => {
-      if (insErr) console.error("[rate-limit] insert failed", insErr);
-    });
+    .insert({ user_id: userId, action: opts.action });
+  if (insErr) {
+    console.error("[rate-limit] insert failed", insErr);
+    if (opts.failClosed) {
+      throw new Error("🚦 تعذّر تسجيل العملية ضمن حدود الاستخدام — تم إيقاف الطلب المالي مؤقتاً، حاول لاحقاً.");
+    }
+  }
+
 
   // Opportunistic cleanup (~1% of calls): purge entries older than 24h
   // so the table never grows unbounded.

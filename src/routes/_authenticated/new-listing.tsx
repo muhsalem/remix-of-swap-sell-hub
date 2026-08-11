@@ -7,6 +7,7 @@ import { uploadListingImage } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { toast } from "sonner";
+import { listingErrorMessage } from "@/lib/user-error-messages";
 import { Loader2, Upload, X, AlertTriangle, ShieldCheck, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/new-listing")({

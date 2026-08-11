@@ -49,7 +49,11 @@ export function PaymentCheckoutButton({
       window.location.href = res.checkoutUrl;
     } catch (err) {
       console.error("[checkout]", err);
-      toast.error("تعذّر بدء عملية الدفع. حاول مرة أخرى.");
+      const friendly = paymentErrorMessage(err);
+      toast.error(friendly.title, {
+        description: friendly.description,
+        duration: friendly.isRateLimit ? 10000 : 6000,
+      });
       setLoading(false);
     }
   }

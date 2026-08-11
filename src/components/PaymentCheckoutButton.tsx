@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { createPaymentIntent } from "@/lib/payments/fawaterak.functions";
+import { paymentErrorMessage } from "@/lib/user-error-messages";
 
 type Purpose =
   | "verify_individual"

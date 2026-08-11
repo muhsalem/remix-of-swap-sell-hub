@@ -1,0 +1,52 @@
+{
+  "$comment": "قائمة مراقبة الاعتمادات الحساسة. minVersion = أقل إصدار آمن مقبول، ويُفرض عبر overrides في package.json",
+  "watch": [
+    {
+      "name": "seroval",
+      "minVersion": "1.6.2",
+      "reason": "ثغرة حرجة في 1.5.2 (تبعية غير مباشرة لـ TanStack)"
+    },
+    {
+      "name": "seroval-plugins",
+      "minVersion": "1.6.2",
+      "reason": "يتبع إصدار seroval"
+    },
+    {
+      "name": "@supabase/supabase-js",
+      "minVersion": "2.106.2",
+      "reason": "عميل قاعدة البيانات والمصادقة"
+    },
+    {
+      "name": "@tanstack/react-start",
+      "minVersion": "1.167.50",
+      "reason": "طبقة الخادم SSR/server functions"
+    },
+    {
+      "name": "@tanstack/react-router",
+      "minVersion": "1.168.25",
+      "reason": "التوجيه وحماية المسارات"
+    },
+    {
+      "name": "vite",
+      "minVersion": "7.0.0",
+      "reason": "أداة البناء - ثغرات كشف الملفات المتكررة",
+      "allowMajorUpgrade": false
+    },
+    {
+      "name": "zod",
+      "minVersion": "3.25.76",
+      "reason": "التحقق من مدخلات المستخدم (المشروع على zod 3)"
+    },
+    {
+      "name": "react",
+      "minVersion": "19.2.0",
+      "reason": "نواة الواجهة"
+    },
+    {
+      "name": "react-dom",
+      "minVersion": "19.2.0",
+      "reason": "نواة الواجهة"
+    }
+  ],
+  "$comment2": "allowMajorUpgrade=false يمنع الترقية التلقائية عبر إصدار رئيسي (تُطلب مراجعة يدوية)"
+}

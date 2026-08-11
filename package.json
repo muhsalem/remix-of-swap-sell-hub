@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:e2e": "python3 tests/e2e/barter-flow.spec.py"
+    "test:e2e": "python3 tests/e2e/barter-flow.spec.py",
+    "deps:watch": "node scripts/dep-watch.mjs",
+    "deps:watch:json": "node scripts/dep-watch.mjs --json",
+    "deps:fix": "node scripts/dep-watch.mjs --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -102,6 +102,15 @@ for (const w of cfg.watch) {
       : latest && current && cmp(latest, current) > 0
         ? 'info'
         : 'ok'
+  const major = (v) => Number(String(v).replace(/^\D*/, '').split('.')[0] || 0)
+  const allowMajor = w.allowMajorUpgrade !== false
+  let target = adv.length || belowMin ? (latest && cmp(latest, w.minVersion) > 0 ? latest : w.minVersion) : null
+  let manualReview = false
+  if (target && current && !allowMajor && major(target) > major(current)) {
+    // الترقية تتطلب إصدار رئيسي جديد → لا تُطبَّق تلقائياً
+    target = null
+    manualReview = true
+  }
   findings.push({
     name: w.name,
     reason: w.reason,
@@ -111,23 +120,25 @@ for (const w of cfg.watch) {
     belowMin,
     advisories: adv.map((a) => ({ title: a.title, severity: a.severity, url: a.url, patched: a.vulnerable_versions })),
     severity,
-    target: adv.length || belowMin ? (latest && cmp(latest, w.minVersion) > 0 ? latest : w.minVersion) : null,
+    target,
+    manualReview,
   })
 }
 
 const risky = findings.filter((f) => f.severity === 'critical' || f.severity === 'high')
+const autoFixable = risky.filter((f) => f.target)
 
-if (FIX && risky.length) {
+if (FIX && autoFixable.length) {
   pkg.overrides ||= {}
   pkg.resolutions ||= {}
-  for (const f of risky) {
-    if (!f.target) continue
+  for (const f of autoFixable) {
     pkg.overrides[f.name] = `^${f.target}`
     pkg.resolutions[f.name] = `^${f.target}`
   }
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
   execSync('bun install', { cwd: root, stdio: 'inherit' })
 }
+
 
 if (JSON_OUT) {
   console.log(JSON.stringify({ generatedAt: new Date().toISOString(), fixed: FIX && risky.length > 0, findings }, null, 2))

@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { createPaymentIntent } from "@/lib/payments/fawaterak.functions";
+import { paymentErrorMessage } from "@/lib/user-error-messages";
 
 type Purpose =
   | "verify_individual"
@@ -49,7 +50,11 @@ export function PaymentCheckoutButton({
       window.location.href = res.checkoutUrl;
     } catch (err) {
       console.error("[checkout]", err);
-      toast.error("تعذّر بدء عملية الدفع. حاول مرة أخرى.");
+      const friendly = paymentErrorMessage(err);
+      toast.error(friendly.title, {
+        description: friendly.description,
+        duration: friendly.isRateLimit ? 10000 : 6000,
+      });
       setLoading(false);
     }
   }

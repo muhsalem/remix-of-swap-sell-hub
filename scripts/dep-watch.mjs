@@ -141,7 +141,7 @@ if (FIX && autoFixable.length) {
 
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ generatedAt: new Date().toISOString(), fixed: FIX && risky.length > 0, findings }, null, 2))
+  console.log(JSON.stringify({ generatedAt: new Date().toISOString(), fixed: FIX && autoFixable.length > 0, findings }, null, 2))
 } else {
   const icon = { critical: '🛑', high: '⚠️ ', moderate: '🔸', info: 'ℹ️ ', ok: '✅' }
   console.log('\n🔎 مراقبة الاعتمادات الحساسة\n' + '─'.repeat(60))
@@ -151,14 +151,16 @@ if (JSON_OUT) {
     )
     if (f.belowMin) console.log(`     ↳ أقل من الحد الآمن — ${f.reason}`)
     for (const a of f.advisories) console.log(`     ↳ [${a.severity}] ${a.title} ${a.url ?? ''}`)
+    if (f.manualReview) console.log('     ↳ الإصلاح يتطلب إصدارًا رئيسيًا جديدًا — مراجعة يدوية مطلوبة (لن يُحدَّث تلقائياً)')
   }
   console.log('─'.repeat(60))
   if (risky.length) {
-    console.log(`❌ ${risky.length} اعتماد يحتاج تحديثاً فورياً.`)
-    if (!FIX) console.log('   شغّل: bun run deps:fix')
+    console.log(`❌ ${risky.length} اعتماد يحتاج تحديثاً — منها ${autoFixable.length} قابل للتحديث التلقائي.`)
+    if (!FIX && autoFixable.length) console.log('   شغّل: bun run deps:fix')
   } else {
     console.log('✅ لا توجد مخاطر في الاعتمادات المراقَبة.')
   }
 }
+
 
 process.exit(risky.length && !FIX ? 1 : 0)

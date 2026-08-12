@@ -27,7 +27,7 @@ export async function recordFraudSignal(input: {
       listing_id: input.listingId ?? null,
       kind: input.kind,
       severity: input.severity ?? "medium",
-      details: input.details ?? {},
+      details: (input.details ?? {}) as never,
     });
   } catch (e) {
     console.error("[fraud] signal insert failed", e);

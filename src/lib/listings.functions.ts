@@ -82,7 +82,8 @@ export const createListing = createServerFn({ method: "POST" })
 
     // كشف الاحتيال (المرحلة 1): صور مكرّرة عبر الحسابات + سقف قيمة حسب الثقة
     const { screenImageHashes, persistImageHashes, enforceTrustValueCap } = await import("./fraud.server");
-    const screen = await screenImageHashes(userId, data.image_hashes);
+    const { image_hashes: imageHashes, ...listingFields } = data;
+    const screen = await screenImageHashes(userId, imageHashes);
     if (screen.blocked) throw new Error(screen.reason ?? "🚫 تعذّر نشر الإعلان لأسباب أمنية.");
     await enforceTrustValueCap(userId, data.market_price);
 
@@ -97,8 +98,7 @@ export const createListing = createServerFn({ method: "POST" })
     const { data: row, error } = await supabase
       .from("listings")
       .insert({
-        ...data,
-        image_hashes: undefined,
+        ...listingFields,
         market_price: fmv.price,
         price_input_sar: fmv.input,
         price_reference_sar: fmv.reference,
@@ -110,7 +110,7 @@ export const createListing = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    await persistImageHashes(row.id, userId, data.image_hashes);
+    await persistImageHashes(row.id, userId, imageHashes);
 
     // إشعار المالك عند تعديل السعر أو انحرافه الكبير عن المرجع
     try {

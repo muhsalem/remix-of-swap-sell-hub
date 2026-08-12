@@ -393,6 +393,10 @@ export type Database = {
           kind: string
           listing_id: string | null
           resolved: boolean
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           severity: string
           user_id: string | null
         }
@@ -403,6 +407,10 @@ export type Database = {
           kind: string
           listing_id?: string | null
           resolved?: boolean
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           severity?: string
           user_id?: string | null
         }
@@ -413,6 +421,10 @@ export type Database = {
           kind?: string
           listing_id?: string | null
           resolved?: boolean
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           severity?: string
           user_id?: string | null
         }
@@ -819,8 +831,12 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_suspended: boolean
           preferred_country: string | null
           rating: number | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           terms_accepted_at: string | null
           terms_version: string | null
           trades_count: number | null
@@ -838,8 +854,12 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          is_suspended?: boolean
           preferred_country?: string | null
           rating?: number | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           terms_accepted_at?: string | null
           terms_version?: string | null
           trades_count?: number | null
@@ -857,8 +877,12 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_suspended?: boolean
           preferred_country?: string | null
           rating?: number | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           terms_accepted_at?: string | null
           terms_version?: string | null
           trades_count?: number | null

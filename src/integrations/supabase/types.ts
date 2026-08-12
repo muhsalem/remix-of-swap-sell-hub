@@ -385,6 +385,79 @@ export type Database = {
         }
         Relationships: []
       }
+      fraud_signals: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          kind: string
+          listing_id: string | null
+          resolved: boolean
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          kind: string
+          listing_id?: string | null
+          resolved?: boolean
+          severity?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          kind?: string
+          listing_id?: string | null
+          resolved?: boolean
+          severity?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_signals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_image_hashes: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          owner_id: string
+          phash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          owner_id: string
+          phash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          owner_id?: string
+          phash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_image_hashes_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           age_months: number

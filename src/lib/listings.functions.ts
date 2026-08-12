@@ -18,6 +18,7 @@ const ListingInput = z.object({
   is_ribawi: z.boolean().default(false),
   city: z.string().trim().min(2).max(60).optional().or(z.literal("")).transform((v) => (v ? v : undefined)),
   listing_type: z.enum(["item", "service"]).optional().default("item"),
+  image_hashes: z.array(z.string().regex(/^[0-9a-f]{16}$/)).max(8).optional().default([]),
 });
 
 export const listActiveListings = createServerFn({ method: "GET" }).handler(async () => {
@@ -79,6 +80,13 @@ export const createListing = createServerFn({ method: "POST" })
       );
     }
 
+    // كشف الاحتيال (المرحلة 1): صور مكرّرة عبر الحسابات + سقف قيمة حسب الثقة
+    const { screenImageHashes, persistImageHashes, enforceTrustValueCap } = await import("./fraud.server");
+    const { image_hashes: imageHashes, ...listingFields } = data;
+    const screen = await screenImageHashes(userId, imageHashes);
+    if (screen.blocked) throw new Error(screen.reason ?? "🚫 تعذّر نشر الإعلان لأسباب أمنية.");
+    await enforceTrustValueCap(userId, data.market_price);
+
     // تقييد السعر بمرجع Fair Market Value وتسجيل مصدر السعر
     const { resolveFmvReference, applyFmvGuard } = await import("./fmv.server");
     const { reference, refSource } = await resolveFmvReference(supabase as never, {
@@ -90,7 +98,7 @@ export const createListing = createServerFn({ method: "POST" })
     const { data: row, error } = await supabase
       .from("listings")
       .insert({
-        ...data,
+        ...listingFields,
         market_price: fmv.price,
         price_input_sar: fmv.input,
         price_reference_sar: fmv.reference,
@@ -101,6 +109,8 @@ export const createListing = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    await persistImageHashes(row.id, userId, imageHashes);
 
     // إشعار المالك عند تعديل السعر أو انحرافه الكبير عن المرجع
     try {

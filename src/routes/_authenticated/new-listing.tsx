@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createListing } from "@/lib/listings.functions";
 import { uploadListingImage } from "@/lib/storage";
+import { computeImageHash } from "@/lib/image-hash";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ function NewListing() {
   const fn = useServerFn(createListing);
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<string[]>([]);
+  const [imageHashes, setImageHashes] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [ownsItem, setOwnsItem] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -53,15 +55,19 @@ function NewListing() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("غير مسجّل");
       const uploaded: string[] = [];
+      const hashes: string[] = [];
       for (const file of Array.from(files).slice(0, 8 - images.length)) {
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`${file.name}: يجب أن يكون أقل من 5MB`);
           continue;
         }
+        const hash = await computeImageHash(file);
+        if (hash) hashes.push(hash);
         const path = await uploadListingImage(file, user.id);
         uploaded.push(path);
       }
       setImages((prev) => [...prev, ...uploaded]);
+      setImageHashes((prev) => [...prev, ...hashes]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "فشل رفع الصورة");
     } finally {
@@ -74,6 +80,7 @@ function NewListing() {
       data: {
         ...form,
         images,
+        image_hashes: imageHashes,
         is_ribawi: isRibawi,
         market_price: Number(form.market_price),
         age_months: Number(form.age_months),

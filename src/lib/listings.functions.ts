@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase as anonClient } from "@/integrations/supabase/client";
 import { checkHaram } from "./haram-filter";
+import { arNormalize, arTokens } from "./ar-normalize";
 
 const ConditionEnum = z.enum(["new", "like-new", "excellent", "good", "fair"]);
 

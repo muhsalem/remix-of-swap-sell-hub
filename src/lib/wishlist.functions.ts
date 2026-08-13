@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase as anonClient } from "@/integrations/supabase/client";
+import { arTokens } from "./ar-normalize";
 
 // Search active listings for "I want this in barter" suggestions.
 export const searchPlatformItems = createServerFn({ method: "POST" })

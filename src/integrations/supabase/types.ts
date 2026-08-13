@@ -494,6 +494,7 @@ export type Database = {
           price_input_sar: number | null
           price_reference_sar: number | null
           price_source: string
+          search_norm: string | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
@@ -522,6 +523,7 @@ export type Database = {
           price_input_sar?: number | null
           price_reference_sar?: number | null
           price_source?: string
+          search_norm?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
@@ -550,6 +552,7 @@ export type Database = {
           price_input_sar?: number | null
           price_reference_sar?: number | null
           price_source?: string
+          search_norm?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
@@ -1829,6 +1832,7 @@ export type Database = {
       }
     }
     Functions: {
+      ar_normalize: { Args: { _t: string }; Returns: string }
       di_balance: { Args: { _user_id: string }; Returns: number }
       di_statement: {
         Args: { _limit?: number; _user_id: string }
@@ -1892,6 +1896,46 @@ export type Database = {
       }
       purchase_subscription: { Args: { _tier: string }; Returns: Json }
       purchase_verification: { Args: never; Returns: Json }
+      search_listings_ar: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          age_months: number
+          boost_count: number
+          category: string
+          city: string | null
+          condition: Database["public"]["Enums"]["listing_condition"]
+          created_at: string
+          description: string | null
+          featured_until: string | null
+          id: string
+          images: string[]
+          is_featured: boolean
+          is_pinned: boolean
+          is_ribawi: boolean
+          last_boosted_at: string | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          market_price: number
+          owner_id: string
+          pinned_until: string | null
+          price_deviation_pct: number | null
+          price_input_sar: number | null
+          price_reference_sar: number | null
+          price_source: string
+          search_norm: string | null
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+          wants: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "listings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       account_type: "individual" | "company"

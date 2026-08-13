@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase as anonClient } from "@/integrations/supabase/client";
 import { checkHaram } from "./haram-filter";
+import { arNormalize, arTokens } from "./ar-normalize";
 
 const ConditionEnum = z.enum(["new", "like-new", "excellent", "good", "fair"]);
 
@@ -157,34 +158,35 @@ export const matchListings = createServerFn({ method: "POST" })
     }).parse(i),
   )
   .handler(async ({ data }) => {
-    const tokens = (s: string) =>
-      s.toLowerCase().split(/[\s,،.\-_/]+/).filter((t) => t.length >= 2).slice(0, 6);
-    const wantTokens = tokens(data.want);
-    const haveTokens = tokens(data.have);
+    const wantTokens = arTokens(data.want);
+    const haveTokens = arTokens(data.have);
 
-    // ابحث عن إعلانات تطابق "ما أريد" في العنوان/الفئة
-    const wantOr = wantTokens.flatMap((t) => [
-      `title.ilike.%${t}%`, `category.ilike.%${t}%`, `description.ilike.%${t}%`,
-    ]).join(",");
+    // بحث مُطبَّع عربياً على مستوى قاعدة البيانات (pg_trgm)
+    const { data: rpcRows, error: rpcErr } = await (anonClient as any).rpc("search_listings_ar", {
+      _q: data.want,
+      _limit: 40,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+    const ids = ((rpcRows ?? []) as Array<{ id: string }>).map((r) => r.id);
+    if (ids.length === 0) return { matches: [] as any[] };
 
     const { data: candidates, error } = await anonClient
       .from("listings")
       .select("id,title,category,condition,market_price,wants,images,owner_id,city,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
-      .eq("status", "active")
-      .or(wantOr || "title.ilike.%%")
-      .limit(40);
+      .in("id", ids);
     if (error) throw new Error(error.message);
 
     // رتّب: ضاعف النقاط إذا كان "wants" الخاص بصاحب الإعلان يطابق "ما أملك"
     const scored = (candidates ?? []).map((l: any) => {
-      const wantsLower = (l.wants ?? "").toLowerCase();
-      const titleLower = (l.title ?? "").toLowerCase();
-      const catLower = (l.category ?? "").toLowerCase();
-      const haveMatch = haveTokens.filter((t) => wantsLower.includes(t)).length;
-      const wantMatch = wantTokens.filter((t) => titleLower.includes(t) || catLower.includes(t)).length;
-      const score = wantMatch * 2 + haveMatch * 3;
+      const wantsNorm = arNormalize(l.wants ?? "");
+      const titleNorm = arNormalize(l.title ?? "");
+      const catNorm = arNormalize(l.category ?? "");
+      const haveMatch = haveTokens.filter((t) => wantsNorm.includes(t)).length;
+      const wantMatch = wantTokens.filter((t) => titleNorm.includes(t) || catNorm.includes(t)).length;
+      const rank = Math.max(0, ids.length - ids.indexOf(l.id)) / Math.max(1, ids.length);
+      const score = wantMatch * 2 + haveMatch * 3 + rank;
       return { ...l, _score: score, _mutual: haveMatch > 0 };
-    }).filter((x) => x._score > 0).sort((a, b) => b._score - a._score).slice(0, 12);
+    }).sort((a, b) => b._score - a._score).slice(0, 12);
 
     return { matches: scored };
   });

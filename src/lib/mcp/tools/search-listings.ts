@@ -19,6 +19,18 @@ export default defineTool({
       process.env.SUPABASE_PUBLISHABLE_KEY!,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
+    let ids: string[] | null = null;
+    if (query) {
+      const { data: hits, error: rpcErr } = await (supabase as any).rpc("search_listings_ar", {
+        _q: query,
+        _limit: limit ?? 20,
+      });
+      if (rpcErr) return { content: [{ type: "text", text: rpcErr.message }], isError: true };
+      ids = ((hits ?? []) as Array<{ id: string }>).map((r) => r.id);
+      if (ids.length === 0) {
+        return { content: [{ type: "text", text: "[]" }], structuredContent: { listings: [] } };
+      }
+    }
     let q = supabase
       .from("listings")
       .select("id,title,category,condition,market_price,wants,city,listing_type,created_at")
@@ -26,7 +38,7 @@ export default defineTool({
       .order("created_at", { ascending: false })
       .limit(limit ?? 20);
     if (category) q = q.eq("category", category);
-    if (query) q = q.or(`title.ilike.%${query}%,wants.ilike.%${query}%`);
+    if (ids) q = q.in("id", ids);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {

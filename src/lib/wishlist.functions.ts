@@ -11,20 +11,30 @@ export const searchPlatformItems = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     type Item = { id: string; title: string; category: string; market_price: number };
-    if (arTokens(data.q, 4).length === 0) return { items: [] as Item[] };
+    const { logArSearch } = await import("./search-log.server");
+    const t0 = Date.now();
+    if (arTokens(data.q, 4).length === 0) {
+      await logArSearch({ q: data.q, source: "wishlist", results: 0, ms: 0 });
+      return { items: [] as Item[] };
+    }
     const { data: rows, error } = await (anonClient as any).rpc("search_listings_ar", {
       _q: data.q,
       _limit: 8,
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      await logArSearch({ q: data.q, source: "wishlist", results: 0, ms: Date.now() - t0, error: error.message });
+      throw new Error(error.message);
+    }
     const items: Item[] = ((rows ?? []) as any[]).map((r) => ({
       id: r.id,
       title: r.title,
       category: r.category,
       market_price: Number(r.market_price ?? 0),
     }));
+    await logArSearch({ q: data.q, source: "wishlist", results: items.length, ms: Date.now() - t0 });
     return { items };
   });
+
 
 // Register a "notify me when available" alert.
 export const addWishlistAlert = createServerFn({ method: "POST" })

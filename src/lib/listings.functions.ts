@@ -160,21 +160,32 @@ export const matchListings = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const wantTokens = arTokens(data.want);
     const haveTokens = arTokens(data.have);
+    const { logArSearch } = await import("./search-log.server");
+    const t0 = Date.now();
 
     // بحث مُطبَّع عربياً على مستوى قاعدة البيانات (pg_trgm)
     const { data: rpcRows, error: rpcErr } = await (anonClient as any).rpc("search_listings_ar", {
       _q: data.want,
       _limit: 40,
     });
-    if (rpcErr) throw new Error(rpcErr.message);
+    if (rpcErr) {
+      await logArSearch({ q: data.want, source: "match", results: 0, ms: Date.now() - t0, error: rpcErr.message });
+      throw new Error(rpcErr.message);
+    }
     const ids = ((rpcRows ?? []) as Array<{ id: string }>).map((r) => r.id);
-    if (ids.length === 0) return { matches: [] as any[] };
+    if (ids.length === 0) {
+      await logArSearch({ q: data.want, source: "match", results: 0, ms: Date.now() - t0 });
+      return { matches: [] as any[] };
+    }
 
     const { data: candidates, error } = await anonClient
       .from("listings")
       .select("id,title,category,condition,market_price,wants,images,owner_id,city,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
       .in("id", ids);
-    if (error) throw new Error(error.message);
+    if (error) {
+      await logArSearch({ q: data.want, source: "match", results: 0, ms: Date.now() - t0, error: error.message });
+      throw new Error(error.message);
+    }
 
     // رتّب: ضاعف النقاط إذا كان "wants" الخاص بصاحب الإعلان يطابق "ما أملك"
     const scored = (candidates ?? []).map((l: any) => {
@@ -188,5 +199,7 @@ export const matchListings = createServerFn({ method: "POST" })
       return { ...l, _score: score, _mutual: haveMatch > 0 };
     }).sort((a, b) => b._score - a._score).slice(0, 12);
 
+    await logArSearch({ q: data.want, source: "match", results: scored.length, ms: Date.now() - t0 });
     return { matches: scored };
   });
+

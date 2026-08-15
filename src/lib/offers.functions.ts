@@ -9,8 +9,29 @@ const CreateOfferInput = z.object({
   offered_listing: z.string().uuid(),
   message: z.string().max(1000).optional().default(""),
   cash_balance: z.number().min(0).max(10_000_000).default(0),
+  di_balance: z.number().min(0).max(1_000_000).default(0),
   fairness_score: z.number().int().min(0).max(100).optional(),
 });
+
+export const SAR_PER_DI = 5;
+
+/** رصيد DI للمستخدم الحالي + حالة تفعيل العملة — لشاشة سدّ فرق القيمة. */
+export const getDiWallet = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [balRes, cfgRes] = await Promise.all([
+      supabase.rpc("di_balance", { _user_id: userId }),
+      anonClient.from("platform_config").select("value").eq("key", "di_enabled").maybeSingle(),
+    ]);
+    const balance = Math.round(Number(balRes.data ?? 0) * 100) / 100;
+    return {
+      balance,
+      valueSar: Math.round(balance * SAR_PER_DI * 100) / 100,
+      sarPerDi: SAR_PER_DI,
+      enabled: Boolean(cfgRes.data?.value),
+    };
+  });
 
 export const createOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

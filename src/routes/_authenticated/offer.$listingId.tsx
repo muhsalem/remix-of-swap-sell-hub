@@ -10,9 +10,11 @@ import { ListingImage } from "@/components/ListingImage";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { OfferPreviewPanel } from "@/components/OfferPreviewPanel";
 import { ConsentCheckbox } from "@/components/ConsentCheckbox";
-import { ArrowLeftRight, Plus } from "lucide-react";
+import { ArrowLeftRight, Plus, Coins } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });
+const diQ = queryOptions({ queryKey: ["di-wallet"], queryFn: () => getDiWallet() });
 const targetQ = (id: string) => queryOptions({ queryKey: ["target-listing", id], queryFn: () => getListingForOffer({ data: { id } }) });
 
 export const Route = createFileRoute("/_authenticated/offer/$listingId")({

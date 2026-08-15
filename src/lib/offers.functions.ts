@@ -75,6 +75,12 @@ export const createOffer = createServerFn({ method: "POST" })
         "🚫 لا يجوز إضافة فرق نقدي عند وجود صنف ربوي (ذهب/فضة/نقد) — راجع سياسة مكافحة الربا.",
       );
     }
+    // DI تُعامل معاملة النقد في الأحكام الربوية
+    if ((shariah.ribawiA || shariah.ribawiB) && data.di_balance > 0) {
+      throw new Error(
+        "🚫 لا يجوز سدّ الفرق بعملة DI عند وجود صنف ربوي (ذهب/فضة/نقد) — راجع سياسة مكافحة الربا.",
+      );
+    }
 
 
 

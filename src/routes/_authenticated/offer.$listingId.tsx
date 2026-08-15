@@ -150,6 +150,65 @@ function NewOfferPage() {
               />
             </label>
 
+            {gapSar > 0 && diWallet.data?.enabled && (
+              <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                <div className="flex items-start gap-3">
+                  <Coins className="size-5 text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">
+                      الفرق {gapSar.toLocaleString("ar-EG")} ر.س → غطِّها بـ {diNeeded.toLocaleString("ar-EG")} DI
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      رصيدك: {diAvailable.toLocaleString("ar-EG")} DI ({sarPerDi} ر.س لكل DI). سدّ الفرق بعملة بَدِّل بدل التفاوض النقدي.
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      <button
+                        type="button"
+                        disabled={!canCoverWithDi}
+                        onClick={() => setDi(diNeeded)}
+                        className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold disabled:opacity-50"
+                      >
+                        غطِّ الفرق بـ DI
+                      </button>
+                      {di > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setDi(0)}
+                          className="px-4 py-2 rounded-full bg-stone-soft text-xs font-bold"
+                        >
+                          إلغاء
+                        </button>
+                      )}
+                      <input
+                        type="number"
+                        min={0}
+                        max={diAvailable}
+                        value={di}
+                        onChange={(e) => setDi(Math.max(0, Math.min(diAvailable, Number(e.target.value) || 0)))}
+                        className="w-28 px-3 py-2 rounded-xl bg-card border border-border text-xs outline-none focus:ring-2 ring-primary/30"
+                        aria-label="مقدار DI"
+                      />
+                    </div>
+
+                    {!canCoverWithDi && diNeeded > 0 && (
+                      <p className="text-xs text-amber-600 mt-2">
+                        رصيدك لا يكفي لتغطية الفرق كاملاً — يمكنك تغطية جزء منه أو إضافة مبلغ نقدي.
+                      </p>
+                    )}
+                    <p className="text-xs mt-2">
+                      {remainingGap > 0
+                        ? `المتبقي بعد التغطية: ${remainingGap.toLocaleString("ar-EG")} ر.س`
+                        : "✅ الفرق مُغطّى بالكامل"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      يُخصم DI من رصيدك ويُضاف للطرف الآخر عند اكتمال الصفقة فقط.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <label className="block mb-6">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-bold block mb-1.5">
                 رسالة للطرف الآخر

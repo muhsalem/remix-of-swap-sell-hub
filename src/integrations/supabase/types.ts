@@ -1454,6 +1454,7 @@ export type Database = {
           delivery_confirmed_by_from: boolean
           delivery_confirmed_by_to: boolean
           delivery_proof_url: string | null
+          di_balance: number
           escrow_locked: boolean
           escrow_released_at: string | null
           expected_delivery: string | null
@@ -1488,6 +1489,7 @@ export type Database = {
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
           delivery_proof_url?: string | null
+          di_balance?: number
           escrow_locked?: boolean
           escrow_released_at?: string | null
           expected_delivery?: string | null
@@ -1522,6 +1524,7 @@ export type Database = {
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
           delivery_proof_url?: string | null
+          di_balance?: number
           escrow_locked?: boolean
           escrow_released_at?: string | null
           expected_delivery?: string | null

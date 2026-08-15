@@ -39,16 +39,29 @@ function NewOfferPage() {
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [cash, setCash] = useState(0);
+  const [di, setDi] = useState(0);
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
   const { country } = useUserCurrency();
+  const diWallet = useQuery(diQ);
+
+  const myListing = mine.listings.find((l) => l.id === selectedId);
+  const sarPerDi = diWallet.data?.sarPerDi ?? 5;
+  const gapSar = Math.max(
+    0,
+    Math.round((Number(targetListing?.market_price ?? 0) - Number(myListing?.market_price ?? 0)) * 100) / 100,
+  );
+  const remainingGap = Math.max(0, Math.round((gapSar - cash - di * sarPerDi) * 100) / 100);
+  const diNeeded = Math.ceil(Math.max(0, gapSar - cash) / sarPerDi);
+  const diAvailable = diWallet.data?.balance ?? 0;
+  const canCoverWithDi = Boolean(diWallet.data?.enabled) && diNeeded > 0 && diAvailable >= diNeeded;
 
   const createFn = useServerFn(createOffer);
   const consentFn = useServerFn(logConsent);
   const m = useMutation({
     mutationFn: async () => {
       const res = await createFn({
-        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
+        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, di_balance: di, message },
       });
       try {
         await consentFn({

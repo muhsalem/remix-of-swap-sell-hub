@@ -1957,6 +1957,8 @@ export type Database = {
         | "fee_charge"
         | "manual_adjust"
         | "refund"
+        | "di_gap_out"
+        | "di_gap_in"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
       listing_type: "item" | "service"
@@ -2147,6 +2149,8 @@ export const Constants = {
         "fee_charge",
         "manual_adjust",
         "refund",
+        "di_gap_out",
+        "di_gap_in",
       ],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],

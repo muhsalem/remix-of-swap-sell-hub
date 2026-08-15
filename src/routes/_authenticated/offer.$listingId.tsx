@@ -3,16 +3,18 @@ import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-que
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/offers.functions";
+import { listMyListingsForOffer, getListingForOffer, createOffer, getDiWallet } from "@/lib/offers.functions";
 import { logConsent } from "@/lib/consent.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { OfferPreviewPanel } from "@/components/OfferPreviewPanel";
 import { ConsentCheckbox } from "@/components/ConsentCheckbox";
-import { ArrowLeftRight, Plus } from "lucide-react";
+import { ArrowLeftRight, Plus, Coins } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 const myQ = queryOptions({ queryKey: ["my-active-listings"], queryFn: () => listMyListingsForOffer() });
+const diQ = queryOptions({ queryKey: ["di-wallet"], queryFn: () => getDiWallet() });
 const targetQ = (id: string) => queryOptions({ queryKey: ["target-listing", id], queryFn: () => getListingForOffer({ data: { id } }) });
 
 export const Route = createFileRoute("/_authenticated/offer/$listingId")({
@@ -37,16 +39,29 @@ function NewOfferPage() {
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [cash, setCash] = useState(0);
+  const [di, setDi] = useState(0);
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
   const { country } = useUserCurrency();
+  const diWallet = useQuery(diQ);
+
+  const myListing = mine.listings.find((l) => l.id === selectedId);
+  const sarPerDi = diWallet.data?.sarPerDi ?? 5;
+  const gapSar = Math.max(
+    0,
+    Math.round((Number(targetListing?.market_price ?? 0) - Number(myListing?.market_price ?? 0)) * 100) / 100,
+  );
+  const remainingGap = Math.max(0, Math.round((gapSar - cash - di * sarPerDi) * 100) / 100);
+  const diNeeded = Math.ceil(Math.max(0, gapSar - cash) / sarPerDi);
+  const diAvailable = diWallet.data?.balance ?? 0;
+  const canCoverWithDi = Boolean(diWallet.data?.enabled) && diNeeded > 0 && diAvailable >= diNeeded;
 
   const createFn = useServerFn(createOffer);
   const consentFn = useServerFn(logConsent);
   const m = useMutation({
     mutationFn: async () => {
       const res = await createFn({
-        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, message },
+        data: { requested_listing: listingId, offered_listing: selectedId, cash_balance: cash, di_balance: di, message },
       });
       try {
         await consentFn({
@@ -134,6 +149,65 @@ function NewOfferPage() {
                 className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border outline-none focus:ring-2 ring-primary/30"
               />
             </label>
+
+            {gapSar > 0 && diWallet.data?.enabled && (
+              <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                <div className="flex items-start gap-3">
+                  <Coins className="size-5 text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">
+                      الفرق {gapSar.toLocaleString("ar-EG")} ر.س → غطِّها بـ {diNeeded.toLocaleString("ar-EG")} DI
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      رصيدك: {diAvailable.toLocaleString("ar-EG")} DI ({sarPerDi} ر.س لكل DI). سدّ الفرق بعملة بَدِّل بدل التفاوض النقدي.
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      <button
+                        type="button"
+                        disabled={!canCoverWithDi}
+                        onClick={() => setDi(diNeeded)}
+                        className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold disabled:opacity-50"
+                      >
+                        غطِّ الفرق بـ DI
+                      </button>
+                      {di > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setDi(0)}
+                          className="px-4 py-2 rounded-full bg-stone-soft text-xs font-bold"
+                        >
+                          إلغاء
+                        </button>
+                      )}
+                      <input
+                        type="number"
+                        min={0}
+                        max={diAvailable}
+                        value={di}
+                        onChange={(e) => setDi(Math.max(0, Math.min(diAvailable, Number(e.target.value) || 0)))}
+                        className="w-28 px-3 py-2 rounded-xl bg-card border border-border text-xs outline-none focus:ring-2 ring-primary/30"
+                        aria-label="مقدار DI"
+                      />
+                    </div>
+
+                    {!canCoverWithDi && diNeeded > 0 && (
+                      <p className="text-xs text-amber-600 mt-2">
+                        رصيدك لا يكفي لتغطية الفرق كاملاً — يمكنك تغطية جزء منه أو إضافة مبلغ نقدي.
+                      </p>
+                    )}
+                    <p className="text-xs mt-2">
+                      {remainingGap > 0
+                        ? `المتبقي بعد التغطية: ${remainingGap.toLocaleString("ar-EG")} ر.س`
+                        : "✅ الفرق مُغطّى بالكامل"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      يُخصم DI من رصيدك ويُضاف للطرف الآخر عند اكتمال الصفقة فقط.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <label className="block mb-6">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-bold block mb-1.5">

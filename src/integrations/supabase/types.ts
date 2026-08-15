@@ -1454,6 +1454,7 @@ export type Database = {
           delivery_confirmed_by_from: boolean
           delivery_confirmed_by_to: boolean
           delivery_proof_url: string | null
+          di_balance: number
           escrow_locked: boolean
           escrow_released_at: string | null
           expected_delivery: string | null
@@ -1488,6 +1489,7 @@ export type Database = {
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
           delivery_proof_url?: string | null
+          di_balance?: number
           escrow_locked?: boolean
           escrow_released_at?: string | null
           expected_delivery?: string | null
@@ -1522,6 +1524,7 @@ export type Database = {
           delivery_confirmed_by_from?: boolean
           delivery_confirmed_by_to?: boolean
           delivery_proof_url?: string | null
+          di_balance?: number
           escrow_locked?: boolean
           escrow_released_at?: string | null
           expected_delivery?: string | null
@@ -1957,6 +1960,8 @@ export type Database = {
         | "fee_charge"
         | "manual_adjust"
         | "refund"
+        | "di_gap_out"
+        | "di_gap_in"
       listing_condition: "new" | "like-new" | "excellent" | "good" | "fair"
       listing_status: "active" | "pending" | "traded" | "closed"
       listing_type: "item" | "service"
@@ -2147,6 +2152,8 @@ export const Constants = {
         "fee_charge",
         "manual_adjust",
         "refund",
+        "di_gap_out",
+        "di_gap_in",
       ],
       listing_condition: ["new", "like-new", "excellent", "good", "fair"],
       listing_status: ["active", "pending", "traded", "closed"],

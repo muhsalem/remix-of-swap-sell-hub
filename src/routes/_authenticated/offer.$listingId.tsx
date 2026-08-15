@@ -3,7 +3,7 @@ import { useSuspenseQuery, queryOptions, useMutation } from "@tanstack/react-que
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listMyListingsForOffer, getListingForOffer, createOffer } from "@/lib/offers.functions";
+import { listMyListingsForOffer, getListingForOffer, createOffer, getDiWallet } from "@/lib/offers.functions";
 import { logConsent } from "@/lib/consent.functions";
 import { Nav } from "@/components/Nav";
 import { ListingImage } from "@/components/ListingImage";

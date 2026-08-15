@@ -109,7 +109,13 @@ export const createOffer = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message.includes("insufficient_di_balance"))
+        throw new Error("رصيد DI غير كافٍ لتغطية الفرق — قلّل المبلغ أو أكمل صفقات لكسب DI.");
+      if (error.message.includes("di_disabled"))
+        throw new Error("عملة DI غير مفعّلة حالياً — استخدم الفرق النقدي بدلاً منها.");
+      throw new Error(error.message);
+    }
     return { id: row.id };
   });
 

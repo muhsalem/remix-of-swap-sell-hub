@@ -102,6 +102,7 @@ export const createOffer = createServerFn({ method: "POST" })
         to_user: requested.owner_id,
         message: data.message,
         cash_balance: data.cash_balance,
+        di_balance: data.di_balance,
         fairness_score: data.fairness_score ?? null,
         anchor_price_sar: anchorPrice > 0 ? anchorPrice : null,
         anchor_expires_at: anchorPrice > 0 ? anchorExpires : null,

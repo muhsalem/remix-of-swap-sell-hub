@@ -306,15 +306,22 @@ function DisputeBlock({ offerId, disputes, qc }: { offerId: string; disputes: an
       {disputes.length > 0 ? (
         <div className="space-y-2 mb-3">
           {disputes.map((d) => (
-            <div key={d.id} className="text-xs p-2 rounded-lg bg-destructive/5 border border-destructive/20">
+            <Link
+              key={d.id}
+              to="/disputes/$id"
+              params={{ id: d.id }}
+              className="block text-xs p-2 rounded-lg bg-destructive/5 border border-destructive/20 hover:border-destructive/40"
+            >
               <div className="font-bold">الحالة: {d.status}</div>
               <div className="text-muted-foreground mt-1">{d.reason}</div>
-            </div>
+              <div className="text-primary font-bold mt-1">متابعة النزاع ←</div>
+            </Link>
           ))}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground mb-3">لا توجد نزاعات على هذه الصفقة.</p>
       )}
+
       {!open ? (
         <button onClick={() => setOpen(true)} className="w-full text-xs px-3 py-2 rounded-full bg-destructive/10 text-destructive font-bold hover:bg-destructive/20">
           فتح نزاع

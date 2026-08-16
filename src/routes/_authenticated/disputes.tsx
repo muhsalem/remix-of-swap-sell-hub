@@ -59,9 +59,15 @@ function DisputesPage() {
                     d.status === "rejected" ? "bg-muted text-muted-foreground" :
                     "bg-destructive/10 text-destructive"
                   }`}>{d.status}</span>
-                  <Link to="/offers/$id" params={{ id: d.offer_id }} className="text-xs text-primary hover:underline">
-                    فتح الصفقة ←
-                  </Link>
+                  <div className="flex gap-3">
+                    <Link to="/disputes/$id" params={{ id: d.id }} className="text-xs text-primary font-bold hover:underline">
+                      متابعة النزاع ←
+                    </Link>
+                    <Link to="/offers/$id" params={{ id: d.offer_id }} className="text-xs text-muted-foreground hover:underline">
+                      الصفقة
+                    </Link>
+                  </div>
+
                 </div>
                 <p className="text-sm font-bold">{d.reason}</p>
                 {d.evidence && <p className="text-xs text-muted-foreground mt-1">{d.evidence}</p>}

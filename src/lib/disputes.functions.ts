@@ -104,11 +104,13 @@ export const sendDisputeMessage = createServerFn({ method: "POST" })
     if (!data.body.trim() && data.attachments.length === 0) {
       throw new Error("اكتب رسالة أو أرفق ملفاً");
     }
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
     const { error } = await supabase.from("dispute_messages").insert({
       dispute_id: data.dispute_id,
       sender_id: userId,
       body: data.body.trim(),
       attachments: data.attachments,
+      is_admin: Boolean(isAdmin),
     });
     if (error) throw new Error("تعذّر إرسال الرسالة — قد يكون النزاع مغلقاً.");
     return { ok: true };

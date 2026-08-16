@@ -173,6 +173,47 @@ export type Database = {
           },
         ]
       }
+      dispute_messages: {
+        Row: {
+          attachments: string[]
+          body: string
+          created_at: string
+          dispute_id: string
+          id: string
+          is_admin: boolean
+          is_system: boolean
+          sender_id: string | null
+        }
+        Insert: {
+          attachments?: string[]
+          body?: string
+          created_at?: string
+          dispute_id: string
+          id?: string
+          is_admin?: boolean
+          is_system?: boolean
+          sender_id?: string | null
+        }
+        Update: {
+          attachments?: string[]
+          body?: string
+          created_at?: string
+          dispute_id?: string
+          id?: string
+          is_admin?: boolean
+          is_system?: boolean
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_messages_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "disputes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           created_at: string

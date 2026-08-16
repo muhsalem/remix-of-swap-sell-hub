@@ -84,9 +84,14 @@ function DisputeRow({ d }: { d: any }) {
           <p className="text-sm font-bold mt-2">{d.reason}</p>
           {d.evidence && <p className="text-xs text-muted-foreground mt-1">دليل: {d.evidence}</p>}
         </div>
-        <Link to="/offers/$id" params={{ id: d.offer_id }} className="text-xs text-primary hover:underline whitespace-nowrap">
-          فتح الصفقة ←
-        </Link>
+        <div className="flex flex-col items-end gap-1 whitespace-nowrap">
+          <Link to="/disputes/$id" params={{ id: d.id }} className="text-xs text-primary font-bold hover:underline">
+            سجل النزاع والمرفقات ←
+          </Link>
+          <Link to="/offers/$id" params={{ id: d.offer_id }} className="text-xs text-muted-foreground hover:underline">
+            فتح الصفقة ←
+          </Link>
+        </div>
       </div>
 
       {d.resolution && (

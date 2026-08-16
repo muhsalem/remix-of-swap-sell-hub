@@ -9,8 +9,10 @@ export const openDispute = createServerFn({ method: "POST" })
       offer_id: z.string().uuid(),
       reason: z.string().min(5).max(500),
       evidence: z.string().max(2000).optional().default(""),
+      attachments: z.array(z.string().max(400)).max(10).optional().default([]),
     }).parse(i),
   )
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

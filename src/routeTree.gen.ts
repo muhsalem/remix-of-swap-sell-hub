@@ -47,6 +47,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
+import { Route as AuthenticatedDisputesIdRouteImport } from './routes/_authenticated/disputes.$id'
 import { Route as AuthenticatedAdminWaitlistRouteImport } from './routes/_authenticated/admin.waitlist'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminShippingCitiesRouteImport } from './routes/_authenticated/admin.shipping-cities'
@@ -256,6 +257,11 @@ const AuthenticatedOfferListingIdRoute =
     path: '/offer/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDisputesIdRoute = AuthenticatedDisputesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedDisputesRoute,
+} as any)
 const AuthenticatedAdminWaitlistRoute =
   AuthenticatedAdminWaitlistRouteImport.update({
     id: '/waitlist',
@@ -362,7 +368,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/disputes': typeof AuthenticatedDisputesRoute
+  '/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
+  '/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -416,7 +423,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/disputes': typeof AuthenticatedDisputesRoute
+  '/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/new-listing': typeof AuthenticatedNewListingRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
+  '/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
@@ -472,7 +480,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
+  '/_authenticated/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/new-listing': typeof AuthenticatedNewListingRoute
@@ -503,6 +511,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/shipping-cities': typeof AuthenticatedAdminShippingCitiesRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/admin/waitlist': typeof AuthenticatedAdminWaitlistRoute
+  '/_authenticated/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
   '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-cities'
     | '/admin/support'
     | '/admin/waitlist'
+    | '/disputes/$id'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -613,6 +623,7 @@ export interface FileRouteTypes {
     | '/admin/shipping-cities'
     | '/admin/support'
     | '/admin/waitlist'
+    | '/disputes/$id'
     | '/offer/$listingId'
     | '/offers/$id'
     | '/support/$id'
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/shipping-cities'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/waitlist'
+    | '/_authenticated/disputes/$id'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
     | '/_authenticated/support/$id'
@@ -970,6 +982,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOfferListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/disputes/$id': {
+      id: '/_authenticated/disputes/$id'
+      path: '/$id'
+      fullPath: '/disputes/$id'
+      preLoaderRoute: typeof AuthenticatedDisputesIdRouteImport
+      parentRoute: typeof AuthenticatedDisputesRoute
+    }
     '/_authenticated/admin/waitlist': {
       id: '/_authenticated/admin/waitlist'
       path: '/waitlist'
@@ -1114,6 +1133,19 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedDisputesRouteChildren {
+  AuthenticatedDisputesIdRoute: typeof AuthenticatedDisputesIdRoute
+}
+
+const AuthenticatedDisputesRouteChildren: AuthenticatedDisputesRouteChildren = {
+  AuthenticatedDisputesIdRoute: AuthenticatedDisputesIdRoute,
+}
+
+const AuthenticatedDisputesRouteWithChildren =
+  AuthenticatedDisputesRoute._addFileChildren(
+    AuthenticatedDisputesRouteChildren,
+  )
+
 interface AuthenticatedOffersRouteChildren {
   AuthenticatedOffersIdRoute: typeof AuthenticatedOffersIdRoute
 }
@@ -1138,7 +1170,7 @@ const AuthenticatedSupportRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
+  AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRouteWithChildren
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNewListingRoute: typeof AuthenticatedNewListingRoute
@@ -1154,7 +1186,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
+  AuthenticatedDisputesRoute: AuthenticatedDisputesRouteWithChildren,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNewListingRoute: AuthenticatedNewListingRoute,

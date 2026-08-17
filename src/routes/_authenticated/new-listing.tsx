@@ -221,7 +221,36 @@ function NewListing() {
         >
           {step === 1 && (
             <>
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm flex items-center gap-2">
+                      <Sparkles className="size-4 text-primary" /> استيراد بضغطة
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ارفع صورة المنتج ونملأ لك العنوان والفئة والحالة والعمر والسعر التقديري تلقائياً.
+                    </p>
+                  </div>
+                  <label className={`px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition flex items-center gap-2 ${
+                    autoFilling ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}>
+                    {autoFilling ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                    {autoFilling ? "جارٍ التحليل..." : "حلّل صورة"}
+                    <input
+                      type="file" accept="image/*" hidden disabled={autoFilling}
+                      onChange={(e) => { quickImport(e.target.files); e.target.value = ""; }}
+                    />
+                  </label>
+                </div>
+                {autoFilled.length > 0 && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    تمت تعبئة: <strong className="text-foreground">{autoFilled.join("، ")}</strong> — راجع القيم وعدّلها عند الحاجة.
+                  </div>
+                )}
+              </div>
+
               <Field label="عنوان المنتج *">
+
                 <input
                   required minLength={3} maxLength={120}
                   value={form.title}

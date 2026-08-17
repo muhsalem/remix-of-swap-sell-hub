@@ -21,6 +21,33 @@ export const Route = createFileRoute("/_authenticated/new-listing")({
 const CATEGORIES = ["إلكترونيات", "ساعات", "كاميرات", "أجهزة لوحية", "صوتيات", "وسائل تنقل", "ذهب وفضة", "أثاث", "كتب", "أخرى"];
 const RIBAWI = ["ذهب وفضة"];
 
+// تحويل فئة الرؤية الحاسوبية إلى فئات النموذج
+const VISION_CATEGORY_MAP: Record<string, string> = {
+  "هواتف": "إلكترونيات",
+  "حواسيب": "إلكترونيات",
+  "إلكترونيات": "إلكترونيات",
+  "أجهزة لوحية": "أجهزة لوحية",
+  "صوتيات": "صوتيات",
+  "كاميرات": "كاميرات",
+  "ساعات": "ساعات",
+  "مجوهرات": "ذهب وفضة",
+  "ذهب": "ذهب وفضة",
+  "فضة": "ذهب وفضة",
+  "وسائل تنقل": "وسائل تنقل",
+  "أثاث": "أثاث",
+  "كتب": "كتب",
+};
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("تعذّر قراءة الصورة"));
+    r.readAsDataURL(file);
+  });
+}
+
+
 const STEPS = [
   { id: 1, label: "الأساسيات", hint: "ماذا تعرض؟" },
   { id: 2, label: "التفاصيل والصور", hint: "السعر والحالة" },

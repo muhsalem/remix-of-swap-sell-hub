@@ -76,6 +76,48 @@ function NewListing() {
   });
 
   const isRibawi = RIBAWI.includes(form.category);
+  const analyze = useServerFn(analyzeProductImage);
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFilled, setAutoFilled] = useState<string[]>([]);
+
+  /** P0-1: استيراد بضغطة — صورة واحدة تملأ العنوان/الفئة/الحالة/العمر/السعر */
+  const quickImport = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("يجب أن تكون الصورة أقل من 5MB");
+      return;
+    }
+    setAutoFilling(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const [attrs] = await Promise.all([
+        analyze({ data: { imageBase64: dataUrl } }),
+        handleFiles(files),
+      ]);
+      const filled: string[] = [];
+      setForm((prev) => {
+        const next = { ...prev };
+        if (attrs.name) { next.title = attrs.name; filled.push("العنوان"); }
+        const cat = VISION_CATEGORY_MAP[attrs.category];
+        if (cat) { next.category = cat; filled.push("الفئة"); }
+        next.condition = attrs.condition as typeof prev.condition;
+        filled.push("الحالة");
+        if (attrs.estimatedAgeMonths >= 0) { next.age_months = attrs.estimatedAgeMonths; filled.push("العمر"); }
+        if (attrs.marketPriceSAR > 0) { next.market_price = Math.round(attrs.marketPriceSAR); filled.push("السعر التقديري"); }
+        if (attrs.itemType === "service") next.listing_type = "service";
+        if (!prev.description && attrs.notes) { next.description = attrs.notes; filled.push("الوصف"); }
+        return next;
+      });
+      setAutoFilled(filled);
+      toast.success(`عبّأنا ${filled.length} حقول تلقائياً — راجعها قبل النشر`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذّر تحليل الصورة — أكمل يدوياً");
+    } finally {
+      setAutoFilling(false);
+    }
+  };
+
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;

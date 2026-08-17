@@ -3,13 +3,15 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createListing } from "@/lib/listings.functions";
+import { analyzeProductImage } from "@/lib/vision.functions";
 import { uploadListingImage } from "@/lib/storage";
 import { computeImageHash } from "@/lib/image-hash";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { toast } from "sonner";
 import { listingErrorMessage } from "@/lib/user-error-messages";
-import { Loader2, Upload, X, AlertTriangle, ShieldCheck, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Loader2, Upload, X, AlertTriangle, ShieldCheck, ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/new-listing")({
   head: () => ({ meta: [{ title: "أضف عرضاً جديداً — بادل بادل" }] }),
@@ -18,6 +20,33 @@ export const Route = createFileRoute("/_authenticated/new-listing")({
 
 const CATEGORIES = ["إلكترونيات", "ساعات", "كاميرات", "أجهزة لوحية", "صوتيات", "وسائل تنقل", "ذهب وفضة", "أثاث", "كتب", "أخرى"];
 const RIBAWI = ["ذهب وفضة"];
+
+// تحويل فئة الرؤية الحاسوبية إلى فئات النموذج
+const VISION_CATEGORY_MAP: Record<string, string> = {
+  "هواتف": "إلكترونيات",
+  "حواسيب": "إلكترونيات",
+  "إلكترونيات": "إلكترونيات",
+  "أجهزة لوحية": "أجهزة لوحية",
+  "صوتيات": "صوتيات",
+  "كاميرات": "كاميرات",
+  "ساعات": "ساعات",
+  "مجوهرات": "ذهب وفضة",
+  "ذهب": "ذهب وفضة",
+  "فضة": "ذهب وفضة",
+  "وسائل تنقل": "وسائل تنقل",
+  "أثاث": "أثاث",
+  "كتب": "كتب",
+};
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("تعذّر قراءة الصورة"));
+    r.readAsDataURL(file);
+  });
+}
+
 
 const STEPS = [
   { id: 1, label: "الأساسيات", hint: "ماذا تعرض؟" },
@@ -47,6 +76,48 @@ function NewListing() {
   });
 
   const isRibawi = RIBAWI.includes(form.category);
+  const analyze = useServerFn(analyzeProductImage);
+  const [autoFilling, setAutoFilling] = useState(false);
+  const [autoFilled, setAutoFilled] = useState<string[]>([]);
+
+  /** P0-1: استيراد بضغطة — صورة واحدة تملأ العنوان/الفئة/الحالة/العمر/السعر */
+  const quickImport = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("يجب أن تكون الصورة أقل من 5MB");
+      return;
+    }
+    setAutoFilling(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const [attrs] = await Promise.all([
+        analyze({ data: { imageBase64: dataUrl } }),
+        handleFiles(files),
+      ]);
+      const filled: string[] = [];
+      setForm((prev) => {
+        const next = { ...prev };
+        if (attrs.name) { next.title = attrs.name; filled.push("العنوان"); }
+        const cat = VISION_CATEGORY_MAP[attrs.category];
+        if (cat) { next.category = cat; filled.push("الفئة"); }
+        next.condition = attrs.condition as typeof prev.condition;
+        filled.push("الحالة");
+        if (attrs.estimatedAgeMonths >= 0) { next.age_months = attrs.estimatedAgeMonths; filled.push("العمر"); }
+        if (attrs.marketPriceSAR > 0) { next.market_price = Math.round(attrs.marketPriceSAR); filled.push("السعر التقديري"); }
+        if (attrs.itemType === "service") next.listing_type = "service";
+        if (!prev.description && attrs.notes) { next.description = attrs.notes; filled.push("الوصف"); }
+        return next;
+      });
+      setAutoFilled(filled);
+      toast.success(`عبّأنا ${filled.length} حقول تلقائياً — راجعها قبل النشر`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذّر تحليل الصورة — أكمل يدوياً");
+    } finally {
+      setAutoFilling(false);
+    }
+  };
+
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -150,7 +221,36 @@ function NewListing() {
         >
           {step === 1 && (
             <>
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm flex items-center gap-2">
+                      <Sparkles className="size-4 text-primary" /> استيراد بضغطة
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ارفع صورة المنتج ونملأ لك العنوان والفئة والحالة والعمر والسعر التقديري تلقائياً.
+                    </p>
+                  </div>
+                  <label className={`px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition flex items-center gap-2 ${
+                    autoFilling ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}>
+                    {autoFilling ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                    {autoFilling ? "جارٍ التحليل..." : "حلّل صورة"}
+                    <input
+                      type="file" accept="image/*" hidden disabled={autoFilling}
+                      onChange={(e) => { quickImport(e.target.files); e.target.value = ""; }}
+                    />
+                  </label>
+                </div>
+                {autoFilled.length > 0 && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    تمت تعبئة: <strong className="text-foreground">{autoFilled.join("، ")}</strong> — راجع القيم وعدّلها عند الحاجة.
+                  </div>
+                )}
+              </div>
+
               <Field label="عنوان المنتج *">
+
                 <input
                   required minLength={3} maxLength={120}
                   value={form.title}

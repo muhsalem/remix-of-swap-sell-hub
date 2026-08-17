@@ -101,6 +101,61 @@ function ThreeWayPage() {
         </Button>
       </Card>
 
+      <Card className="p-5 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-bold">الاكتشاف الآلي للدورات المغلقة</h2>
+            <p className="text-sm text-muted-foreground">
+              نفحص السوق ونبحث عن دورات A→B→C→A تُغلق الصفقة لكل الأطراف دون نقد.
+            </p>
+          </div>
+          <Button variant="secondary" disabled={autoChains.isPending} onClick={() => autoChains.mutate()}>
+            {autoChains.isPending && <Loader2 className="animate-spin ml-2 h-4 w-4" />}
+            اكتشف تلقائياً
+          </Button>
+        </div>
+
+        {autoChains.data && autoChains.data.chains.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {autoChains.data.chains.map((c, i) => (
+              <div key={i} className="rounded-xl border p-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  {c.steps.map((s, j) => (
+                    <span key={s.listingId} className="flex items-center gap-2">
+                      {s.isMine ? (
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                          أنت: {s.title}
+                        </span>
+                      ) : (
+                        <Link
+                          to="/listings/$id"
+                          params={{ id: s.listingId }}
+                          className="px-3 py-1 rounded-full bg-secondary hover:bg-secondary/80"
+                        >
+                          {s.title}
+                        </Link>
+                      )}
+                      {j < c.steps.length - 1 && <ArrowRight className="h-4 w-4" />}
+                    </span>
+                  ))}
+                  <ArrowRight className="h-4 w-4" />
+                  <span className="text-muted-foreground text-xs">تعود إليك</span>
+                </div>
+                <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
+                  <span>توافق {c.score}%</span>
+                  <span>أقصى فارق قيمة {c.maxGapPct}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {autoChains.data && autoChains.data.chains.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            لا توجد دورات مغلقة الآن — أضف رغبات أوضح في إعلاناتك لرفع فرص المطابقة.
+          </p>
+        )}
+      </Card>
+
       {search.data && search.data.chains.length === 0 && (
         <Card className="p-6 text-center text-muted-foreground">
           لم نجد سلاسل ثلاثية حالياً — جرب فئة أوسع أو عُد لاحقاً.

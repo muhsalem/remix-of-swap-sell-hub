@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { findThreeWayMatches } from "@/lib/matching.functions";
+import { discoverMyChains } from "@/lib/chains.functions";
 import { suggestNegotiation } from "@/lib/negotiator.functions";
 import { myListings } from "@/lib/listings.functions";
 import { useQuery } from "@tanstack/react-query";

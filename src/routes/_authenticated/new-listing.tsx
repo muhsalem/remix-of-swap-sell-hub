@@ -3,13 +3,15 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createListing } from "@/lib/listings.functions";
+import { analyzeProductImage } from "@/lib/vision.functions";
 import { uploadListingImage } from "@/lib/storage";
 import { computeImageHash } from "@/lib/image-hash";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { toast } from "sonner";
 import { listingErrorMessage } from "@/lib/user-error-messages";
-import { Loader2, Upload, X, AlertTriangle, ShieldCheck, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Loader2, Upload, X, AlertTriangle, ShieldCheck, ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/new-listing")({
   head: () => ({ meta: [{ title: "أضف عرضاً جديداً — بادل بادل" }] }),

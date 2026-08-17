@@ -45,6 +45,17 @@ function ThreeWayPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const discover = useServerFn(discoverMyChains);
+  const autoChains = useMutation({
+    mutationFn: () =>
+      discover({ data: { listingId: listingId || undefined, notify: true } }),
+    onSuccess: (r) => {
+      if (r.chains.length === 0) toast.info("لم نعثر على دورات مقايضة مغلقة الآن");
+      else toast.success(`وجدنا ${r.chains.length} سلسلة مغلقة`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const negotiateAI = useMutation({
     mutationFn: (vars: { myItem: string; theirItem: string }) =>
       negotiate({ data: vars }),

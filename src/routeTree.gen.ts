@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
+import { Route as SwipeRouteImport } from './routes/swipe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -67,6 +68,11 @@ import { Route as ApiPublicWebhooksFawaterakRouteImport } from './routes/api/pub
 const WaitlistRoute = WaitlistRouteImport.update({
   id: '/waitlist',
   path: '/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SwipeRoute = SwipeRouteImport.update({
+  id: '/swipe',
+  path: '/swipe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/swipe': typeof SwipeRoute
   '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/swipe': typeof SwipeRoute
   '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -476,6 +484,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/swipe': typeof SwipeRoute
   '/waitlist': typeof WaitlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -533,6 +542,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/swipe'
     | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/swipe'
     | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sharia-committee'
     | '/sitemap.xml'
+    | '/swipe'
     | '/waitlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -701,6 +713,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SwipeRoute: typeof SwipeRoute
   WaitlistRoute: typeof WaitlistRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -721,6 +734,13 @@ declare module '@tanstack/react-router' {
       path: '/waitlist'
       fullPath: '/waitlist'
       preLoaderRoute: typeof WaitlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/swipe': {
+      id: '/swipe'
+      path: '/swipe'
+      fullPath: '/swipe'
+      preLoaderRoute: typeof SwipeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1228,6 +1248,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SwipeRoute: SwipeRoute,
   WaitlistRoute: WaitlistRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:

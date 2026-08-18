@@ -162,6 +162,10 @@ function ListingPage() {
               </div>
             )}
 
+            {l.owner_id && (
+              <TrustScoreCard userId={l.owner_id} />
+            )}
+
             <Link
               to="/offer/$listingId"
               params={{ listingId: l.id }}

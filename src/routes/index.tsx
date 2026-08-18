@@ -11,6 +11,8 @@ import { Hero } from "@/components/Hero";
 import { CategoryQuickBar } from "@/components/CategoryQuickBar";
 import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
+import { FairValueTag } from "@/components/FairValueTag";
+import { EscrowBadge } from "@/components/EscrowBadge";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { CountrySwitcher } from "@/components/CountrySwitcher";

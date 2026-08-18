@@ -11,6 +11,8 @@ import { Hero } from "@/components/Hero";
 import { CategoryQuickBar } from "@/components/CategoryQuickBar";
 import { QuickSearchBar } from "@/components/QuickSearchBar";
 import { ListingImage } from "@/components/ListingImage";
+import { FairValueTag } from "@/components/FairValueTag";
+import { EscrowBadge } from "@/components/EscrowBadge";
 import { ListingsGridSkeleton } from "@/components/ListingSkeleton";
 import { LocalPrice, useUserCurrency } from "@/components/LocalPrice";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
@@ -432,12 +434,20 @@ function Index() {
                     </div>
                     <h3 className="font-bold mb-1 truncate">{l.title}</h3>
                     <p className="text-xs text-muted-foreground mb-4 line-clamp-1">يريد مقابله: {l.wants}</p>
-                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Star className="size-3 fill-accent text-accent" />
-                        {Number(l.profiles?.rating ?? 0).toFixed(1)}
-                      </span>
+                    <div className="pt-4 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Star className="size-3 fill-accent text-accent" />
+                          {Number(l.profiles?.rating ?? 0).toFixed(1)}
+                        </span>
+                      </div>
+                      <FairValueTag
+                        referenceSar={l.price_reference_sar}
+                        source={l.price_source}
+                        deviationPct={l.price_deviation_pct}
+                      />
+                      <div className="mt-2"><EscrowBadge compact /></div>
                     </div>
                   </Link>
                 ))}
@@ -510,13 +520,21 @@ function Index() {
                   </div>
                   <h3 className="font-bold mb-1 truncate">{l.title}</h3>
                   <p className="text-xs text-muted-foreground mb-3 line-clamp-1">مطلوب مقابله: {l.wants}</p>
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${(l as any).profiles?.trades_count ?? 0} صفقة مكتملة`}>
-                      <Star className="size-3 fill-accent text-accent" />
-                      {Number((l as any).profiles?.rating ?? 0).toFixed(1)}
-                      <span className="opacity-60">({(l as any).profiles?.trades_count ?? 0})</span>
-                    </span>
+                  <div className="pt-3 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`${(l as any).profiles?.trades_count ?? 0} صفقة مكتملة`}>
+                        <Star className="size-3 fill-accent text-accent" />
+                        {Number((l as any).profiles?.rating ?? 0).toFixed(1)}
+                        <span className="opacity-60">({(l as any).profiles?.trades_count ?? 0})</span>
+                      </span>
+                    </div>
+                    <FairValueTag
+                      referenceSar={(l as any).price_reference_sar}
+                      source={(l as any).price_source}
+                      deviationPct={(l as any).price_deviation_pct}
+                    />
+                    <div className="mt-2"><EscrowBadge compact /></div>
                   </div>
                 </Link>
                 );

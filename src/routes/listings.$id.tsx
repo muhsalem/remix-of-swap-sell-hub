@@ -13,6 +13,7 @@ import { formatSAR } from "@/lib/format-price";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
 import { MarketReferencePrice } from "@/components/MarketReferencePrice";
 import { TrustScoreCard } from "@/components/TrustScoreCard";
+import { EscrowBadge } from "@/components/EscrowBadge";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -136,6 +137,10 @@ function ListingPage() {
                 listingPriceSar={Number(l.market_price)}
               />
             </div>
+
+            <EscrowBadge />
+
+
 
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">

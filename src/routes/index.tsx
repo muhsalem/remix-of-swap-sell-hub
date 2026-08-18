@@ -432,12 +432,20 @@ function Index() {
                     </div>
                     <h3 className="font-bold mb-1 truncate">{l.title}</h3>
                     <p className="text-xs text-muted-foreground mb-4 line-clamp-1">يريد مقابله: {l.wants}</p>
-                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Star className="size-3 fill-accent text-accent" />
-                        {Number(l.profiles?.rating ?? 0).toFixed(1)}
-                      </span>
+                    <div className="pt-4 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold"><LocalPrice sar={l.market_price} /></span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Star className="size-3 fill-accent text-accent" />
+                          {Number(l.profiles?.rating ?? 0).toFixed(1)}
+                        </span>
+                      </div>
+                      <FairValueTag
+                        referenceSar={l.price_reference_sar}
+                        source={l.price_source}
+                        deviationPct={l.price_deviation_pct}
+                      />
+                      <div className="mt-2"><EscrowBadge compact /></div>
                     </div>
                   </Link>
                 ))}

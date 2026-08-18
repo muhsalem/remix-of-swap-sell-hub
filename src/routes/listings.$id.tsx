@@ -137,6 +137,10 @@ function ListingPage() {
               />
             </div>
 
+            <EscrowBadge />
+
+
+
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">

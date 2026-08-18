@@ -13,6 +13,7 @@ import { formatSAR } from "@/lib/format-price";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
 import { MarketReferencePrice } from "@/components/MarketReferencePrice";
 import { TrustScoreCard } from "@/components/TrustScoreCard";
+import { EscrowBadge } from "@/components/EscrowBadge";
 
 import { supabase } from "@/integrations/supabase/client";
 

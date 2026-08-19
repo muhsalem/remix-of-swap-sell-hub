@@ -34,6 +34,7 @@ import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedThreeWayRouteImport } from './routes/_authenticated/three-way'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedRefundsRouteImport } from './routes/_authenticated/refunds'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
@@ -188,6 +189,11 @@ const AuthenticatedThreeWayRoute = AuthenticatedThreeWayRouteImport.update({
 const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRefundsRoute = AuthenticatedRefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/refunds': typeof AuthenticatedRefundsRoute
   '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/refunds': typeof AuthenticatedRefundsRoute
   '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -497,6 +505,7 @@ export interface FileRoutesById {
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/refunds': typeof AuthenticatedRefundsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRouteWithChildren
   '/_authenticated/three-way': typeof AuthenticatedThreeWayRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
@@ -555,6 +564,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/referrals'
+    | '/refunds'
     | '/support'
     | '/three-way'
     | '/transactions'
@@ -611,6 +621,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/referrals'
+    | '/refunds'
     | '/support'
     | '/three-way'
     | '/transactions'
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments'
     | '/_authenticated/profile'
     | '/_authenticated/referrals'
+    | '/_authenticated/refunds'
     | '/_authenticated/support'
     | '/_authenticated/three-way'
     | '/_authenticated/transactions'
@@ -902,6 +914,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/refunds': {
+      id: '/_authenticated/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof AuthenticatedRefundsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/referrals': {
@@ -1198,6 +1217,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedRefundsRoute: typeof AuthenticatedRefundsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRouteWithChildren
   AuthenticatedThreeWayRoute: typeof AuthenticatedThreeWayRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
@@ -1214,6 +1234,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedRefundsRoute: AuthenticatedRefundsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRouteWithChildren,
   AuthenticatedThreeWayRoute: AuthenticatedThreeWayRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,

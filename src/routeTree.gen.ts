@@ -34,6 +34,7 @@ import { Route as ApiRobotsDottxtRouteImport } from './routes/api/robots[.]txt'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedThreeWayRouteImport } from './routes/_authenticated/three-way'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedRefundsRouteImport } from './routes/_authenticated/refunds'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
@@ -46,6 +47,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
+import { Route as AuthenticatedRefundsNewRouteImport } from './routes/_authenticated/refunds_.new'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
 import { Route as AuthenticatedDisputesIdRouteImport } from './routes/_authenticated/disputes.$id'
@@ -190,6 +192,11 @@ const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
   path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRefundsRoute = AuthenticatedRefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
@@ -251,6 +258,11 @@ const AuthenticatedSupportIdRoute = AuthenticatedSupportIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedSupportRoute,
+} as any)
+const AuthenticatedRefundsNewRoute = AuthenticatedRefundsNewRouteImport.update({
+  id: '/refunds_/new',
+  path: '/refunds/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOffersIdRoute = AuthenticatedOffersIdRouteImport.update({
   id: '/$id',
@@ -383,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/refunds': typeof AuthenticatedRefundsRoute
   '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -409,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/refunds/new': typeof AuthenticatedRefundsNewRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -439,6 +453,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/refunds': typeof AuthenticatedRefundsRoute
   '/support': typeof AuthenticatedSupportRouteWithChildren
   '/three-way': typeof AuthenticatedThreeWayRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -465,6 +480,7 @@ export interface FileRoutesByTo {
   '/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/refunds/new': typeof AuthenticatedRefundsNewRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -497,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/refunds': typeof AuthenticatedRefundsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRouteWithChildren
   '/_authenticated/three-way': typeof AuthenticatedThreeWayRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
@@ -523,6 +540,7 @@ export interface FileRoutesById {
   '/_authenticated/disputes/$id': typeof AuthenticatedDisputesIdRoute
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
+  '/_authenticated/refunds_/new': typeof AuthenticatedRefundsNewRoute
   '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -555,6 +573,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/referrals'
+    | '/refunds'
     | '/support'
     | '/three-way'
     | '/transactions'
@@ -581,6 +600,7 @@ export interface FileRouteTypes {
     | '/disputes/$id'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/refunds/new'
     | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesByTo: FileRoutesByTo
@@ -611,6 +631,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/profile'
     | '/referrals'
+    | '/refunds'
     | '/support'
     | '/three-way'
     | '/transactions'
@@ -637,6 +658,7 @@ export interface FileRouteTypes {
     | '/disputes/$id'
     | '/offer/$listingId'
     | '/offers/$id'
+    | '/refunds/new'
     | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   id:
@@ -668,6 +690,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments'
     | '/_authenticated/profile'
     | '/_authenticated/referrals'
+    | '/_authenticated/refunds'
     | '/_authenticated/support'
     | '/_authenticated/three-way'
     | '/_authenticated/transactions'
@@ -694,6 +717,7 @@ export interface FileRouteTypes {
     | '/_authenticated/disputes/$id'
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
+    | '/_authenticated/refunds_/new'
     | '/_authenticated/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesById: FileRoutesById
@@ -904,6 +928,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/refunds': {
+      id: '/_authenticated/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof AuthenticatedRefundsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/referrals': {
       id: '/_authenticated/referrals'
       path: '/referrals'
@@ -987,6 +1018,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/support/$id'
       preLoaderRoute: typeof AuthenticatedSupportIdRouteImport
       parentRoute: typeof AuthenticatedSupportRoute
+    }
+    '/_authenticated/refunds_/new': {
+      id: '/_authenticated/refunds_/new'
+      path: '/refunds/new'
+      fullPath: '/refunds/new'
+      preLoaderRoute: typeof AuthenticatedRefundsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/offers/$id': {
       id: '/_authenticated/offers/$id'
@@ -1198,10 +1236,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedRefundsRoute: typeof AuthenticatedRefundsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRouteWithChildren
   AuthenticatedThreeWayRoute: typeof AuthenticatedThreeWayRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
+  AuthenticatedRefundsNewRoute: typeof AuthenticatedRefundsNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1214,10 +1254,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedRefundsRoute: AuthenticatedRefundsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRouteWithChildren,
   AuthenticatedThreeWayRoute: AuthenticatedThreeWayRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
+  AuthenticatedRefundsNewRoute: AuthenticatedRefundsNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

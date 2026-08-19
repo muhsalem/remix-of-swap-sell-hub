@@ -1,35 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-export const REFUND_WINDOW_HOURS = 72;
-export const REFUND_TAG = "[استرداد]";
-
-export const REFUND_REASONS = [
-  { value: "not_as_described", label: "الغرض غير مطابق للوصف" },
-  { value: "damaged", label: "وصل تالفاً أو به عيب غير معلن" },
-  { value: "not_delivered", label: "لم يصل الغرض / لم يتم التسليم" },
-  { value: "counterfeit", label: "الغرض مقلّد أو غير أصلي" },
-  { value: "missing_parts", label: "نواقص أو ملحقات مفقودة" },
-  { value: "other", label: "سبب آخر" },
-] as const;
-
-export const REQUIRED_DOCS: Record<string, string[]> = {
-  not_as_described: ["صور واضحة للغرض من عدة زوايا", "لقطة من وصف الإعلان الأصلي"],
-  damaged: ["صور للضرر", "صورة لغلاف الشحنة عند الاستلام"],
-  not_delivered: ["إيصال الشحن أو رقم التتبع", "لقطة من آخر حالة تتبع"],
-  counterfeit: ["صور للرقم التسلسلي/الملصقات", "أي تقرير فحص أو مقارنة بالأصلي"],
-  missing_parts: ["صورة لمحتويات الشحنة كما وصلت", "لقطة من الملحقات المذكورة في الإعلان"],
-  other: ["أي مستندات أو صور تدعم طلبك"],
-};
-
-function windowStart(offer: { updated_at: string; created_at: string }) {
-  return new Date(offer.updated_at ?? offer.created_at).getTime();
-}
-
-function deadlineOf(offer: { updated_at: string; created_at: string }) {
-  return windowStart(offer) + REFUND_WINDOW_HOURS * 3600_000;
-}
+import { REFUND_REASONS, REFUND_TAG, refundDeadline } from "@/lib/refunds";
 
 /** الصفقات المؤهلة لفتح طلب استرداد خلال نافذة 72 ساعة. */
 export const listRefundableOffers = createServerFn({ method: "GET" })
@@ -54,14 +26,17 @@ export const listRefundableOffers = createServerFn({ method: "GET" })
 
     const now = Date.now();
     return {
-      offers: (offers ?? []).map((o: any) => ({
-        id: o.id,
-        status: o.status,
-        cash_balance: o.cash_balance ?? 0,
-        deadline: new Date(deadlineOf(o)).toISOString(),
-        expired: deadlineOf(o) < now,
-        hasRequest: withDispute.has(o.id),
-      })),
+      offers: (offers ?? []).map((o: any) => {
+        const dl = refundDeadline(o);
+        return {
+          id: o.id as string,
+          status: o.status as string,
+          cash_balance: Number(o.cash_balance ?? 0),
+          deadline: new Date(dl).toISOString(),
+          expired: dl < now,
+          hasRequest: withDispute.has(o.id),
+        };
+      }),
     };
   });
 
@@ -99,12 +74,12 @@ export const createRefundRequest = createServerFn({ method: "POST" })
       throw new Error("غير مصرّح لك بطلب استرداد على هذه الصفقة");
     if (offer.status !== "accepted" && offer.status !== "completed")
       throw new Error("لا يمكن طلب الاسترداد إلا بعد قبول الصفقة");
-    if (deadlineOf(offer as any) < Date.now())
+    if (refundDeadline(offer as any) < Date.now())
       throw new Error("انتهت نافذة الاسترداد (72 ساعة من الاستلام)");
 
     const { data: existing } = await supabase
       .from("disputes")
-      .select("id, status")
+      .select("id")
       .eq("offer_id", data.offer_id)
       .in("status", ["open", "under_review"])
       .maybeSingle();
@@ -168,15 +143,15 @@ export const listMyRefundRequests = createServerFn({ method: "GET" })
       requests: (data ?? [])
         .filter((d: any) => String(d.reason ?? "").startsWith(REFUND_TAG))
         .map((d: any) => ({
-          id: d.id,
-          offer_id: d.offer_id,
-          reason: d.reason,
-          evidence: d.evidence,
-          status: d.status,
-          resolution: d.resolution,
-          created_at: d.created_at,
-          updated_at: d.updated_at,
-          amount: byOffer.get(d.offer_id)?.cash_balance ?? 0,
+          id: d.id as string,
+          offer_id: d.offer_id as string,
+          reason: d.reason as string,
+          evidence: d.evidence as string | null,
+          status: d.status as string,
+          resolution: d.resolution as string | null,
+          created_at: d.created_at as string,
+          updated_at: d.updated_at as string,
+          amount: Number(byOffer.get(d.offer_id)?.cash_balance ?? 0),
           mine: d.opened_by === userId,
         })),
     };

@@ -156,3 +156,77 @@ export const listMyRefundRequests = createServerFn({ method: "GET" })
         })),
     };
   });
+
+/** تقرير مبسّط: نسبة الطلبات المقبولة، الضمان المسترد، وأبرز أسباب الرفض. */
+export const getMyRefundReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: offers } = await supabase
+      .from("trade_offers")
+      .select("id, cash_balance")
+      .or(`from_user.eq.${userId},to_user.eq.${userId}`);
+    const ids = (offers ?? []).map((o: any) => o.id);
+    const empty = {
+      total: 0,
+      resolved: 0,
+      rejected: 0,
+      pending: 0,
+      approvalRate: 0,
+      refundedSAR: 0,
+      heldSAR: 0,
+      topRejectionReasons: [] as { reason: string; count: number }[],
+    };
+    if (!ids.length) return empty;
+
+    const { data, error } = await supabase
+      .from("disputes")
+      .select("*")
+      .in("offer_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+
+    const amount = new Map((offers ?? []).map((o: any) => [o.id, Number(o.cash_balance ?? 0)]));
+    const rows = (data ?? []).filter(
+      (d: any) => String(d.reason ?? "").startsWith(REFUND_TAG) && d.opened_by === userId,
+    );
+    if (!rows.length) return empty;
+
+    let resolved = 0;
+    let rejected = 0;
+    let pending = 0;
+    let refundedSAR = 0;
+    let heldSAR = 0;
+    const reasons = new Map<string, number>();
+
+    for (const d of rows as any[]) {
+      const amt = amount.get(d.offer_id) ?? 0;
+      if (d.status === "resolved") {
+        resolved += 1;
+        refundedSAR += amt;
+      } else if (d.status === "rejected") {
+        rejected += 1;
+        const key = String(d.resolution ?? "").trim() || "بدون سبب مسجَّل";
+        reasons.set(key, (reasons.get(key) ?? 0) + 1);
+      } else {
+        pending += 1;
+        heldSAR += amt;
+      }
+    }
+
+    const decided = resolved + rejected;
+    return {
+      total: rows.length,
+      resolved,
+      rejected,
+      pending,
+      approvalRate: decided ? Math.round((resolved / decided) * 100) : 0,
+      refundedSAR,
+      heldSAR,
+      topRejectionReasons: [...reasons.entries()]
+        .map(([reason, count]) => ({ reason, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3),
+    };
+  });

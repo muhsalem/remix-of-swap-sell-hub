@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import badelLogo from "@/assets/badel-logo.png";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle, RotateCcw } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
@@ -95,10 +95,16 @@ export function Nav() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/refunds" className="flex items-center gap-2 cursor-pointer">
+                      <RotateCcw className="size-4" /> طلبات الاسترداد
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                       <Wallet className="size-4" /> محفظتي
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={async () => { await signOut(); navigate({ to: "/" }); }}

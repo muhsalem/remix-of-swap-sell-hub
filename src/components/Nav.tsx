@@ -95,10 +95,16 @@ export function Nav() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/refunds" className="flex items-center gap-2 cursor-pointer">
+                      <RotateCcw className="size-4" /> طلبات الاسترداد
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                       <Wallet className="size-4" /> محفظتي
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={async () => { await signOut(); navigate({ to: "/" }); }}

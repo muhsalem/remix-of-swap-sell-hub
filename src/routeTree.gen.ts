@@ -43,6 +43,7 @@ import { Route as AuthenticatedNewListingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
+import { Route as AuthenticatedBulkImportRouteImport } from './routes/_authenticated/bulk-import'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -238,6 +239,11 @@ const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
   path: '/disputes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBulkImportRoute = AuthenticatedBulkImportRouteImport.update({
+  id: '/bulk-import',
+  path: '/bulk-import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -394,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/bulk-import': typeof AuthenticatedBulkImportRoute
   '/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/bulk-import': typeof AuthenticatedBulkImportRoute
   '/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -514,6 +522,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/bulk-import': typeof AuthenticatedBulkImportRoute
   '/_authenticated/disputes': typeof AuthenticatedDisputesRouteWithChildren
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
@@ -575,6 +584,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/bulk-import'
     | '/disputes'
     | '/kyc'
     | '/my-listings'
@@ -634,6 +644,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/bulk-import'
     | '/disputes'
     | '/kyc'
     | '/my-listings'
@@ -694,6 +705,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
+    | '/_authenticated/bulk-import'
     | '/_authenticated/disputes'
     | '/_authenticated/kyc'
     | '/_authenticated/my-listings'
@@ -1004,6 +1016,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDisputesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bulk-import': {
+      id: '/_authenticated/bulk-import'
+      path: '/bulk-import'
+      fullPath: '/bulk-import'
+      preLoaderRoute: typeof AuthenticatedBulkImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -1250,6 +1269,7 @@ const AuthenticatedSupportRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedBulkImportRoute: typeof AuthenticatedBulkImportRoute
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRouteWithChildren
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
@@ -1268,6 +1288,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedBulkImportRoute: AuthenticatedBulkImportRoute,
   AuthenticatedDisputesRoute: AuthenticatedDisputesRouteWithChildren,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,

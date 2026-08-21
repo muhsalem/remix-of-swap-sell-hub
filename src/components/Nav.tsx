@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import badelLogo from "@/assets/badel-logo.png";
 import { useAuth, signOut } from "@/lib/auth";
-import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle, RotateCcw } from "lucide-react";
+import { LogOut, Plus, User, Inbox, Wallet, History, ShieldAlert, ChevronDown, UserCircle, RotateCcw, FileSpreadsheet } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
@@ -92,6 +92,11 @@ export function Nav() {
                   <DropdownMenuItem asChild>
                     <Link to="/transactions" className="flex items-center gap-2 cursor-pointer">
                       <History className="size-4" /> السجل
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/bulk-import" className="flex items-center gap-2 cursor-pointer">
+                      <FileSpreadsheet className="size-4" /> استيراد جماعي
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

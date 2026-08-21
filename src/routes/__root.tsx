@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { CountryDetectedBanner } from "@/components/CountryDetectedBanner";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { trackPageview, track } from "@/lib/analytics";
 import { detectCountryServer } from "@/lib/geo.functions";
 import { getPreferredCountry, setPreferredCountry } from "@/lib/currency-pref.functions";
@@ -144,6 +145,7 @@ function RootComponent() {
       <CookieConsent />
       <OnboardingTour />
       <CountryDetectedBanner />
+      <InstallPrompt />
       <Toaster position="top-center" richColors closeButton dir="rtl" />
     </QueryClientProvider>
   );

@@ -133,11 +133,14 @@ function DisputeDetailPage() {
             </div>
           )}
 
+          <Timeline d={d} messages={data.messages as any[]} />
+
           <div className="mt-3 text-[11px] text-muted-foreground">
             فُتح في {new Date(d.created_at).toLocaleString("ar")}
             {data.offer?.escrow_locked && " · المبلغ مجمّد في حساب الضمان حتى الحسم"}
           </div>
         </div>
+
 
         <section className="bg-card rounded-3xl ring-1 ring-black/5 p-6">
           <h2 className="font-bold mb-4 pb-3 border-b border-border">سجل النزاع والمراسلات</h2>

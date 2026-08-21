@@ -133,11 +133,14 @@ function DisputeDetailPage() {
             </div>
           )}
 
+          <Timeline d={d} messages={data.messages as any[]} />
+
           <div className="mt-3 text-[11px] text-muted-foreground">
             فُتح في {new Date(d.created_at).toLocaleString("ar")}
             {data.offer?.escrow_locked && " · المبلغ مجمّد في حساب الضمان حتى الحسم"}
           </div>
         </div>
+
 
         <section className="bg-card rounded-3xl ring-1 ring-black/5 p-6">
           <h2 className="font-bold mb-4 pb-3 border-b border-border">سجل النزاع والمراسلات</h2>
@@ -243,5 +246,79 @@ function AttachmentLink({ path, mine }: { path: string; mine: boolean }) {
     <a href={url} target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-[11px] underline ${mine ? "" : "text-primary"}`}>
       <Paperclip className="size-3" /> {name}
     </a>
+  );
+}
+
+type Ev = { at: string; title: string; note?: string; tone: "start" | "info" | "good" | "bad" };
+
+function Timeline({ d, messages }: { d: any; messages: any[] }) {
+  const events: Ev[] = [];
+  events.push({
+    at: d.created_at,
+    title: "إرسال الطلب",
+    note: d.reason,
+    tone: "start",
+  });
+
+  const first = messages[0];
+  const docCount = messages.reduce((n, m) => n + ((m.attachments ?? []).length as number), 0);
+  if (first) {
+    events.push({
+      at: first.created_at,
+      title: "استلام الوثائق والمرفقات",
+      note: docCount > 0 ? `${docCount} مرفق مُرسل` : "بدون مرفقات",
+      tone: "info",
+    });
+  }
+
+  const firstAdmin = messages.find((m) => m.is_admin);
+  if (firstAdmin) {
+    events.push({ at: firstAdmin.created_at, title: "أول ردّ من فريق المراجعة", tone: "info" });
+  }
+
+  if (d.status === "under_review") {
+    events.push({ at: d.updated_at, title: "الطلب قيد المراجعة", tone: "info" });
+  }
+  if (d.status === "resolved") {
+    events.push({ at: d.updated_at, title: "قرار: قبول الطلب وإغلاقه", note: d.resolution ?? undefined, tone: "good" });
+  }
+  if (d.status === "rejected") {
+    events.push({ at: d.updated_at, title: "قرار: رفض الطلب وإغلاقه", note: d.resolution ?? undefined, tone: "bad" });
+  }
+
+  const sorted = events
+    .filter((e) => e.at)
+    .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+
+  const dot: Record<Ev["tone"], string> = {
+    start: "bg-destructive",
+    info: "bg-amber-500",
+    good: "bg-primary",
+    bad: "bg-muted-foreground",
+  };
+
+  return (
+    <div className="mt-5 rounded-2xl bg-stone-soft/60 p-4">
+      <h3 className="text-xs font-bold mb-3">الخط الزمني للطلب</h3>
+      <ol className="relative border-r border-border pr-4 space-y-4">
+        {sorted.map((e, i) => (
+          <li key={i} className="relative">
+            <span className={`absolute -right-[21px] top-1.5 size-2.5 rounded-full ring-2 ring-background ${dot[e.tone]}`} />
+            <div className="text-xs font-bold">{e.title}</div>
+            {e.note && <div className="text-[11px] text-muted-foreground whitespace-pre-wrap">{e.note}</div>}
+            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+              {new Date(e.at).toLocaleString("ar")}
+            </div>
+          </li>
+        ))}
+        {(d.status === "open" || d.status === "under_review") && (
+          <li className="relative opacity-60">
+            <span className="absolute -right-[21px] top-1.5 size-2.5 rounded-full ring-2 ring-background bg-border" />
+            <div className="text-xs font-bold">الإغلاق وإصدار القرار</div>
+            <div className="text-[10px] text-muted-foreground">بانتظار قرار فريق المراجعة</div>
+          </li>
+        )}
+      </ol>
+    </div>
   );
 }

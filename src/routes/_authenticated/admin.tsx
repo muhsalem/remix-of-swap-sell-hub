@@ -41,6 +41,7 @@ function AdminDashboard() {
           <Link to="/admin/waitlist" className="text-primary font-bold hover:underline">قائمة الانتظار →</Link>
           <Link to="/admin/monitoring" className="text-primary font-bold hover:underline">المراقبة والضمان →</Link>
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
+          <Link to="/admin/refunds" className="text-primary font-bold hover:underline">طلبات الاسترداد →</Link>
           <Link to="/admin/fraud" className="text-primary font-bold hover:underline">إشارات الاحتيال →</Link>
           <Link to="/admin/search-analytics" className="text-primary font-bold hover:underline">إحصاءات البحث →</Link>
 

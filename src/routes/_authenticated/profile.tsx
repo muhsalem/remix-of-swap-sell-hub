@@ -7,6 +7,7 @@ import { SAR_PER_DI } from "@/lib/pricing.functions";
 import { Wallet, Star, TrendingUp, Award, Package, Inbox, CheckCircle2, Sparkles, History, ArrowLeftRight, ShieldCheck, AlertTriangle, Ban, Building2, User as UserIcon, BadgeCheck, Users, Zap, Crown, Trophy } from "lucide-react";
 import { ContactSettings } from "@/components/ContactSettings";
 import { VerificationCard } from "@/components/VerificationCard";
+import { RefundReportCard } from "@/components/RefundReportCard";
 import { getPricing } from "@/lib/promotions.functions";
 import { useQuery } from "@tanstack/react-query";
 

@@ -216,6 +216,10 @@ function ProfilePage() {
         </div>
       )}
 
+      <RefundReportCard />
+
+
+
 
       {/* آخر تحليل توافق مقايضة — مربوط بـ PricingEngine */}
       {lastAnalysis && (

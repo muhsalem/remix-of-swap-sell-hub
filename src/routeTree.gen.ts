@@ -48,6 +48,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedSupportIdRouteImport } from './routes/_authenticated/support.$id'
+import { Route as AuthenticatedShippingLabelOfferIdRouteImport } from './routes/_authenticated/shipping-label.$offerId'
 import { Route as AuthenticatedRefundsNewRouteImport } from './routes/_authenticated/refunds_.new'
 import { Route as AuthenticatedOffersIdRouteImport } from './routes/_authenticated/offers.$id'
 import { Route as AuthenticatedOfferListingIdRouteImport } from './routes/_authenticated/offer.$listingId'
@@ -266,6 +267,12 @@ const AuthenticatedSupportIdRoute = AuthenticatedSupportIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedSupportRoute,
 } as any)
+const AuthenticatedShippingLabelOfferIdRoute =
+  AuthenticatedShippingLabelOfferIdRouteImport.update({
+    id: '/shipping-label/$offerId',
+    path: '/shipping-label/$offerId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRefundsNewRoute = AuthenticatedRefundsNewRouteImport.update({
   id: '/refunds_/new',
   path: '/refunds/new',
@@ -438,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/refunds/new': typeof AuthenticatedRefundsNewRoute
+  '/shipping-label/$offerId': typeof AuthenticatedShippingLabelOfferIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -498,6 +506,7 @@ export interface FileRoutesByTo {
   '/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/offers/$id': typeof AuthenticatedOffersIdRoute
   '/refunds/new': typeof AuthenticatedRefundsNewRoute
+  '/shipping-label/$offerId': typeof AuthenticatedShippingLabelOfferIdRoute
   '/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -560,6 +569,7 @@ export interface FileRoutesById {
   '/_authenticated/offer/$listingId': typeof AuthenticatedOfferListingIdRoute
   '/_authenticated/offers/$id': typeof AuthenticatedOffersIdRoute
   '/_authenticated/refunds_/new': typeof AuthenticatedRefundsNewRoute
+  '/_authenticated/shipping-label/$offerId': typeof AuthenticatedShippingLabelOfferIdRoute
   '/_authenticated/support/$id': typeof AuthenticatedSupportIdRoute
   '/api/public/webhooks/fawaterak': typeof ApiPublicWebhooksFawaterakRoute
 }
@@ -622,6 +632,7 @@ export interface FileRouteTypes {
     | '/offer/$listingId'
     | '/offers/$id'
     | '/refunds/new'
+    | '/shipping-label/$offerId'
     | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesByTo: FileRoutesByTo
@@ -682,6 +693,7 @@ export interface FileRouteTypes {
     | '/offer/$listingId'
     | '/offers/$id'
     | '/refunds/new'
+    | '/shipping-label/$offerId'
     | '/support/$id'
     | '/api/public/webhooks/fawaterak'
   id:
@@ -743,6 +755,7 @@ export interface FileRouteTypes {
     | '/_authenticated/offer/$listingId'
     | '/_authenticated/offers/$id'
     | '/_authenticated/refunds_/new'
+    | '/_authenticated/shipping-label/$offerId'
     | '/_authenticated/support/$id'
     | '/api/public/webhooks/fawaterak'
   fileRoutesById: FileRoutesById
@@ -1051,6 +1064,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSupportIdRouteImport
       parentRoute: typeof AuthenticatedSupportRoute
     }
+    '/_authenticated/shipping-label/$offerId': {
+      id: '/_authenticated/shipping-label/$offerId'
+      path: '/shipping-label/$offerId'
+      fullPath: '/shipping-label/$offerId'
+      preLoaderRoute: typeof AuthenticatedShippingLabelOfferIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/refunds_/new': {
       id: '/_authenticated/refunds_/new'
       path: '/refunds/new'
@@ -1284,6 +1304,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedOfferListingIdRoute: typeof AuthenticatedOfferListingIdRoute
   AuthenticatedRefundsNewRoute: typeof AuthenticatedRefundsNewRoute
+  AuthenticatedShippingLabelOfferIdRoute: typeof AuthenticatedShippingLabelOfferIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1303,6 +1324,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedOfferListingIdRoute: AuthenticatedOfferListingIdRoute,
   AuthenticatedRefundsNewRoute: AuthenticatedRefundsNewRoute,
+  AuthenticatedShippingLabelOfferIdRoute:
+    AuthenticatedShippingLabelOfferIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

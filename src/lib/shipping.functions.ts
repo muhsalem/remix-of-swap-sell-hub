@@ -249,18 +249,39 @@ export const bookShipment = createServerFn({ method: "POST" })
       weightKg: data.weight_kg,
       declaredValueSar: data.declared_value_sar,
     });
-    const tracking = genTracking(quote.country);
-    const bookedAt = new Date();
-    const expected = new Date(bookedAt.getTime() + quote.eta_hours * 3600 * 1000)
-      .toISOString().slice(0, 10);
 
+    const { getShippingAdapter } = await import("@/lib/shipping-provider.server");
+    const adapter = getShippingAdapter(quote.country);
+
+    const bookedAt = new Date();
+    let tracking: string;
+    let expected = new Date(bookedAt.getTime() + quote.eta_hours * 3600 * 1000)
+      .toISOString().slice(0, 10);
+    try {
+      const created = await adapter.createShipment({
+        country: quote.country,
+        fromCity: data.from_city,
+        toCity: data.to_city,
+        weightKg: quote.weight_kg,
+        declaredValueSar: data.declared_value_sar,
+        reference: `BADEL-${data.offer_id.slice(0, 8)}`,
+      });
+      tracking = created.tracking_number;
+      if (created.expected_delivery) expected = String(created.expected_delivery).slice(0, 10);
+    } catch (e) {
+      throw new Error(
+        `تعذّر حجز الشحنة لدى ${adapter.name}: ${e instanceof Error ? e.message : "خطأ غير معروف"}`,
+      );
+    }
+
+    const providerName = adapter.name;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { error: upErr } = await supabaseAdmin
       .from("trade_offers")
       .update({
-        shipping_carrier: quote.provider,
-        shipping_provider: quote.provider,
+        shipping_carrier: providerName,
+        shipping_provider: providerName,
         tracking_number: tracking,
         expected_delivery: expected,
         shipment_weight_kg: quote.weight_kg,
@@ -276,12 +297,12 @@ export const bookShipment = createServerFn({ method: "POST" })
     await supabaseAdmin.from("shipment_events").insert({
       offer_id: data.offer_id,
       status: "created",
-      description: `تم إنشاء الشحنة عبر ${quote.provider}`,
+      description: `تم إنشاء الشحنة عبر ${providerName}`,
       location: quote.from_city,
       event_at: bookedAt.toISOString(),
     } as never);
 
-    return { ok: true, tracking_number: tracking, quote, expected_delivery: expected };
+    return { ok: true, tracking_number: tracking, provider: providerName, live: adapter.live, quote, expected_delivery: expected };
   });
 
 /** Deterministic mock progression based on elapsed time since booking. */

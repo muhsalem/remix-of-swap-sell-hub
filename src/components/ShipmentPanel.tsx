@@ -131,6 +131,17 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
           )}
         </div>
 
+        <a
+          href={`/shipping-label/${offer.id}`}
+          target="_blank"
+          rel="noopener"
+          data-testid="shipment-label-link"
+          className="mb-3 w-full px-3 py-2 bg-stone-soft rounded-full text-xs font-bold flex items-center justify-center gap-2 hover:bg-stone-soft/70"
+        >
+          <Printer className="size-4" /> طباعة ملصق الشحن
+        </a>
+
+
         {trackQ.isLoading ? (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-4 justify-center">
             <Loader2 className="size-4 animate-spin" /> جاري تحميل التتبع…

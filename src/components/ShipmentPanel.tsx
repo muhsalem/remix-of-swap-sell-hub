@@ -98,6 +98,8 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
   if (offer.tracking_number) {
     const events = trackQ.data?.events ?? [];
     const shipInfo: any = trackQ.data?.offer;
+    const isDelivered = (events as any[]).some((e) => e.status === "delivered");
+
     return (
       <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel-tracking">
         <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">

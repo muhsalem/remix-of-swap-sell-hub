@@ -342,7 +342,7 @@ export const getShipmentTracking = createServerFn({ method: "POST" })
     if (!offer) throw new Error("الصفقة غير موجودة");
     if (offer.from_user !== userId && offer.to_user !== userId) throw new Error("غير مصرّح");
     if (!offer.tracking_number || !offer.shipment_booked_at) {
-      return { tracking_number: null, events: [], offer };
+      return { tracking_number: null, events: [], offer, live: false, synced_at: new Date().toISOString() };
     }
     const etaHours = offer.expected_delivery
       ? Math.max(
@@ -351,11 +351,77 @@ export const getShipmentTracking = createServerFn({ method: "POST" })
             new Date(offer.shipment_booked_at).getTime()) / 3_600_000,
         )
       : 48;
+
+    const country = (offer.country_code === "EG" ? "EG" : "SA") as "SA" | "EG";
+    const { getShippingAdapter } = await import("@/lib/shipping-provider.server");
+    const adapter = getShippingAdapter(country);
+
+    if (adapter.live) {
+      // Pull live provider events and persist new ones (dedupe on status+event_at).
+      let providerEvents: Awaited<ReturnType<typeof adapter.fetchEvents>> = null;
+      try {
+        providerEvents = await adapter.fetchEvents(offer.tracking_number);
+      } catch {
+        providerEvents = null;
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: stored } = await supabaseAdmin
+        .from("shipment_events")
+        .select("status,description,location,event_at")
+        .eq("offer_id", data.offer_id)
+        .order("event_at", { ascending: true });
+
+      const seen = new Set(
+        (stored ?? []).map((e: any) => `${e.status}|${new Date(e.event_at).toISOString().slice(0, 16)}`),
+      );
+      const fresh = (providerEvents ?? []).filter(
+        (e) => !seen.has(`${e.status}|${new Date(e.event_at).toISOString().slice(0, 16)}`),
+      );
+      if (fresh.length > 0) {
+        await supabaseAdmin.from("shipment_events").insert(
+          fresh.map((e) => ({
+            offer_id: data.offer_id,
+            status: e.status,
+            description: e.description,
+            location: e.location,
+            event_at: e.event_at,
+          })) as never,
+        );
+      }
+      const all = [...(stored ?? []), ...fresh]
+        .map((e: any) => ({
+          status: e.status,
+          description: e.description ?? "تحديث من المزوّد",
+          location: e.location ?? "—",
+          event_at: new Date(e.event_at).toISOString(),
+        }))
+        .sort((a, b) => a.event_at.localeCompare(b.event_at));
+
+      if (all.length > 0) {
+        return {
+          tracking_number: offer.tracking_number,
+          events: all,
+          offer,
+          live: true,
+          provider: adapter.name,
+          synced_at: new Date().toISOString(),
+        };
+      }
+    }
+
     const events = computeSyntheticEvents(
       offer.shipment_booked_at,
       etaHours,
       offer.from_city ?? "—",
       offer.to_city ?? "—",
     );
-    return { tracking_number: offer.tracking_number, events, offer };
+    return {
+      tracking_number: offer.tracking_number,
+      events,
+      offer,
+      live: false,
+      provider: adapter.name,
+      synced_at: new Date().toISOString(),
+    };
   });
+

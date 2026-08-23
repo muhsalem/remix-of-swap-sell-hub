@@ -133,6 +133,8 @@ function DisputeDetailPage() {
             </div>
           )}
 
+          <SlaBar d={d} messages={data.messages as any[]} />
+
           <Timeline d={d} messages={data.messages as any[]} />
 
           <div className="mt-3 text-[11px] text-muted-foreground">

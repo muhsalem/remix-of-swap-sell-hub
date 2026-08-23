@@ -54,8 +54,12 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
     queryKey: ["shipment", offer.id],
     queryFn: () => trackFn({ data: { offer_id: offer.id } }),
     enabled: !!offer.tracking_number,
-    refetchInterval: 20_000,
+    refetchInterval: (q) => {
+      const evs: any[] = (q.state.data as any)?.events ?? [];
+      return evs.some((e) => e.status === "delivered") ? false : 20_000;
+    },
   });
+
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -94,6 +98,8 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
   if (offer.tracking_number) {
     const events = trackQ.data?.events ?? [];
     const shipInfo: any = trackQ.data?.offer;
+    const isDelivered = (events as any[]).some((e) => e.status === "delivered");
+
     return (
       <div className="bg-card rounded-2xl ring-1 ring-black/5 p-4" data-testid="shipment-panel-tracking">
         <h3 className="font-bold mb-3 flex items-center gap-2 text-sm">
@@ -140,6 +146,32 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
         >
           <Printer className="size-4" /> طباعة ملصق الشحن
         </a>
+
+        <div className="flex items-center gap-2 mb-3 text-[10px] text-muted-foreground" data-testid="shipment-sync-bar">
+          {(trackQ.data as any)?.live ? (
+            <span className="flex items-center gap-1 font-bold text-emerald-700">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> مباشر من المزوّد
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 font-bold text-amber-700">
+              <span className="size-1.5 rounded-full bg-amber-500" /> وضع تجريبي (Sandbox)
+            </span>
+          )}
+          {(trackQ.data as any)?.synced_at && (
+            <span>· آخر تحديث {new Date((trackQ.data as any).synced_at).toLocaleTimeString("ar")}</span>
+          )}
+          {isDelivered && <span>· توقّف التحديث التلقائي بعد التسليم</span>}
+          <button
+            onClick={() => trackQ.refetch()}
+            disabled={trackQ.isFetching}
+            data-testid="shipment-refresh"
+            className="ms-auto px-2 py-1 rounded-full bg-stone-soft font-bold hover:bg-stone-soft/70 disabled:opacity-50"
+          >
+            {trackQ.isFetching ? "جاري التحديث…" : "تحديث الآن"}
+          </button>
+        </div>
+
+
 
 
         {trackQ.isLoading ? (

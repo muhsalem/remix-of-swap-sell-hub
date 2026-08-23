@@ -160,7 +160,7 @@ function ShippingLabelPage() {
       )}
 
       {tracking && (
-        <div className="label-sheet bg-white text-black rounded-2xl ring-1 ring-black/10 p-6 shadow-sm">
+        <div ref={sheetRef} className="label-sheet bg-white text-black rounded-2xl ring-1 ring-black/10 p-6 shadow-sm">
           <div className="flex items-start justify-between border-b-2 border-black pb-3 mb-4">
             <div>
               <div className="text-2xl font-extrabold">بَدِّل</div>

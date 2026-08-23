@@ -47,22 +47,99 @@ function ShippingLabelPage() {
   const info: any = q.data?.offer;
   const tracking = q.data?.tracking_number;
 
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  async function renderCanvas() {
+    if (!sheetRef.current) throw new Error("لا يوجد ملصق للعرض");
+    const { default: html2canvas } = await import("html2canvas");
+    return html2canvas(sheetRef.current, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+  }
+
+  async function handlePreview() {
+    setBusy(true);
+    try {
+      const canvas = await renderCanvas();
+      setPreview(canvas.toDataURL("image/png"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذّرت المعاينة");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePdf() {
+    setBusy(true);
+    try {
+      const canvas = await renderCanvas();
+      const { jsPDF } = await import("jspdf");
+      // A6 portrait: 105 × 148 mm
+      const pdf = new jsPDF({ unit: "mm", format: "a6", orientation: "portrait" });
+      const margin = 5;
+      const w = 105 - margin * 2;
+      const h = (canvas.height / canvas.width) * w;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, w, Math.min(h, 148 - margin * 2));
+      pdf.save(`badel-label-${tracking}.pdf`);
+      toast.success("تم تنزيل ملصق الشحن PDF");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذّر إنشاء ملف PDF");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6" dir="rtl">
       <style>{`@media print { .no-print { display: none !important; } body { background: #fff; } .label-sheet { box-shadow: none !important; margin: 0 !important; } }`}</style>
 
-      <div className="flex items-center justify-between mb-4 no-print">
+      <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
         <Link to="/offers/$id" params={{ id: offerId }} className="text-xs font-bold text-muted-foreground flex items-center gap-1">
           <ArrowRight className="size-4" /> رجوع للصفقة
         </Link>
-        <button
-          onClick={() => window.print()}
-          disabled={!tracking}
-          className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-2 disabled:opacity-50"
-        >
-          <Printer className="size-4" /> طباعة الملصق
-        </button>
+        <div className="ms-auto flex items-center gap-2">
+          <button
+            onClick={handlePreview}
+            disabled={!tracking || busy}
+            data-testid="label-preview"
+            className="px-3 py-2 rounded-full bg-stone-soft text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+          >
+            <Eye className="size-4" /> معاينة قبل الطباعة
+          </button>
+          <button
+            onClick={handlePdf}
+            disabled={!tracking || busy}
+            data-testid="label-pdf"
+            className="px-3 py-2 rounded-full bg-stone-soft text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} تنزيل PDF
+          </button>
+          <button
+            onClick={() => window.print()}
+            disabled={!tracking}
+            className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+          >
+            <Printer className="size-4" /> طباعة الملصق
+          </button>
+        </div>
       </div>
+
+      {preview && (
+        <div className="no-print fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
+          <div className="bg-white rounded-2xl p-3 max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <img src={preview} alt="معاينة ملصق الشحن" className="max-w-[360px] w-full" />
+            <div className="flex gap-2 mt-3">
+              <button onClick={handlePdf} className="flex-1 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                تنزيل PDF
+              </button>
+              <button onClick={() => setPreview(null)} className="px-3 py-2 rounded-full bg-stone-soft text-xs font-bold text-black">
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {q.isLoading && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-16">

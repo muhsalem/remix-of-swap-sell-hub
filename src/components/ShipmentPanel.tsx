@@ -54,8 +54,12 @@ export function ShipmentPanel({ offer, userId }: { offer: Offer; userId: string 
     queryKey: ["shipment", offer.id],
     queryFn: () => trackFn({ data: { offer_id: offer.id } }),
     enabled: !!offer.tracking_number,
-    refetchInterval: 20_000,
+    refetchInterval: (q) => {
+      const evs: any[] = (q.state.data as any)?.events ?? [];
+      return evs.some((e) => e.status === "delivered") ? false : 20_000;
+    },
   });
+
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");

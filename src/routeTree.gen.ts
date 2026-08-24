@@ -13,6 +13,7 @@ import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as SwipeRouteImport } from './routes/swipe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShariaCommitteeRouteImport } from './routes/sharia-committee'
+import { Route as SeoPricesRouteImport } from './routes/seo-prices'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingEngineRouteImport } from './routes/pricing-engine'
@@ -88,6 +89,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ShariaCommitteeRoute = ShariaCommitteeRouteImport.update({
   id: '/sharia-committee',
   path: '/sharia-committee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeoPricesRoute = SeoPricesRouteImport.update({
+  id: '/seo-prices',
+  path: '/seo-prices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -400,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/seo-prices': typeof SeoPricesRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/swipe': typeof SwipeRoute
@@ -461,6 +468,7 @@ export interface FileRoutesByTo {
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/seo-prices': typeof SeoPricesRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/swipe': typeof SwipeRoute
@@ -524,6 +532,7 @@ export interface FileRoutesById {
   '/pricing-engine': typeof PricingEngineRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/seo-prices': typeof SeoPricesRoute
   '/sharia-committee': typeof ShariaCommitteeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/swipe': typeof SwipeRoute
@@ -587,6 +596,7 @@ export interface FileRouteTypes {
     | '/pricing-engine'
     | '/reset-password'
     | '/robots.txt'
+    | '/seo-prices'
     | '/sharia-committee'
     | '/sitemap.xml'
     | '/swipe'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/pricing-engine'
     | '/reset-password'
     | '/robots.txt'
+    | '/seo-prices'
     | '/sharia-committee'
     | '/sitemap.xml'
     | '/swipe'
@@ -710,6 +721,7 @@ export interface FileRouteTypes {
     | '/pricing-engine'
     | '/reset-password'
     | '/robots.txt'
+    | '/seo-prices'
     | '/sharia-committee'
     | '/sitemap.xml'
     | '/swipe'
@@ -773,6 +785,7 @@ export interface RootRouteChildren {
   PricingEngineRoute: typeof PricingEngineRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SeoPricesRoute: typeof SeoPricesRoute
   ShariaCommitteeRoute: typeof ShariaCommitteeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SwipeRoute: typeof SwipeRoute
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/sharia-committee'
       fullPath: '/sharia-committee'
       preLoaderRoute: typeof ShariaCommitteeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seo-prices': {
+      id: '/seo-prices'
+      path: '/seo-prices'
+      fullPath: '/seo-prices'
+      preLoaderRoute: typeof SeoPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -1354,6 +1374,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingEngineRoute: PricingEngineRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SeoPricesRoute: SeoPricesRoute,
   ShariaCommitteeRoute: ShariaCommitteeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SwipeRoute: SwipeRoute,

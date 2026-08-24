@@ -251,6 +251,92 @@ function AttachmentLink({ path, mine }: { path: string; mine: boolean }) {
   );
 }
 
+function SlaBar({ d, messages }: { d: any; messages: any[] }) {
+  const created = new Date(d.created_at).getTime();
+  const now = Date.now();
+  const HOUR = 3600 * 1000;
+
+  const firstAdmin = messages.find((m) => m.is_admin);
+  const firstAdminAt = firstAdmin ? new Date(firstAdmin.created_at).getTime() : null;
+
+  const resolvedAt =
+    d.status === "resolved" || d.status === "rejected"
+      ? new Date(d.updated_at).getTime()
+      : null;
+
+  // First-response SLA: 24h from creation
+  const frDeadline = created + 24 * HOUR;
+  const frElapsed = (firstAdminAt ?? now) - created;
+  const frOver = !firstAdminAt && now > frDeadline;
+  const frPct = Math.min(100, Math.round((frElapsed / (24 * HOUR)) * 100));
+  const frDone = !!firstAdminAt;
+
+  // Resolution SLA: 72h from creation
+  const resDeadline = created + 72 * HOUR;
+  const resElapsed = (resolvedAt ?? now) - created;
+  const resOver = !resolvedAt && now > resDeadline;
+  const resPct = Math.min(100, Math.round((resElapsed / (72 * HOUR)) * 100));
+  const resDone = !!resolvedAt;
+
+  const closed = d.status === "resolved" || d.status === "rejected";
+
+  const fmt = (ms: number) => {
+    const h = Math.max(0, Math.floor(ms / HOUR));
+    if (h >= 24) return `${Math.floor(h / 24)} يوم ${h % 24} ساعة`;
+    return `${h} ساعة`;
+  };
+
+  const bar = (pct: number, done: boolean, over: boolean) =>
+    done ? "bg-primary" : over ? "bg-destructive" : pct > 75 ? "bg-amber-500" : "bg-primary/60";
+
+  return (
+    <div className="mt-5 rounded-2xl bg-stone-soft/60 p-4">
+      <h3 className="text-xs font-bold mb-3 flex items-center gap-1">
+        <Clock className="size-3.5" /> التزام وقت الاستجابة (SLA)
+      </h3>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {/* First response */}
+        <div>
+          <div className="flex items-center justify-between text-[11px] mb-1">
+            <span className="font-bold">أول ردّ إداري</span>
+            {frDone ? (
+              <span className="text-primary font-bold">تم خلال {fmt(firstAdminAt! - created)}</span>
+            ) : frOver ? (
+              <span className="text-destructive font-bold">تجاوز المهلة</span>
+            ) : (
+              <span className="text-muted-foreground">متبقّي {fmt(frDeadline - now)}</span>
+            )}
+          </div>
+          <div className="h-1.5 rounded-full bg-border overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${bar(frPct, frDone, frOver)}`} style={{ width: `${frDone ? 100 : frPct}%` }} />
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">المهلة: 24 ساعة من فتح النزاع</div>
+        </div>
+
+        {/* Resolution */}
+        <div>
+          <div className="flex items-center justify-between text-[11px] mb-1">
+            <span className="font-bold">إغلاق وحسم النزاع</span>
+            {resDone ? (
+              <span className="text-primary font-bold">تم خلال {fmt(resolvedAt! - created)}</span>
+            ) : resOver ? (
+              <span className="text-destructive font-bold">تجاوز المهلة</span>
+            ) : closed ? (
+              <span className="text-muted-foreground">—</span>
+            ) : (
+              <span className="text-muted-foreground">متبقّي {fmt(resDeadline - now)}</span>
+            )}
+          </div>
+          <div className="h-1.5 rounded-full bg-border overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${bar(resPct, resDone, resOver)}`} style={{ width: `${resDone ? 100 : resPct}%` }} />
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">المهلة: 72 ساعة من فتح النزاع</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type Ev = { at: string; title: string; note?: string; tone: "start" | "info" | "good" | "bad" };
 
 function Timeline({ d, messages }: { d: any; messages: any[] }) {

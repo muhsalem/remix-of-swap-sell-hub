@@ -114,7 +114,7 @@ function SeoPrices() {
               أسعار {sub.labelAr} المستعملة — {CATEGORIES[cat]?.labelAr}
             </h2>
             <p className="text-sm text-muted-foreground">
-              السعر المرجعي الجديد: {fmtUSD(sub.basePrice)} · معدل الإهلاك السنوي:{" "}
+              السعر المرجعي الجديد: {fmtUSD(sub.basePrice ?? 0)} · معدل الإهلاك السنوي:{" "}
               {Math.round((sub.deprRate ?? 0) * 100)}% · سيولة السوق: {Math.round((sub.liquidity ?? 0) * 100)}%
             </p>
             <div className="overflow-x-auto rounded-xl border border-border">
@@ -138,9 +138,9 @@ function SeoPrices() {
                       </th>
                       {AGES.map((age) => {
                         const usd = valueGood({
-                          basePrice: sub.basePrice,
+                          basePrice: sub.basePrice ?? 0,
                           ageYears: age,
-                          deprRate: sub.deprRate,
+                          deprRate: sub.deprRate ?? 0.1,
                           conditionKey: c,
                           demandKey: "normal",
                           inflationRate: COUNTRIES.SA?.inflationRate ?? 0.025,

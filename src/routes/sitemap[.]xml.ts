@@ -11,6 +11,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/about",
           "/leaderboard",
           "/pricing-engine",
+          "/seo-prices",
           "/premium",
           "/digital-currency",
           "/sharia-committee",
@@ -39,9 +40,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           // fail-open
         }
 
-        const now = new Date().toISOString();
         const urls = [
-          ...staticPaths.map((p) => ({ loc: `${origin}${p}`, lastmod: now })),
+          ...staticPaths.map((p) => ({ loc: `${origin}${p}` })),
           ...listings.map((l) => ({ loc: `${origin}/listings/${l.id}`, lastmod: l.updated_at })),
         ];
 

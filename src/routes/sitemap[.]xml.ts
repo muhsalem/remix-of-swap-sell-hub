@@ -40,14 +40,14 @@ export const Route = createFileRoute("/sitemap.xml")({
           // fail-open
         }
 
-        const urls = [
+        const urls: { loc: string; lastmod?: string }[] = [
           ...staticPaths.map((p) => ({ loc: `${origin}${p}` })),
           ...listings.map((l) => ({ loc: `${origin}/listings/${l.id}`, lastmod: l.updated_at })),
         ];
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${u.loc}</loc><lastmod>${u.lastmod}</lastmod></url>`).join("\n")}
+${urls.map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}</url>`).join("\n")}
 </urlset>`;
 
         return new Response(xml, {

@@ -8,7 +8,8 @@ const LIVE_BASE = "https://app.fawaterk.com/api/v2";
 const SANDBOX_BASE = "https://staging.fawaterk.com/api/v2";
 
 function baseUrl(): string {
-  return (process.env.FAWATERAK_MODE ?? "live") === "sandbox" ? SANDBOX_BASE : LIVE_BASE;
+  // Default to sandbox: going live is an explicit opt-in via FAWATERAK_MODE=live.
+  return (process.env.FAWATERAK_MODE ?? "sandbox") === "live" ? LIVE_BASE : SANDBOX_BASE;
 }
 
 export interface FawaterakCustomer {

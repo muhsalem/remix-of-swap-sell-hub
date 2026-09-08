@@ -49,7 +49,7 @@ export function Nav() {
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium items-center">
             <Link to="/pricing-engine" className="hover:text-primary transition-colors inline-flex items-center gap-1">🧮 محرك التسعير</Link>
-            <Link to="/" hash="market" className="hover:text-primary transition-colors">السوق</Link>
+            <Link to="/listings" className="hover:text-primary transition-colors">السوق</Link>
             <Link to="/swipe" className="hover:text-primary transition-colors inline-flex items-center gap-1">⚡ مقايضة سريعة</Link>
             <Link to="/leaderboard" className="hover:text-primary transition-colors inline-flex items-center gap-1">🏆 المتصدرون</Link>
             <Link to="/" hash="how" className="hover:text-primary transition-colors">كيف يعمل؟</Link>

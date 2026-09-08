@@ -8,6 +8,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const { BLOG_POSTS } = await import("@/lib/blog-content");
         const staticPaths = [
           "",
+          "/listings",
           "/about",
           "/leaderboard",
           "/pricing-engine",

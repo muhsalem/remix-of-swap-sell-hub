@@ -26,6 +26,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as PaymentsCallbackRouteImport } from './routes/payments/callback'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
@@ -153,6 +154,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingsIndexRoute = ListingsIndexRouteImport.update({
+  id: '/listings/',
+  path: '/listings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsCallbackRoute = PaymentsCallbackRouteImport.update({
@@ -433,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
+  '/listings/': typeof ListingsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -495,6 +502,7 @@ export interface FileRoutesByTo {
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
+  '/listings': typeof ListingsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -559,6 +567,7 @@ export interface FileRoutesById {
   '/legal/$doc': typeof LegalDocRoute
   '/listings/$id': typeof ListingsIdRoute
   '/payments/callback': typeof PaymentsCallbackRoute
+  '/listings/': typeof ListingsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
+    | '/listings/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/audit'
@@ -685,6 +695,7 @@ export interface FileRouteTypes {
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
+    | '/listings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/audit'
@@ -748,6 +759,7 @@ export interface FileRouteTypes {
     | '/legal/$doc'
     | '/listings/$id'
     | '/payments/callback'
+    | '/listings/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/audit'
@@ -797,6 +809,7 @@ export interface RootRouteChildren {
   LegalDocRoute: typeof LegalDocRoute
   ListingsIdRoute: typeof ListingsIdRoute
   PaymentsCallbackRoute: typeof PaymentsCallbackRoute
+  ListingsIndexRoute: typeof ListingsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicWebhooksFawaterakRoute: typeof ApiPublicWebhooksFawaterakRoute
@@ -921,6 +934,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listings/': {
+      id: '/listings/'
+      path: '/listings'
+      fullPath: '/listings/'
+      preLoaderRoute: typeof ListingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/callback': {
@@ -1387,6 +1407,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalDocRoute: LegalDocRoute,
   ListingsIdRoute: ListingsIdRoute,
   PaymentsCallbackRoute: PaymentsCallbackRoute,
+  ListingsIndexRoute: ListingsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicWebhooksFawaterakRoute: ApiPublicWebhooksFawaterakRoute,

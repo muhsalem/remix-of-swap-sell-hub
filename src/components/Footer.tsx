@@ -7,6 +7,7 @@ export function Footer() {
         <div>
           <h3 className="font-bold mb-3">المنصة</h3>
           <ul className="space-y-2 text-muted-foreground">
+            <li><Link to="/listings" className="hover:text-primary">تصفّح الإعلانات</Link></li>
             <li><Link to="/about" className="hover:text-primary">من نحن</Link></li>
             <li><Link to="/sharia-committee" className="hover:text-primary">الهيئة الشرعية</Link></li>
             <li><Link to="/pricing-engine" className="hover:text-primary">محرك التسعير</Link></li>

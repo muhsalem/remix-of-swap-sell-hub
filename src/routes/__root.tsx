@@ -179,8 +179,26 @@ function AuthListener() {
       } catch { /* silent — not signed in or transient */ }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Track the identity we already rendered for. Supabase replays SIGNED_IN
+    // on every tab focus / token refresh; invalidating on those replays makes
+    // suspended route data re-pend and the page goes blank.
+    let currentUserId: string | null | undefined = undefined;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      const nextUserId = session?.user?.id ?? null;
+      if (currentUserId === undefined) {
+        // First notification after hydration — adopt the identity silently.
+        currentUserId = nextUserId;
+        if (nextUserId) {
+          void syncCountry();
+          void import("@/lib/pref-sync-queue").then((m) => m.flushPrefSyncQueue("signed_in"));
+        }
+        return;
+      }
+      if (nextUserId === currentUserId && event !== "USER_UPDATED") return;
+      currentUserId = nextUserId;
+
       router.invalidate();
       if (event !== "SIGNED_OUT") {
         qc.invalidateQueries();

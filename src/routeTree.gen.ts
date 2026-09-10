@@ -63,6 +63,7 @@ import { Route as AuthenticatedAdminRefundsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminPaymentsSandboxRouteImport } from './routes/_authenticated/admin.payments-sandbox'
 import { Route as AuthenticatedAdminPaymentsFinanceRouteImport } from './routes/_authenticated/admin.payments-finance'
 import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
+import { Route as AuthenticatedAdminListingsRouteImport } from './routes/_authenticated/admin.listings'
 import { Route as AuthenticatedAdminFraudRouteImport } from './routes/_authenticated/admin.fraud'
 import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
 import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
@@ -354,6 +355,12 @@ const AuthenticatedAdminMonitoringRoute =
     path: '/monitoring',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminListingsRoute =
+  AuthenticatedAdminListingsRouteImport.update({
+    id: '/listings',
+    path: '/listings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminFraudRoute = AuthenticatedAdminFraudRouteImport.update({
   id: '/fraud',
   path: '/fraud',
@@ -447,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/fraud': typeof AuthenticatedAdminFraudRoute
+  '/admin/listings': typeof AuthenticatedAdminListingsRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
@@ -510,6 +518,7 @@ export interface FileRoutesByTo {
   '/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/fraud': typeof AuthenticatedAdminFraudRoute
+  '/admin/listings': typeof AuthenticatedAdminListingsRoute
   '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
@@ -575,6 +584,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/emails': typeof AuthenticatedAdminEmailsRoute
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/_authenticated/admin/fraud': typeof AuthenticatedAdminFraudRoute
+  '/_authenticated/admin/listings': typeof AuthenticatedAdminListingsRoute
   '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/admin/payments-finance': typeof AuthenticatedAdminPaymentsFinanceRoute
   '/_authenticated/admin/payments-sandbox': typeof AuthenticatedAdminPaymentsSandboxRoute
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/admin/emails'
     | '/admin/finance'
     | '/admin/fraud'
+    | '/admin/listings'
     | '/admin/monitoring'
     | '/admin/payments-finance'
     | '/admin/payments-sandbox'
@@ -703,6 +714,7 @@ export interface FileRouteTypes {
     | '/admin/emails'
     | '/admin/finance'
     | '/admin/fraud'
+    | '/admin/listings'
     | '/admin/monitoring'
     | '/admin/payments-finance'
     | '/admin/payments-sandbox'
@@ -767,6 +779,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/emails'
     | '/_authenticated/admin/finance'
     | '/_authenticated/admin/fraud'
+    | '/_authenticated/admin/listings'
     | '/_authenticated/admin/monitoring'
     | '/_authenticated/admin/payments-finance'
     | '/_authenticated/admin/payments-sandbox'
@@ -1195,6 +1208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMonitoringRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/listings': {
+      id: '/_authenticated/admin/listings'
+      path: '/listings'
+      fullPath: '/admin/listings'
+      preLoaderRoute: typeof AuthenticatedAdminListingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/fraud': {
       id: '/_authenticated/admin/fraud'
       path: '/fraud'
@@ -1260,6 +1280,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEmailsRoute: typeof AuthenticatedAdminEmailsRoute
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRoute
   AuthenticatedAdminFraudRoute: typeof AuthenticatedAdminFraudRoute
+  AuthenticatedAdminListingsRoute: typeof AuthenticatedAdminListingsRoute
   AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
   AuthenticatedAdminPaymentsFinanceRoute: typeof AuthenticatedAdminPaymentsFinanceRoute
   AuthenticatedAdminPaymentsSandboxRoute: typeof AuthenticatedAdminPaymentsSandboxRoute
@@ -1276,6 +1297,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEmailsRoute: AuthenticatedAdminEmailsRoute,
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRoute,
   AuthenticatedAdminFraudRoute: AuthenticatedAdminFraudRoute,
+  AuthenticatedAdminListingsRoute: AuthenticatedAdminListingsRoute,
   AuthenticatedAdminMonitoringRoute: AuthenticatedAdminMonitoringRoute,
   AuthenticatedAdminPaymentsFinanceRoute:
     AuthenticatedAdminPaymentsFinanceRoute,

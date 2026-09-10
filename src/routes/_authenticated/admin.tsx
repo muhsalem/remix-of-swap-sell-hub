@@ -43,6 +43,7 @@ function AdminDashboard() {
           <Link to="/admin/disputes" className="text-primary font-bold hover:underline">النزاعات →</Link>
           <Link to="/admin/refunds" className="text-primary font-bold hover:underline">طلبات الاسترداد →</Link>
           <Link to="/admin/fraud" className="text-primary font-bold hover:underline">إشارات الاحتيال →</Link>
+          <Link to="/admin/listings" className="text-primary font-bold hover:underline">إدارة الإعلانات →</Link>
           <Link to="/admin/search-analytics" className="text-primary font-bold hover:underline">إحصاءات البحث →</Link>
 
 

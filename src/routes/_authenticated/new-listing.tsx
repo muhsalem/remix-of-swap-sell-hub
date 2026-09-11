@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { createListing } from "@/lib/listings.functions";
 import { analyzeProductImage } from "@/lib/vision.functions";
 import { uploadListingImage } from "@/lib/storage";
-import { computeImageHash } from "@/lib/image-hash";
+import { computeImageSignature, type ImageSignature } from "@/lib/image-hash";
 import { supabase } from "@/integrations/supabase/client";
 import { Nav } from "@/components/Nav";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ function NewListing() {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<string[]>([]);
   const [imageHashes, setImageHashes] = useState<string[]>([]);
+  const [imageSignatures, setImageSignatures] = useState<ImageSignature[]>([]);
   const [uploading, setUploading] = useState(false);
   const [ownsItem, setOwnsItem] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -69,6 +70,7 @@ function NewListing() {
     category: "إلكترونيات",
     condition: "excellent" as const,
     age_months: 0,
+    area_sqm: "",
     market_price: 0,
     wants: "",
     city: "",
@@ -127,18 +129,20 @@ function NewListing() {
       if (!user) throw new Error("غير مسجّل");
       const uploaded: string[] = [];
       const hashes: string[] = [];
+      const sigs: ImageSignature[] = [];
       for (const file of Array.from(files).slice(0, 8 - images.length)) {
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`${file.name}: يجب أن يكون أقل من 5MB`);
           continue;
         }
-        const hash = await computeImageHash(file);
-        if (hash) hashes.push(hash);
+        const sig = await computeImageSignature(file);
+        if (sig) { hashes.push(sig.phash); sigs.push(sig); }
         const path = await uploadListingImage(file, user.id);
         uploaded.push(path);
       }
       setImages((prev) => [...prev, ...uploaded]);
       setImageHashes((prev) => [...prev, ...hashes]);
+      setImageSignatures((prev) => [...prev, ...sigs]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "فشل رفع الصورة");
     } finally {
@@ -152,6 +156,8 @@ function NewListing() {
         ...form,
         images,
         image_hashes: imageHashes,
+        image_signatures: imageSignatures,
+        area_sqm: form.area_sqm ? Number(form.area_sqm) : undefined,
         is_ribawi: isRibawi,
         market_price: Number(form.market_price),
         age_months: Number(form.age_months),
@@ -341,6 +347,16 @@ function NewListing() {
                 </Field>
               </div>
 
+              <Field label="المساحة (م²) — للعقارات والمعدات والمساحات (اختياري)">
+                <input
+                  type="number" min={0} step="0.1"
+                  value={form.area_sqm}
+                  onChange={(e) => setForm({ ...form, area_sqm: e.target.value })}
+                  placeholder="مثال: 120"
+                  className="w-full px-4 py-3 rounded-xl bg-stone-soft border border-border outline-none text-sm"
+                />
+              </Field>
+
               <Field label="السعر السوقي (ر.س) *">
                 <input
                   type="number" min={1} required
@@ -411,7 +427,8 @@ function NewListing() {
                 <Row k="النوع" v={form.listing_type === "item" ? "سلعة" : "خدمة"} />
                 <Row k="الفئة" v={form.category} />
                 <Row k="الحالة" v={form.condition} />
-                <Row k="العمر" v={`${form.age_months} شهر`} />
+                <Row k="مدة الاستخدام" v={`${form.age_months} شهر`} />
+                {form.area_sqm && <Row k="المساحة" v={`${form.area_sqm} م²`} />}
                 <Row k="السعر السوقي" v={`${form.market_price} ر.س`} />
                 <Row k="يقايض بـ" v={form.wants} />
                 {form.city && <Row k="المدينة" v={form.city} />}

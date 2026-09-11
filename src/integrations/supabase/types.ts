@@ -482,6 +482,8 @@ export type Database = {
       listing_image_hashes: {
         Row: {
           created_at: string
+          csig: string | null
+          esig: string | null
           id: string
           listing_id: string
           owner_id: string
@@ -489,6 +491,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          csig?: string | null
+          esig?: string | null
           id?: string
           listing_id: string
           owner_id: string
@@ -496,6 +500,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          csig?: string | null
+          esig?: string | null
           id?: string
           listing_id?: string
           owner_id?: string
@@ -514,6 +520,7 @@ export type Database = {
       listings: {
         Row: {
           age_months: number
+          area_sqm: number | null
           boost_count: number
           category: string
           city: string | null
@@ -543,6 +550,7 @@ export type Database = {
         }
         Insert: {
           age_months?: number
+          area_sqm?: number | null
           boost_count?: number
           category: string
           city?: string | null
@@ -572,6 +580,7 @@ export type Database = {
         }
         Update: {
           age_months?: number
+          area_sqm?: number | null
           boost_count?: number
           category?: string
           city?: string | null
@@ -1944,6 +1953,7 @@ export type Database = {
         Args: { _limit?: number; _q: string }
         Returns: {
           age_months: number
+          area_sqm: number | null
           boost_count: number
           category: string
           city: string | null

@@ -1,16 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase as anonClient } from "@/integrations/supabase/client";
-import { hammingDistance } from "./image-hash";
+import { combinedSimilarity } from "./image-hash";
 
 const Input = z.object({
   phash: z.string().regex(/^[0-9a-f]{16}$/),
-  maxDistance: z.number().int().min(0).max(24).optional().default(12),
+  csig: z.string().regex(/^[0-9a-f]{96}$/).optional(),
+  esig: z.string().regex(/^[0-9a-f]{16}$/).optional(),
+  /** أقل درجة تشابه مقبولة (0..1) — الافتراضي 0.72 */
+  minScore: z.number().min(0.4).max(1).optional().default(0.72),
 });
 
 /**
- * بحث بالصورة: يقارن بصمة الصورة المرفوعة (dHash) ببصمات صور الإعلانات
- * ويعيد الإعلانات النشطة الأقرب شبهاً مرتبة حسب التطابق.
+ * بحث بالصورة: يقارن بصمة البنية + الألوان + الأنماط للصورة المرفوعة
+ * ببصمات صور الإعلانات، ويعيد الإعلانات النشطة مرتبة حسب درجة التشابه.
  */
 export const searchListingsByImage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
@@ -19,16 +22,17 @@ export const searchListingsByImage = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await supabaseAdmin
       .from("listing_image_hashes")
-      .select("listing_id,phash")
+      .select("listing_id,phash,csig,esig")
       .limit(5000);
     if (error) throw new Error(error.message);
 
-    const best = new Map<string, number>();
-    for (const r of (rows ?? []) as Array<{ listing_id: string; phash: string }>) {
-      const d = hammingDistance(data.phash, r.phash);
-      if (d > data.maxDistance) continue;
+    type Row = { listing_id: string; phash: string; csig: string | null; esig: string | null };
+    const best = new Map<string, { score: number; structure: number; color: number | null; pattern: number | null }>();
+    for (const r of (rows ?? []) as Row[]) {
+      const sim = combinedSimilarity(data, r);
+      if (sim.score < data.minScore) continue;
       const prev = best.get(r.listing_id);
-      if (prev === undefined || d < prev) best.set(r.listing_id, d);
+      if (!prev || sim.score > prev.score) best.set(r.listing_id, sim);
     }
     if (best.size === 0) return { matches: [] as any[] };
 
@@ -36,15 +40,25 @@ export const searchListingsByImage = createServerFn({ method: "POST" })
     const { data: listings, error: lErr } = await anonClient
       .from("listings")
       .select(
-        "id,title,description,category,condition,age_months,market_price,wants,images,status,city,listing_type,created_at,price_reference_sar,price_source,price_deviation_pct,profiles:owner_id(display_name,avatar_url,rating,trades_count)",
+        "id,title,description,category,condition,age_months,area_sqm,market_price,wants,images,status,city,listing_type,created_at,price_reference_sar,price_source,price_deviation_pct,profiles:owner_id(display_name,avatar_url,rating,trades_count)",
       )
       .in("id", ids)
       .eq("status", "active");
     if (lErr) throw new Error(lErr.message);
 
     const matches = (listings ?? [])
-      .map((l: any) => ({ ...l, _distance: best.get(l.id) ?? 64 }))
-      .sort((a: any, b: any) => a._distance - b._distance)
+      .map((l: any) => {
+        const s = best.get(l.id)!;
+        return {
+          ...l,
+          _score: s.score,
+          _similarity: Math.round(s.score * 100),
+          _colorMatch: s.color === null ? null : Math.round(s.color * 100),
+          _patternMatch: s.pattern === null ? null : Math.round(s.pattern * 100),
+          _structureMatch: Math.round(s.structure * 100),
+        };
+      })
+      .sort((a: any, b: any) => b._score - a._score)
       .slice(0, 24);
 
     return { matches };

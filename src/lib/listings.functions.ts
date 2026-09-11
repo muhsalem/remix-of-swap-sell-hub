@@ -20,12 +20,24 @@ const ListingInput = z.object({
   city: z.string().trim().min(2).max(60).optional().or(z.literal("")).transform((v) => (v ? v : undefined)),
   listing_type: z.enum(["item", "service"]).optional().default("item"),
   image_hashes: z.array(z.string().regex(/^[0-9a-f]{16}$/)).max(8).optional().default([]),
+  image_signatures: z
+    .array(
+      z.object({
+        phash: z.string().regex(/^[0-9a-f]{16}$/),
+        csig: z.string().regex(/^[0-9a-f]{96}$/).optional(),
+        esig: z.string().regex(/^[0-9a-f]{16}$/).optional(),
+      }),
+    )
+    .max(8)
+    .optional()
+    .default([]),
+  area_sqm: z.number().positive().max(1_000_000).optional(),
 });
 
 export const listActiveListings = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await anonClient
     .from("listings")
-    .select("id,title,description,category,condition,age_months,market_price,wants,images,status,is_ribawi,created_at,owner_id,city,listing_type,price_reference_sar,price_source,price_deviation_pct,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
+    .select("id,title,description,category,condition,age_months,area_sqm,market_price,wants,images,status,is_ribawi,created_at,owner_id,city,listing_type,price_reference_sar,price_source,price_deviation_pct,profiles:owner_id(display_name,avatar_url,rating,trades_count)")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(60);

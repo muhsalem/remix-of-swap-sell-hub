@@ -93,10 +93,18 @@ export async function persistImageHashes(
   listingId: string,
   ownerId: string,
   hashes: string[],
+  signatures: Array<{ phash: string; csig?: string; esig?: string }> = [],
 ): Promise<void> {
+  const sigMap = new Map(signatures.map((s) => [s.phash, s]));
   const rows = hashes
     .filter((h) => /^[0-9a-f]{16}$/.test(h))
-    .map((phash) => ({ listing_id: listingId, owner_id: ownerId, phash }));
+    .map((phash) => ({
+      listing_id: listingId,
+      owner_id: ownerId,
+      phash,
+      csig: sigMap.get(phash)?.csig ?? null,
+      esig: sigMap.get(phash)?.esig ?? null,
+    }));
   if (!rows.length) return;
   try {
     await supabaseAdmin.from("listing_image_hashes").insert(rows);

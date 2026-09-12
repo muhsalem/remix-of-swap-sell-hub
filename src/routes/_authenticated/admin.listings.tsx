@@ -168,6 +168,13 @@ function AdminListings() {
                     category: String(f.get("category") || "").trim(),
                     city: String(f.get("city") || "").trim(),
                     market_price: Number(f.get("market_price")),
+                    ...(String(f.get("description") || "").trim()
+                      ? { description: String(f.get("description")).trim() }
+                      : {}),
+                    ...(Number(f.get("age_months")) >= 0 && String(f.get("age_months") || "") !== ""
+                      ? { age_months: Number(f.get("age_months")) }
+                      : {}),
+                    ...(Number(f.get("area_sqm")) > 0 ? { area_sqm: Number(f.get("area_sqm")) } : {}),
                     status: String(f.get("status")) as any,
                     is_featured: f.get("is_featured") === "on",
                   });
@@ -177,6 +184,9 @@ function AdminListings() {
                 <input name="category" defaultValue={l.category} className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
                 <input name="city" defaultValue={l.city ?? ""} placeholder="المدينة" className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
                 <input name="market_price" type="number" step="0.01" defaultValue={l.market_price} className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
+                <input name="age_months" type="number" min="0" defaultValue={l.age_months ?? 0} placeholder="مدة الاستخدام (شهر)" className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
+                <input name="area_sqm" type="number" step="0.1" min="0" defaultValue={l.area_sqm ?? ""} placeholder="المساحة (م²)" className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
+                <textarea name="description" defaultValue={l.description ?? ""} rows={3} placeholder="الوصف التفصيلي" className="sm:col-span-2 px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs" />
                 <select name="status" defaultValue={l.status} className="px-3 py-2 rounded-lg bg-stone-soft border border-border text-xs">
                   {STATUSES.filter((s) => s !== "all").map((s) => (
                     <option key={s} value={s}>{LABEL[s]}</option>

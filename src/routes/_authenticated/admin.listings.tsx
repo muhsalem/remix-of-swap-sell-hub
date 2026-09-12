@@ -124,6 +124,8 @@ function AdminListings() {
                   {l.category} · {l.city || "—"} · {Number(l.market_price).toLocaleString()} ر.س ·{" "}
                   <b>{LABEL[l.status] ?? l.status}</b>
                   {l.is_featured && <span className="text-primary"> · مميّز</span>}
+                  {typeof l.age_months === "number" && <span> · {l.age_months} شهر</span>}
+                  {Number(l.area_sqm) > 0 && <span> · {l.area_sqm} م²</span>}
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1">
                   المالك: {l.owner?.display_name ?? "—"}

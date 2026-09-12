@@ -331,6 +331,7 @@ function BrowseListings() {
                     source={l.price_source}
                     deviationPct={l.price_deviation_pct}
                   />
+                  <MatchBadges l={l} />
                 </div>
               </Link>
             </li>
@@ -377,6 +378,7 @@ function BrowseListings() {
                   source={l.price_source}
                   deviationPct={l.price_deviation_pct}
                 />
+                <MatchBadges l={l} />
                 <div className="mt-2"><EscrowBadge compact /></div>
               </div>
             </Link>

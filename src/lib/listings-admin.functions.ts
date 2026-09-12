@@ -29,7 +29,7 @@ export const adminListListings = createServerFn({ method: "GET" })
     let query = supabase
       .from("listings")
       .select(
-        "id,title,category,condition,market_price,status,images,city,listing_type,owner_id,is_featured,created_at",
+        "id,title,description,category,condition,market_price,age_months,area_sqm,status,images,city,listing_type,owner_id,is_featured,created_at",
       )
       .order("created_at", { ascending: false })
       .limit(300);
@@ -67,6 +67,8 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
         category: z.string().trim().min(1).max(60).optional(),
         city: z.string().trim().max(60).optional(),
         market_price: z.number().positive().max(10_000_000).optional(),
+        age_months: z.number().int().min(0).max(1200).optional(),
+        area_sqm: z.number().positive().max(1_000_000).optional(),
         status: z.enum(["active", "pending", "traded", "closed"]).optional(),
         is_featured: z.boolean().optional(),
       })

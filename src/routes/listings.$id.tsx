@@ -7,7 +7,7 @@ import { ShareListing } from "@/components/ShareListing";
 import { PromotionPanel } from "@/components/PromotionPanel";
 import { FollowButton } from "@/components/FollowButton";
 import { useAuth } from "@/lib/auth";
-import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin } from "lucide-react";
+import { ArrowLeftRight, Calendar, Tag, Star, Sparkles, Pin, Ruler } from "lucide-react";
 import { LocalPrice } from "@/components/LocalPrice";
 import { formatSAR } from "@/lib/format-price";
 import { CountrySwitcher } from "@/components/CountrySwitcher";
@@ -118,6 +118,10 @@ function ListingPage() {
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Tag className="size-3" /> {l.condition}</span>
                 <span className="flex items-center gap-1"><Calendar className="size-3" /> {l.age_months} شهر</span>
+                <span className="flex items-center gap-1">{(l as { listing_type?: string }).listing_type === "service" ? "خدمة" : "سلعة"}</span>
+                {Number((l as { area_sqm?: number | null }).area_sqm) > 0 && (
+                  <span className="flex items-center gap-1"><Ruler className="size-3" /> {(l as { area_sqm?: number }).area_sqm} م²</span>
+                )}
               </div>
             </div>
 

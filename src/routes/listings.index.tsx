@@ -4,7 +4,26 @@ import { useMemo, useRef, useState } from "react";
 import { Search, Star, SlidersHorizontal, ImageIcon, LayoutGrid, Rows3, MapPin, Clock, X, Loader2 } from "lucide-react";
 import { listActiveListings } from "@/lib/listings.functions";
 import { searchListingsByImage } from "@/lib/image-search.functions";
-import { computeImageHash } from "@/lib/image-hash";
+import { computeImageSignature } from "@/lib/image-hash";
+
+function MatchBadges({ l }: { l: any }) {
+  if (typeof l?._similarity !== "number") return null;
+  const chip = "px-2 py-0.5 rounded-full text-[10px] font-bold";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+      <span className={`${chip} bg-primary text-primary-foreground`}>تطابق {l._similarity}%</span>
+      {typeof l._structureMatch === "number" && (
+        <span className={`${chip} bg-stone-soft text-muted-foreground`}>الشكل {l._structureMatch}%</span>
+      )}
+      {typeof l._colorMatch === "number" && (
+        <span className={`${chip} bg-stone-soft text-muted-foreground`}>الألوان {l._colorMatch}%</span>
+      )}
+      {typeof l._patternMatch === "number" && (
+        <span className={`${chip} bg-stone-soft text-muted-foreground`}>النمط {l._patternMatch}%</span>
+      )}
+    </div>
+  );
+}
 import { ListingImage } from "@/components/ListingImage";
 import { LocalPrice } from "@/components/LocalPrice";
 import { FairValueTag } from "@/components/FairValueTag";
@@ -97,10 +116,12 @@ function BrowseListings() {
     setImgError(null);
     setImgBusy(true);
     try {
-      const phash = await computeImageHash(file);
-      if (!phash) throw new Error("تعذّر قراءة الصورة — جرّب صورة أخرى.");
+      const sig = await computeImageSignature(file);
+      if (!sig) throw new Error("تعذّر قراءة الصورة — جرّب صورة أخرى.");
       setImgPreview(URL.createObjectURL(file));
-      const res = await searchListingsByImage({ data: { phash, maxDistance: 12 } });
+      const res = await searchListingsByImage({
+        data: { phash: sig.phash, csig: sig.csig, esig: sig.esig, minScore: 0.72 },
+      });
       setImgMatches(res.matches ?? []);
     } catch (e: any) {
       setImgMatches(null);
